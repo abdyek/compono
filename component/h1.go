@@ -1,4 +1,4 @@
-package components
+package component
 
 type h1 struct {
 }

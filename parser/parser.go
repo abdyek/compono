@@ -2,11 +2,11 @@ package parser
 
 import (
 	"github.com/umono-cms/compono/ast"
-	"github.com/umono-cms/compono/components"
+	"github.com/umono-cms/compono/component"
 )
 
 type Parser interface {
-	Parse(source []byte, comps []components.Component) ast.Node
+	Parse(source []byte, comps []component.Component) ast.Node
 }
 
 func DefaultParser() Parser {
@@ -16,6 +16,6 @@ func DefaultParser() Parser {
 type parser struct {
 }
 
-func (p *parser) Parse(source []byte, comps []components.Component) ast.Node {
+func (p *parser) Parse(source []byte, comps []component.Component) ast.Node {
 	return nil
 }
