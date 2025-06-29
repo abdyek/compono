@@ -1,15 +1,19 @@
 package component
 
+import "github.com/umono-cms/compono/selector"
+
 type Component interface {
 	Name() string
-	StartWith() string
-	EndWith() string
+	Selectors() []selector.Selector
+	DisallowParent() []string
 }
 
 // Built-in and Markdown Components
 func DefaultComponents() []Component {
 	return []Component{
 		&h1{},
+		&p{},
+		&static{},
 	}
 }
 
