@@ -9,7 +9,7 @@ import (
 )
 
 type Compono interface {
-	Convert(source []byte, writer io.Writer, comps ...component.Component) error
+	Convert(source []byte, writer io.Writer) error
 	Parser() parser.Parser
 	SetParser(parser.Parser)
 	Renderer() renderer.Renderer
@@ -21,9 +21,8 @@ type Compono interface {
 
 func New() Compono {
 	return &compono{
-		parser:     parser.DefaultParser(),
-		renderer:   renderer.DefaultRenderer(),
-		components: component.DefaultComponents(),
+		parser:   parser.DefaultParser(),
+		renderer: renderer.DefaultRenderer(),
 	}
 }
 
@@ -33,13 +32,9 @@ type compono struct {
 	components []component.Component
 }
 
-func (c *compono) Convert(source []byte, writer io.Writer, comps ...component.Component) error {
-
-	allComps := component.OverrideComponents(c.components, comps)
-
-	root := c.parser.Parse(source, allComps)
-
-	return c.renderer.Render(writer, source, root)
+func (c *compono) Convert(source []byte, writer io.Writer) error {
+	root := c.parser.Parse(source)
+	return c.renderer.Render(writer, root)
 }
 
 func (c *compono) Parser() parser.Parser {
@@ -62,10 +57,12 @@ func (c *compono) Components() []component.Component {
 	return c.components
 }
 
+// TODO: redesign
 func (c *compono) RegisterComponents(comps ...component.Component) {
 	c.components = component.OverrideComponents(c.components, comps)
 }
 
+// TODO: redesign
 func (c *compono) UnregisterComponent(name string) {
 	i, _ := component.FindCompIndexByName(c.components, name)
 

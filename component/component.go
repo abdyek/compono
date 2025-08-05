@@ -5,16 +5,20 @@ import "github.com/umono-cms/compono/selector"
 type Component interface {
 	Name() string
 	Selectors() []selector.Selector
-	DisallowParent() []string
+	Components() []Component
+	scalability
 }
 
-// Built-in and Markdown Components
-func DefaultComponents() []Component {
-	return []Component{
-		&h1{},
-		&p{},
-		&static{},
-	}
+type scalability interface {
+	RewriteComponents([]Component)
+}
+
+type scalable struct {
+	components []Component
+}
+
+func (s *scalable) RewriteComponents(components []Component) {
+	s.components = components
 }
 
 func OverrideComponents(comps []Component, dominantComps []Component) []Component {

@@ -18,6 +18,8 @@ func NewStartEnd(startWith, endWith string) *startEnd {
 
 func (se *startEnd) Select(source []byte, without ...[2]int) [][2]int {
 
+	// TODO: add without parameter
+
 	startRe := regexp.MustCompile(se.startWith)
 	endRe := regexp.MustCompile(se.endWith)
 

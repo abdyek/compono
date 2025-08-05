@@ -10,6 +10,8 @@ type Node interface {
 	Children() []Node
 	SetChildren([]Node)
 	HasChildren() bool
+	Raw() []byte
+	SetRaw([]byte)
 }
 
 func DefaultNode() Node {
@@ -20,6 +22,7 @@ type node struct {
 	component component.Component
 	parent    Node
 	children  []Node
+	raw       []byte
 }
 
 func (n *node) Component() component.Component {
@@ -51,4 +54,12 @@ func (n *node) HasChildren() bool {
 		return true
 	}
 	return false
+}
+
+func (n *node) Raw() []byte {
+	return n.raw
+}
+
+func (n *node) SetRaw(raw []byte) {
+	n.raw = raw
 }

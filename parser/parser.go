@@ -5,11 +5,10 @@ import (
 
 	"github.com/umono-cms/compono/ast"
 	"github.com/umono-cms/compono/component"
-	"github.com/umono-cms/compono/util"
 )
 
 type Parser interface {
-	Parse(source []byte, comps []component.Component) ast.Node
+	Parse(source []byte) ast.Node
 }
 
 func DefaultParser() Parser {
@@ -19,10 +18,10 @@ func DefaultParser() Parser {
 type parser struct {
 }
 
-func (p *parser) Parse(source []byte, comps []component.Component) ast.Node {
+func (p *parser) Parse(source []byte) ast.Node {
 	rootNode := ast.DefaultNode()
 	rootNode.SetComponent(&component.Root{})
-	return p.parse(source, rootNode, comps)
+	return p.parse(source, rootNode, rootNode.Component().Components())
 }
 
 func (p *parser) parse(source []byte, parentNode ast.Node, comps []component.Component) ast.Node {
@@ -32,10 +31,6 @@ func (p *parser) parse(source []byte, parentNode ast.Node, comps []component.Com
 	found := []foundComp{}
 
 	for _, comp := range comps {
-
-		if util.InSliceString(parentNode.Component().Name(), comp.DisallowParent()) {
-			continue
-		}
 
 		for _, slctr := range comp.Selectors() {
 			indexes := slctr.Select(source, alreadySelected...)
@@ -62,10 +57,16 @@ func (p *parser) parse(source []byte, parentNode ast.Node, comps []component.Com
 	for _, f := range found {
 		nodeForm := ast.DefaultNode()
 		nodeForm.SetComponent(f.comp)
+		nodeForm.SetRaw(source[f.start:f.end])
 		children = append(children, nodeForm)
 	}
 
+	for i := 0; i < len(children); i++ {
+		children[i] = p.parse(children[i].Raw(), children[i], children[i].Component().Components())
+	}
+
 	parentNode.SetChildren(children)
+
 	return parentNode
 }
 
