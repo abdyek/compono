@@ -21,6 +21,7 @@ func newHtmlRenderer() Renderer {
 		html.NewH2(),
 		html.NewStrong(),
 		html.NewEm(),
+		html.NewP(),
 	}
 
 	for _, el := range elements {
