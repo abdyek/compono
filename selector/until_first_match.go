@@ -13,19 +13,32 @@ func NewUntilFirstMatch(regex string) *untilFirstMatch {
 }
 
 func (ufm *untilFirstMatch) Select(source []byte, without ...[2]int) [][2]int {
-
-	// TODO: add without parameter
-
 	re := regexp.MustCompile(ufm.regex)
-	loc := re.FindStringIndex(string(source))
+	offset := 0
 
-	if loc == nil {
-		return [][2]int{
-			[2]int{0, len(source)},
+	for offset <= len(source) {
+		loc := re.FindStringIndex(string(source[offset:]))
+		if loc == nil {
+			return [][2]int{{offset, len(source)}}
 		}
+
+		absEnd := offset + loc[0]
+		interval := [2]int{offset, absEnd}
+
+		conflict := false
+		for _, w := range without {
+			if intersects(interval[0], interval[1], w[0], w[1]) {
+				conflict = true
+				break
+			}
+		}
+
+		if !conflict {
+			return [][2]int{interval}
+		}
+
+		offset = absEnd
 	}
 
-	return [][2]int{
-		[2]int{0, loc[0]},
-	}
+	return nil
 }

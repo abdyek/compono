@@ -33,17 +33,20 @@ func (p *parser) parse(source []byte, parentNode ast.Node, comps []component.Com
 	for _, comp := range comps {
 
 		for _, slctr := range comp.Selectors() {
+
+			sort.Slice(alreadySelected, func(i, j int) bool {
+				return alreadySelected[i][0] < alreadySelected[j][0]
+			})
+
 			indexes := slctr.Select(source, alreadySelected...)
 
 			for _, index := range indexes {
-				if freeToSelect(alreadySelected, index[0], index[1]) {
-					found = append(found, foundComp{
-						comp:  comp,
-						start: index[0],
-						end:   index[1],
-					})
-					alreadySelected = append(alreadySelected, index)
-				}
+				found = append(found, foundComp{
+					comp:  comp,
+					start: index[0],
+					end:   index[1],
+				})
+				alreadySelected = append(alreadySelected, index)
 			}
 		}
 	}
@@ -74,13 +77,4 @@ type foundComp struct {
 	comp  component.Component
 	start int
 	end   int
-}
-
-func freeToSelect(alreadySelected [][2]int, start, end int) bool {
-	for _, selected := range alreadySelected {
-		if (start >= selected[0] && start < selected[1]) || (end > selected[0] && end <= selected[1]) {
-			return false
-		}
-	}
-	return true
 }

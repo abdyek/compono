@@ -1,6 +1,8 @@
 package selector
 
-import "regexp"
+import (
+	"regexp"
+)
 
 type startEndInner struct {
 	startWith string
@@ -15,6 +17,10 @@ func NewStartEndInner(startWith, endWith string) *startEndInner {
 }
 
 func (sei *startEndInner) Select(source []byte, without ...[2]int) [][2]int {
+	if len(source) == 0 {
+		return nil
+	}
+
 	var results [][2]int
 
 	startRe := regexp.MustCompile(sei.startWith)
@@ -44,7 +50,7 @@ OUTER:
 		}
 
 		results = append(results, [2]int{contentStart, contentEnd})
-		i = endAbs // endWith sonrasından devam et
+		i = endAbs
 	}
 
 	return results

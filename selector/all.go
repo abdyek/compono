@@ -1,7 +1,5 @@
 package selector
 
-import "sort"
-
 type all struct {
 }
 
@@ -14,10 +12,6 @@ func (*all) Select(source []byte, without ...[2]int) [][2]int {
 	if length == 0 {
 		return nil
 	}
-
-	sort.Slice(without, func(i, j int) bool {
-		return without[i][0] < without[j][0]
-	})
 
 	result := make([][2]int, 0)
 	current := 0
