@@ -46,7 +46,7 @@ func (*rootContent) Name() string {
 
 func (*rootContent) Selectors() []selector.Selector {
 	return []selector.Selector{
-		selector.NewAll(),
+		selector.NewUntilFirstMatch(`\n~\s+[A-Z0-9]+(?:_[A-Z0-9]+)*\s*\n`),
 	}
 }
 
