@@ -2,6 +2,9 @@ package renderer
 
 import (
 	"io"
+	"regexp"
+
+	gohtml "html"
 
 	"github.com/umono-cms/compono/ast"
 	"github.com/umono-cms/compono/renderer/html"
@@ -52,8 +55,7 @@ func (hr *htmlRenderer) render(children []ast.Node) string {
 	for _, child := range children {
 
 		if child.Component().Name() == "plain" {
-			// TODO: Add html escape filter
-			result += string(child.Raw())
+			result += hr.prepareRaw(child)
 		}
 
 		el, ok := hr.elementMap[child.Component().Name()]
@@ -70,6 +72,22 @@ func (hr *htmlRenderer) render(children []ast.Node) string {
 	}
 
 	return result
+}
+
+func (hr *htmlRenderer) prepareRaw(node ast.Node) string {
+
+	raw := string(node.Raw())
+	escaped := gohtml.EscapeString(raw)
+
+	trimmed := hr.dynamicTrim(node, escaped)
+
+	return trimmed
+}
+
+func (hr *htmlRenderer) dynamicTrim(node ast.Node, raw string) string {
+	// TODO: Complete it. There are some exceptions
+	re := regexp.MustCompile(`\s+`)
+	return re.ReplaceAllString(raw, " ")
 }
 
 type element interface {
