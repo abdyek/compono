@@ -3,9 +3,9 @@ package compono
 import (
 	"io"
 
-	"github.com/umono-cms/compono/component"
 	"github.com/umono-cms/compono/parser"
 	"github.com/umono-cms/compono/renderer"
+	"github.com/umono-cms/compono/rule"
 )
 
 type Compono interface {
@@ -14,8 +14,8 @@ type Compono interface {
 	SetParser(parser.Parser)
 	Renderer() renderer.Renderer
 	SetRenderer(renderer.Renderer)
-	Components() []component.Component
-	RegisterComponents(...component.Component)
+	Rules() []rule.Rule
+	RegisterRules(...rule.Rule)
 	UnregisterComponent(name string)
 }
 
@@ -27,9 +27,9 @@ func New() Compono {
 }
 
 type compono struct {
-	parser     parser.Parser
-	renderer   renderer.Renderer
-	components []component.Component
+	parser   parser.Parser
+	renderer renderer.Renderer
+	rules    []rule.Rule
 }
 
 func (c *compono) Convert(source []byte, writer io.Writer) error {
@@ -53,22 +53,22 @@ func (c *compono) SetRenderer(renderer renderer.Renderer) {
 	c.renderer = renderer
 }
 
-func (c *compono) Components() []component.Component {
-	return c.components
+func (c *compono) Rules() []rule.Rule {
+	return c.rules
 }
 
 // TODO: redesign
-func (c *compono) RegisterComponents(comps ...component.Component) {
-	c.components = component.OverrideComponents(c.components, comps)
+func (c *compono) RegisterRules(rules ...rule.Rule) {
+	c.rules = rule.OverrideRules(c.rules, rules)
 }
 
 // TODO: redesign
 func (c *compono) UnregisterComponent(name string) {
-	i, _ := component.FindCompIndexByName(c.components, name)
+	i, _ := rule.FindRuleIndexByName(c.rules, name)
 
 	if i == -1 {
 		return
 	}
 
-	c.components = append(c.components[:i], c.components[i+1:]...)
+	c.rules = append(c.rules[:i], c.rules[i+1:]...)
 }

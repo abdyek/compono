@@ -1,4 +1,4 @@
-package component
+package rule
 
 import (
 	"github.com/umono-cms/compono/selector"
@@ -8,7 +8,7 @@ type plain struct {
 	scalable
 }
 
-func newPlain() Component {
+func newPlain() Rule {
 	return &plain{}
 }
 
@@ -22,6 +22,6 @@ func (*plain) Selectors() []selector.Selector {
 	}
 }
 
-func (*plain) Components() []Component {
-	return []Component{}
+func (*plain) Rules() []Rule {
+	return []Rule{}
 }

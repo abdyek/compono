@@ -1,4 +1,4 @@
-package component
+package rule
 
 import "github.com/umono-cms/compono/selector"
 
@@ -6,10 +6,10 @@ type h2 struct {
 	scalable
 }
 
-func newH2() Component {
+func newH2() Rule {
 	return &h2{
 		scalable: scalable{
-			components: []Component{
+			rules: []Rule{
 				newH2Content(),
 			},
 		},
@@ -26,18 +26,18 @@ func (h *h2) Selectors() []selector.Selector {
 	}
 }
 
-func (h *h2) Components() []Component {
-	return h.components
+func (h *h2) Rules() []Rule {
+	return h.rules
 }
 
 type h2Content struct {
 	scalable
 }
 
-func newH2Content() Component {
+func newH2Content() Rule {
 	return &h2Content{
 		scalable: scalable{
-			components: []Component{
+			rules: []Rule{
 				newStrong(),
 				newEm(),
 				newPlain(),
@@ -56,6 +56,6 @@ func (h2c *h2Content) Selectors() []selector.Selector {
 	}
 }
 
-func (h2c *h2Content) Components() []Component {
-	return h2c.components
+func (h2c *h2Content) Rules() []Rule {
+	return h2c.rules
 }

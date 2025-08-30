@@ -1,4 +1,4 @@
-package component
+package rule
 
 import "github.com/umono-cms/compono/selector"
 
@@ -6,10 +6,10 @@ type em struct {
 	scalable
 }
 
-func newEm() Component {
+func newEm() Rule {
 	return &em{
 		scalable: scalable{
-			components: []Component{
+			rules: []Rule{
 				newEmContent(),
 			},
 		},
@@ -26,18 +26,18 @@ func (_ *em) Selectors() []selector.Selector {
 	}
 }
 
-func (e *em) Components() []Component {
-	return e.components
+func (e *em) Rules() []Rule {
+	return e.rules
 }
 
 type emContent struct {
 	scalable
 }
 
-func newEmContent() Component {
+func newEmContent() Rule {
 	return &emContent{
 		scalable: scalable{
-			components: []Component{
+			rules: []Rule{
 				newPlain(),
 			},
 		},
@@ -54,6 +54,6 @@ func (_ *emContent) Selectors() []selector.Selector {
 	}
 }
 
-func (ec *emContent) Components() []Component {
-	return ec.components
+func (ec *emContent) Rules() []Rule {
+	return ec.rules
 }

@@ -1,4 +1,4 @@
-package component
+package rule
 
 import "github.com/umono-cms/compono/selector"
 
@@ -6,10 +6,10 @@ type strong struct {
 	scalable
 }
 
-func newStrong() Component {
+func newStrong() Rule {
 	return &strong{
 		scalable: scalable{
-			components: []Component{
+			rules: []Rule{
 				newStrongContent(),
 			},
 		},
@@ -26,18 +26,18 @@ func (s *strong) Selectors() []selector.Selector {
 	}
 }
 
-func (s *strong) Components() []Component {
-	return s.components
+func (s *strong) Rules() []Rule {
+	return s.rules
 }
 
 type strongContent struct {
 	scalable
 }
 
-func newStrongContent() Component {
+func newStrongContent() Rule {
 	return &strongContent{
 		scalable: scalable{
-			components: []Component{
+			rules: []Rule{
 				newPlain(),
 			},
 		},
@@ -54,6 +54,6 @@ func (sc *strongContent) Selectors() []selector.Selector {
 	}
 }
 
-func (sc *strongContent) Components() []Component {
-	return sc.components
+func (sc *strongContent) Rules() []Rule {
+	return sc.rules
 }

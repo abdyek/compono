@@ -1,10 +1,10 @@
 package ast
 
-import "github.com/umono-cms/compono/component"
+import "github.com/umono-cms/compono/rule"
 
 type Node interface {
-	Component() component.Component
-	SetComponent(component.Component)
+	Rule() rule.Rule
+	SetRule(rule.Rule)
 	Parent() Node
 	SetParent(Node)
 	Children() []Node
@@ -19,18 +19,18 @@ func DefaultNode() Node {
 }
 
 type node struct {
-	component component.Component
-	parent    Node
-	children  []Node
-	raw       []byte
+	rule     rule.Rule
+	parent   Node
+	children []Node
+	raw      []byte
 }
 
-func (n *node) Component() component.Component {
-	return n.component
+func (n *node) Rule() rule.Rule {
+	return n.rule
 }
 
-func (n *node) SetComponent(comp component.Component) {
-	n.component = comp
+func (n *node) SetRule(rule rule.Rule) {
+	n.rule = rule
 }
 
 func (n *node) Parent() Node {

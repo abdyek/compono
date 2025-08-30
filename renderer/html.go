@@ -54,11 +54,11 @@ func (hr *htmlRenderer) render(children []ast.Node) string {
 
 	for _, child := range children {
 
-		if child.Component().Name() == "plain" {
+		if child.Rule().Name() == "plain" {
 			result += hr.prepareRaw(child)
 		}
 
-		el, ok := hr.elementMap[child.Component().Name()]
+		el, ok := hr.elementMap[child.Rule().Name()]
 		if !ok {
 			result += hr.render(child.Children())
 			continue
