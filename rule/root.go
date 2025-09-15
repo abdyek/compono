@@ -21,6 +21,7 @@ func (*Root) Selectors() []selector.Selector {
 func (*Root) Rules() []Rule {
 	return []Rule{
 		newRootContent(),
+		newCompDefWrapper(),
 	}
 }
 
@@ -35,6 +36,7 @@ func newRootContent() Rule {
 				newH2(),
 				newH1(),
 				newP(),
+				newCompCall(),
 			},
 		},
 	}
