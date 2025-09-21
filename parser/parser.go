@@ -26,13 +26,13 @@ func (p *parser) Parse(source []byte) ast.Node {
 	rootNode := ast.DefaultNode()
 	rootNode.SetRule(&rule.Root{})
 	rootNode = p.parse(source, rootNode, rootNode.Rule().Rules())
-	p.logger.Exit(logger.Parser, "Parser stopped")
+	p.logger.Exit(logger.Parser, "Parser finished")
 	return rootNode
 }
 
 func (p *parser) parse(source []byte, parentNode ast.Node, rules []rule.Rule) ast.Node {
 
-	p.logger.Enter(logger.Parser, "Started for %s", parentNode.Rule().Name())
+	p.logger.Enter(logger.Parser, "Parser started for %s", parentNode.Rule().Name())
 
 	alreadySelected := [][2]int{}
 
@@ -40,7 +40,7 @@ func (p *parser) parse(source []byte, parentNode ast.Node, rules []rule.Rule) as
 
 	for _, rule := range rules {
 
-		p.logger.Enter(logger.Parser|logger.Detail, "Started searching for selectors of %s rule", rule.Name())
+		p.logger.Enter(logger.Parser|logger.Detail, "Started searching for selectors of %s rule", logger.Colorize(logger.Bold(rule.Name()), logger.Green))
 
 		for _, slctr := range rule.Selectors() {
 
@@ -49,7 +49,7 @@ func (p *parser) parse(source []byte, parentNode ast.Node, rules []rule.Rule) as
 				slctrName = n.Name()
 			}
 
-			p.logger.Log(logger.Parser|logger.Detail, "Started searching for %s selector", slctrName)
+			p.logger.Log(logger.Parser|logger.Detail, "Started searching for %s selector", logger.Colorize(logger.Bold(slctrName), logger.Green))
 
 			sort.Slice(alreadySelected, func(i, j int) bool {
 				return alreadySelected[i][0] < alreadySelected[j][0]
@@ -57,7 +57,14 @@ func (p *parser) parse(source []byte, parentNode ast.Node, rules []rule.Rule) as
 
 			indexes := slctr.Select(source, alreadySelected...)
 
-			p.logger.Log(logger.Parser|logger.Detail, "Find indexes %v for the source %s", indexes, source)
+			if len(indexes) != 0 {
+				p.logger.Log(logger.Parser|logger.Detail, "Found indexes %v", indexes)
+				p.logger.LogMultiline(logger.Parser|logger.Detail, "Source:\n%s", logger.Highlight(source, indexes, func(s string) string {
+					return logger.Colorize(s, logger.Yellow)
+				}))
+			} else {
+				p.logger.Log(logger.Parser|logger.Detail, "No indexes found")
+			}
 
 			for _, index := range indexes {
 				found = append(found, foundRule{
@@ -69,7 +76,7 @@ func (p *parser) parse(source []byte, parentNode ast.Node, rules []rule.Rule) as
 			}
 		}
 
-		p.logger.Exit(logger.Parser|logger.Detail, "Stopped searching for selectors of %s rule", rule.Name())
+		p.logger.Exit(logger.Parser|logger.Detail, "Finished searching for selectors of %s rule", logger.Colorize(logger.Bold(rule.Name()), logger.Green))
 	}
 
 	sort.Slice(found, func(i, j int) bool {
@@ -91,7 +98,7 @@ func (p *parser) parse(source []byte, parentNode ast.Node, rules []rule.Rule) as
 
 	parentNode.SetChildren(children)
 
-	p.logger.Exit(logger.Parser, "[PARSER] Parser stopped for %s", parentNode.Rule().Name())
+	p.logger.Exit(logger.Parser, "Parser finished parsing for %s", parentNode.Rule().Name())
 
 	return parentNode
 }
