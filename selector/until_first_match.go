@@ -12,6 +12,10 @@ func NewUntilFirstMatch(regex string) *untilFirstMatch {
 	}
 }
 
+func (_ *untilFirstMatch) Name() string {
+	return "until_first_math"
+}
+
 func (ufm *untilFirstMatch) Select(source []byte, without ...[2]int) [][2]int {
 	re := regexp.MustCompile(ufm.regex)
 	offset := 0

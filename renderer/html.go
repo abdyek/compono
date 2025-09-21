@@ -7,16 +7,21 @@ import (
 	gohtml "html"
 
 	"github.com/umono-cms/compono/ast"
+	"github.com/umono-cms/compono/logger"
 	"github.com/umono-cms/compono/renderer/html"
 )
 
 type htmlRenderer struct {
 	elementMap map[string]element
+	logger     logger.Logger
 }
 
-func newHtmlRenderer() Renderer {
+func newHtmlRenderer(log logger.Logger) Renderer {
 
-	renderer := &htmlRenderer{}
+	renderer := &htmlRenderer{
+		logger: log,
+	}
+
 	renderer.elementMap = make(map[string]element)
 
 	elements := []element{

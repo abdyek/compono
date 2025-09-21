@@ -16,6 +16,10 @@ func NewStartEnd(startWith, endWith string) *startEnd {
 	}
 }
 
+func (_ *startEnd) Name() string {
+	return "start_end"
+}
+
 func (se *startEnd) Select(source []byte, without ...[2]int) [][2]int {
 	if len(source) == 0 {
 		return nil

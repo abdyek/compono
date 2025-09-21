@@ -7,6 +7,10 @@ func NewAll() *all {
 	return &all{}
 }
 
+func (_ *all) Name() string {
+	return "all"
+}
+
 func (*all) Select(source []byte, without ...[2]int) [][2]int {
 	length := len(source)
 	if length == 0 {

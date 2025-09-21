@@ -23,7 +23,7 @@ func (_ *compDefWrapper) Name() string {
 
 func (_ *compDefWrapper) Selectors() []selector.Selector {
 	return []selector.Selector{
-		selector.NewSinceFirstMatchInner(`\n~\s+[A-Z0-9]+(?:_[A-Z0-9]+)*\s*\n`),
+		selector.NewSinceFirstMatchInner(`\n*~\s+[A-Z0-9]+(?:_[A-Z0-9]+)*\s*\n`),
 	}
 }
 

@@ -3,6 +3,7 @@ package compono
 import (
 	"io"
 
+	"github.com/umono-cms/compono/logger"
 	"github.com/umono-cms/compono/parser"
 	"github.com/umono-cms/compono/renderer"
 	"github.com/umono-cms/compono/rule"
@@ -14,21 +15,30 @@ type Compono interface {
 	SetParser(parser.Parser)
 	Renderer() renderer.Renderer
 	SetRenderer(renderer.Renderer)
+	Logger() logger.Logger
+	SetLogger(logger.Logger)
 	Rules() []rule.Rule
 	RegisterRules(...rule.Rule)
 	UnregisterComponent(name string)
 }
 
 func New() Compono {
+	log := logger.NewLogger()
+
+	p := parser.DefaultParser(log)
+	r := renderer.DefaultRenderer(log)
+
 	return &compono{
-		parser:   parser.DefaultParser(),
-		renderer: renderer.DefaultRenderer(),
+		parser:   p,
+		renderer: r,
+		logger:   log,
 	}
 }
 
 type compono struct {
 	parser   parser.Parser
 	renderer renderer.Renderer
+	logger   logger.Logger
 	rules    []rule.Rule
 }
 
@@ -51,6 +61,14 @@ func (c *compono) Renderer() renderer.Renderer {
 
 func (c *compono) SetRenderer(renderer renderer.Renderer) {
 	c.renderer = renderer
+}
+
+func (c *compono) Logger() logger.Logger {
+	return c.logger
+}
+
+func (c *compono) SetLogger(logger logger.Logger) {
+	c.logger = logger
 }
 
 func (c *compono) Rules() []rule.Rule {

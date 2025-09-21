@@ -16,6 +16,10 @@ func NewStartEndLeftInner(startWith, endWith string) *startEndLeftInner {
 	}
 }
 
+func (_ *startEndLeftInner) Name() string {
+	return "start_end_left_inner"
+}
+
 func (seli *startEndLeftInner) Select(source []byte, without ...[2]int) [][2]int {
 	if len(source) == 0 {
 		return nil

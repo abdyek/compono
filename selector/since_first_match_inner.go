@@ -12,6 +12,10 @@ func NewSinceFirstMatchInner(regex string) *sinceFirstMatchInner {
 	}
 }
 
+func (_ *sinceFirstMatchInner) Name() string {
+	return "since_first_math_inner"
+}
+
 func (sfm *sinceFirstMatchInner) Select(source []byte, without ...[2]int) [][2]int {
 	re := regexp.MustCompile(sfm.regex)
 	offset := 0
