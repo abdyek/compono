@@ -16,7 +16,14 @@ func NewStartEnd(startWith, endWith string) *startEnd {
 	}
 }
 
+func (_ *startEnd) Name() string {
+	return "start_end"
+}
+
 func (se *startEnd) Select(source []byte, without ...[2]int) [][2]int {
+	if len(source) == 0 {
+		return nil
+	}
 
 	startRe := regexp.MustCompile(se.startWith)
 	endRe := regexp.MustCompile(se.endWith)
@@ -38,10 +45,23 @@ func (se *startEnd) Select(source []byte, without ...[2]int) [][2]int {
 		}
 		endAbs := searchAfterStart + endLoc[1]
 
-		results = append(results, [2]int{startAbs, endAbs})
+		skip := false
+		for _, w := range without {
+			if intersects(startAbs, endAbs, w[0], w[1]) {
+				skip = true
+				break
+			}
+		}
+		if !skip {
+			results = append(results, [2]int{startAbs, endAbs})
+		}
 
 		offset = endAbs
 	}
 
 	return results
+}
+
+func intersects(aStart, aEnd, bStart, bEnd int) bool {
+	return aStart < bEnd && bStart < aEnd
 }

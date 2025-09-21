@@ -3,43 +3,48 @@ package compono
 import (
 	"io"
 
-	"github.com/umono-cms/compono/component"
+	"github.com/umono-cms/compono/logger"
 	"github.com/umono-cms/compono/parser"
 	"github.com/umono-cms/compono/renderer"
+	"github.com/umono-cms/compono/rule"
 )
 
 type Compono interface {
-	Convert(source []byte, writer io.Writer, comps ...component.Component) error
+	Convert(source []byte, writer io.Writer) error
 	Parser() parser.Parser
 	SetParser(parser.Parser)
 	Renderer() renderer.Renderer
 	SetRenderer(renderer.Renderer)
-	Components() []component.Component
-	RegisterComponents(...component.Component)
+	Logger() logger.Logger
+	SetLogger(logger.Logger)
+	Rules() []rule.Rule
+	RegisterRules(...rule.Rule)
 	UnregisterComponent(name string)
 }
 
 func New() Compono {
+	log := logger.NewLogger()
+
+	p := parser.DefaultParser(log)
+	r := renderer.DefaultRenderer(log)
+
 	return &compono{
-		parser:     parser.DefaultParser(),
-		renderer:   renderer.DefaultRenderer(),
-		components: component.DefaultComponents(),
+		parser:   p,
+		renderer: r,
+		logger:   log,
 	}
 }
 
 type compono struct {
-	parser     parser.Parser
-	renderer   renderer.Renderer
-	components []component.Component
+	parser   parser.Parser
+	renderer renderer.Renderer
+	logger   logger.Logger
+	rules    []rule.Rule
 }
 
-func (c *compono) Convert(source []byte, writer io.Writer, comps ...component.Component) error {
-
-	allComps := component.OverrideComponents(c.components, comps)
-
-	root := c.parser.Parse(source, allComps)
-
-	return c.renderer.Render(writer, source, root)
+func (c *compono) Convert(source []byte, writer io.Writer) error {
+	root := c.parser.Parse(source)
+	return c.renderer.Render(writer, root)
 }
 
 func (c *compono) Parser() parser.Parser {
@@ -58,20 +63,30 @@ func (c *compono) SetRenderer(renderer renderer.Renderer) {
 	c.renderer = renderer
 }
 
-func (c *compono) Components() []component.Component {
-	return c.components
+func (c *compono) Logger() logger.Logger {
+	return c.logger
 }
 
-func (c *compono) RegisterComponents(comps ...component.Component) {
-	c.components = component.OverrideComponents(c.components, comps)
+func (c *compono) SetLogger(logger logger.Logger) {
+	c.logger = logger
 }
 
+func (c *compono) Rules() []rule.Rule {
+	return c.rules
+}
+
+// TODO: redesign
+func (c *compono) RegisterRules(rules ...rule.Rule) {
+	c.rules = rule.OverrideRules(c.rules, rules)
+}
+
+// TODO: redesign
 func (c *compono) UnregisterComponent(name string) {
-	i, _ := component.FindCompIndexByName(c.components, name)
+	i, _ := rule.FindRuleIndexByName(c.rules, name)
 
 	if i == -1 {
 		return
 	}
 
-	c.components = append(c.components[:i], c.components[i+1:]...)
+	c.rules = append(c.rules[:i], c.rules[i+1:]...)
 }

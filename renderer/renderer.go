@@ -4,19 +4,13 @@ import (
 	"io"
 
 	"github.com/umono-cms/compono/ast"
+	"github.com/umono-cms/compono/logger"
 )
 
 type Renderer interface {
-	Render(writer io.Writer, source []byte, root ast.Node) error
+	Render(writer io.Writer, root ast.Node) error
 }
 
-func DefaultRenderer() Renderer {
-	return &renderer{}
-}
-
-type renderer struct {
-}
-
-func (r *renderer) Render(writer io.Writer, source []byte, root ast.Node) error {
-	return nil
+func DefaultRenderer(log logger.Logger) Renderer {
+	return newHtmlRenderer(log)
 }
