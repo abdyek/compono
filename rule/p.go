@@ -22,7 +22,7 @@ func (*p) Name() string {
 
 func (*p) Selectors() []selector.Selector {
 	return []selector.Selector{
-		selector.NewAll(),
+		selector.NewStartEnd(`.`, `\n\n|\z`),
 	}
 }
 

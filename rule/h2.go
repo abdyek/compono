@@ -22,7 +22,7 @@ func (h *h2) Name() string {
 
 func (h *h2) Selectors() []selector.Selector {
 	return []selector.Selector{
-		selector.NewStartEnd(`\s*## `, `\n|\z`),
+		selector.NewStartEnd(`(?m)[ \t]*## `, `\n|\z`),
 	}
 }
 
@@ -52,7 +52,7 @@ func (h2c *h2Content) Name() string {
 
 func (h2c *h2Content) Selectors() []selector.Selector {
 	return []selector.Selector{
-		selector.NewStartEndInner(`\s*## `, `\n|\z`),
+		selector.NewStartEndInner(`(?m)[ \t]*## `, `\n|\z`),
 	}
 }
 

@@ -23,12 +23,11 @@ func (sfm *sinceFirstMatchInner) Select(source []byte, without ...[2]int) [][2]i
 	for offset <= len(source) {
 		loc := re.FindStringIndex(string(source[offset:]))
 		if loc == nil {
-			// hiç eşleşme yoksa tümünü döndür
-			return [][2]int{{offset, len(source)}}
+			return [][2]int{}
 		}
 
 		absStart := offset + loc[0]
-		interval := [2]int{offset, len(source)} // baştan sona kadar
+		interval := [2]int{offset, len(source)}
 
 		conflict := false
 		for _, w := range without {
