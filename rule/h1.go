@@ -21,8 +21,9 @@ func (h *h1) Name() string {
 }
 
 func (h *h1) Selectors() []selector.Selector {
+	seSelector, _ := selector.NewStartEnd(`(?m)[ \t]*# `, `\n|\z`)
 	return []selector.Selector{
-		selector.NewStartEnd(`(?m)[ \t]*# `, `\n|\z`),
+		seSelector,
 	}
 }
 

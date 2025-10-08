@@ -46,3 +46,7 @@ func (sfm *sinceFirstMatchInner) Select(source []byte, without ...[2]int) [][2]i
 
 	return nil
 }
+
+func intersects(aStart, aEnd, bStart, bEnd int) bool {
+	return aStart < bEnd && bStart < aEnd
+}

@@ -278,8 +278,9 @@ func (_ *compCall) Name() string {
 }
 
 func (_ *compCall) Selectors() []selector.Selector {
+	seSelector, _ := selector.NewStartEnd(`\{\{\s*`, `\s*\}\}`)
 	return []selector.Selector{
-		selector.NewStartEnd(`\{\{\s*`, `\s*\}\}`),
+		seSelector,
 	}
 }
 

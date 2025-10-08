@@ -21,8 +21,9 @@ func (s *strong) Name() string {
 }
 
 func (s *strong) Selectors() []selector.Selector {
+	seSelector, _ := selector.NewStartEnd(`\*\*`, `\*\*`)
 	return []selector.Selector{
-		selector.NewStartEnd(`\*\*`, `\*\*`),
+		seSelector,
 	}
 }
 
