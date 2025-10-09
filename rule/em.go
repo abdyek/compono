@@ -21,7 +21,7 @@ func (_ *em) Name() string {
 }
 
 func (_ *em) Selectors() []selector.Selector {
-	seSelector, _ := selector.NewStartEnd(`\*`, `\*`)
+	seSelector, _ := selector.NewStartEnd(`\*[^\s\*]`, `[^\s\*]\*`)
 	return []selector.Selector{
 		seSelector,
 	}
