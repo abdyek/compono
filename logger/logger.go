@@ -22,6 +22,12 @@ const (
 
 const All = Parser | Renderer | Detail
 
+// TODO: Change it as
+// Log(level LogLevel, msg func() string, args ...interface{})
+// LogMultiline(level LogLevel, msg func() string, args ...interface{})
+// Enter(level LogLevel, msg func() string, args ...interface{})
+// Exit(level LogLevel, msg func() string, args ...interface{})
+// to remove logger.Highlight etc. functions on release mode
 type Logger interface {
 	SetLogLevel(level LogLevel)
 	Log(level LogLevel, msg string, args ...interface{})

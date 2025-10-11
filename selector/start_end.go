@@ -76,7 +76,7 @@ func (se *startEnd) slct(source []byte, start, end int) [][2]int {
 		})
 	}
 
-	return se.eliminateNested(results)
+	return eliminateNested(results)
 }
 
 func (_ *startEnd) findEL(endLocs [][]int, matchedEL []int, after int) (bool, int) {
@@ -87,32 +87,4 @@ func (_ *startEnd) findEL(endLocs [][]int, matchedEL []int, after int) (bool, in
 		return true, el[1]
 	}
 	return false, 0
-}
-
-func (_ *startEnd) eliminateNested(results [][2]int) [][2]int {
-
-	nestedInd := []int{}
-
-	for i, r := range results {
-		if !util.InSliceInt(i, nestedInd) {
-			for j, rSub := range results {
-				if i == j {
-					continue
-				}
-				if rSub[0] > r[0] && rSub[1] < r[1] {
-					nestedInd = append(nestedInd, j)
-					continue
-				}
-			}
-		}
-	}
-
-	eliminated := [][2]int{}
-	for i, r := range results {
-		if !util.InSliceInt(i, nestedInd) {
-			eliminated = append(eliminated, r)
-		}
-	}
-
-	return eliminated
 }

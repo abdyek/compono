@@ -57,6 +57,12 @@ func (p *parser) parse(source []byte, parentNode ast.Node, rules []rule.Rule) as
 
 			indexes := slctr.Select(source, alreadySelected...)
 
+			// TODO: Move it into the logger msg function. Because Parser don't need ordered indexes.
+			sort.Slice(indexes, func(i, j int) bool {
+				return indexes[i][0] < indexes[j][0]
+			})
+			// ^^^^ here
+
 			if len(indexes) != 0 {
 				p.logger.Log(logger.Parser|logger.Detail, "Found indexes %v", indexes)
 				p.logger.LogMultiline(logger.Parser|logger.Detail, "Source:\n%s", logger.Highlight(source, indexes, func(s string) string {
