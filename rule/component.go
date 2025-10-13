@@ -40,8 +40,7 @@ func newLocalCompDef() Rule {
 	return &localCompDef{
 		scalable: scalable{
 			rules: []Rule{
-				newLocalCompDefName(),
-				newLocalCompParams(),
+				newLocalCompDefHead(),
 				newLocalCompDefContent(),
 			},
 		},
@@ -63,31 +62,61 @@ func (lcd *localCompDef) Rules() []Rule {
 	return lcd.rules
 }
 
-// Local component definition name
-type localCompDefName struct {
+// Local component definition head
+type localCompDefHead struct {
 	scalable
 }
 
-func newLocalCompDefName() Rule {
-	return &localCompDefName{
+func newLocalCompDefHead() Rule {
+	return &localCompDefHead{
+		scalable: scalable{
+			rules: []Rule{
+				newLocalCompName(),
+				newLocalCompParams(),
+			},
+		},
+	}
+}
+
+func (_ *localCompDefHead) Name() string {
+	return "local-comp-def-head"
+}
+
+func (_ *localCompDefHead) Selectors() []selector.Selector {
+	return []selector.Selector{
+		// TODO: complete it
+	}
+}
+
+func (lcdh *localCompDefHead) Rules() []Rule {
+	return lcdh.rules
+}
+
+// Local component name
+type localCompName struct {
+	scalable
+}
+
+func newLocalCompName() Rule {
+	return &localCompName{
 		scalable: scalable{
 			rules: []Rule{},
 		},
 	}
 }
 
-func (_ *localCompDefName) Name() string {
-	return "local-comp-def-name"
+func (_ *localCompName) Name() string {
+	return "local-comp-name"
 }
 
-func (_ *localCompDefName) Selectors() []selector.Selector {
+func (_ *localCompName) Selectors() []selector.Selector {
 	return []selector.Selector{
 		selector.NewStartEndInner(`\n~\s+`, `\s*\n`),
 	}
 }
 
-func (lcdn *localCompDefName) Rules() []Rule {
-	return lcdn.rules
+func (lcn *localCompName) Rules() []Rule {
+	return lcn.rules
 }
 
 // Local component parameters
@@ -250,8 +279,9 @@ func (_ *localCompDefContent) Name() string {
 }
 
 func (_ *localCompDefContent) Selectors() []selector.Selector {
+	seli, _ := selector.NewStartEndLeftInner(`^`, `\n~\s+[A-Z0-9]+(?:_[A-Z0-9]+)*|\z`)
 	return []selector.Selector{
-		// TODO: complete it
+		seli,
 	}
 }
 
