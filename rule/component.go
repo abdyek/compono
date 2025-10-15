@@ -83,8 +83,9 @@ func (_ *localCompDefHead) Name() string {
 }
 
 func (_ *localCompDefHead) Selectors() []selector.Selector {
+	se, _ := selector.NewStartEnd(`\n~\s+`, `\s*\n\n|\z`)
 	return []selector.Selector{
-		// TODO: complete it
+		se,
 	}
 }
 
@@ -139,8 +140,9 @@ func (_ *localCompParams) Name() string {
 }
 
 func (_ *localCompParams) Selectors() []selector.Selector {
+	p, _ := selector.NewPattern(`([a-z][a-z0-9-]*)[\s\n\r]*=[\s\n\r]*(".*?"|\d+(?:\.\d+)?|true|false)`)
 	return []selector.Selector{
-		// TODO: complete it
+		p,
 	}
 }
 
