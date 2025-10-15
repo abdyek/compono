@@ -140,9 +140,10 @@ func (_ *localCompParams) Name() string {
 }
 
 func (_ *localCompParams) Selectors() []selector.Selector {
+	se, _ := selector.NewStartEnd(`\n`, `.`)
 	p, _ := selector.NewPattern(`([a-z][a-z0-9-]*)[\s\n\r]*=[\s\n\r]*(".*?"|\d+(?:\.\d+)?|true|false)`)
 	return []selector.Selector{
-		p,
+		selector.NewBounds(se, p),
 	}
 }
 
@@ -161,7 +162,6 @@ func newLocalCompParam() Rule {
 			rules: []Rule{
 				newLocalCompParamName(),
 				newLocalCompParamType(),
-				newLocalCompParamDefaValue(),
 			},
 		},
 	}
@@ -172,8 +172,9 @@ func (_ *localCompParam) Name() string {
 }
 
 func (_ *localCompParam) Selectors() []selector.Selector {
+	p, _ := selector.NewPattern(`([a-z][a-z0-9-]*)[\s\n\r]*=[\s\n\r]*(".*?"|\d+(?:\.\d+)?|true|false)`)
 	return []selector.Selector{
-		// TODO: complete it
+		p,
 	}
 }
 
@@ -187,7 +188,7 @@ type localCompParamName struct {
 }
 
 func newLocalCompParamName() Rule {
-	return &localCompParam{
+	return &localCompParamName{
 		scalable: scalable{
 			rules: []Rule{},
 		},
@@ -199,8 +200,9 @@ func (_ *localCompParamName) Name() string {
 }
 
 func (_ *localCompParamName) Selectors() []selector.Selector {
+	seli, _ := selector.NewStartEndLeftInner(`([a-z][a-z0-9-]*)\s*`, `=`)
 	return []selector.Selector{
-		// TODO: complete it
+		seli,
 	}
 }
 
@@ -216,7 +218,11 @@ type localCompParamType struct {
 func newLocalCompParamType() Rule {
 	return &localCompParamType{
 		scalable: scalable{
-			rules: []Rule{},
+			rules: []Rule{
+				newLocalCompStringParam(),
+				newLocalCompNumberParam(),
+				newLocalCompBoolParam(),
+			},
 		},
 	}
 }
@@ -226,13 +232,103 @@ func (_ *localCompParamType) Name() string {
 }
 
 func (_ *localCompParamType) Selectors() []selector.Selector {
+	p, _ := selector.NewPattern(`[\s\n\r]*(".*?"|\d+(?:\.\d+)?|true|false)`)
 	return []selector.Selector{
-		// TODO: complete it
+		p,
 	}
 }
 
 func (lcpt *localCompParamType) Rules() []Rule {
 	return lcpt.rules
+}
+
+// Local component's string parameter
+type localCompStringParam struct {
+	scalable
+}
+
+func newLocalCompStringParam() Rule {
+	return &localCompStringParam{
+		scalable: scalable{
+			rules: []Rule{
+				newLocalCompParamDefaValue(),
+			},
+		},
+	}
+}
+
+func (_ *localCompStringParam) Name() string {
+	return "local-comp-string-param"
+}
+
+func (_ *localCompStringParam) Selectors() []selector.Selector {
+	return []selector.Selector{
+		selector.NewStartEndInner(`[\s\n\r]*"`, `"[\s\n\r]*`),
+	}
+}
+
+func (lcsp *localCompStringParam) Rules() []Rule {
+	return lcsp.rules
+}
+
+// Local component's number parameter
+type localCompNumberParam struct {
+	scalable
+}
+
+func newLocalCompNumberParam() Rule {
+	return &localCompNumberParam{
+		scalable: scalable{
+			rules: []Rule{
+				newLocalCompParamDefaValue(),
+			},
+		},
+	}
+}
+
+func (_ *localCompNumberParam) Name() string {
+	return "local-comp-number-param"
+}
+
+func (_ *localCompNumberParam) Selectors() []selector.Selector {
+	p, _ := selector.NewPattern(`\d+(?:\.\d+)?`)
+	return []selector.Selector{
+		p,
+	}
+}
+
+func (lcnp *localCompNumberParam) Rules() []Rule {
+	return lcnp.rules
+}
+
+// Local component's bool parameter
+type localCompBoolParam struct {
+	scalable
+}
+
+func newLocalCompBoolParam() Rule {
+	return &localCompBoolParam{
+		scalable: scalable{
+			rules: []Rule{
+				newLocalCompParamDefaValue(),
+			},
+		},
+	}
+}
+
+func (_ *localCompBoolParam) Name() string {
+	return "local-comp-bool-param"
+}
+
+func (_ *localCompBoolParam) Selectors() []selector.Selector {
+	p, _ := selector.NewPattern(`true|false`)
+	return []selector.Selector{
+		p,
+	}
+}
+
+func (lcbp *localCompBoolParam) Rules() []Rule {
+	return lcbp.rules
 }
 
 // Local component parameter default value
@@ -254,7 +350,7 @@ func (_ *localCompParamDefaValue) Name() string {
 
 func (_ *localCompParamDefaValue) Selectors() []selector.Selector {
 	return []selector.Selector{
-		// TODO: complete it
+		selector.NewAll(),
 	}
 }
 
