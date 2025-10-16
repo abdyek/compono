@@ -397,6 +397,7 @@ func newCompCall() Rule {
 		scalable: scalable{
 			rules: []Rule{
 				newCompCallName(),
+				newCompCallArgs(),
 			},
 		},
 	}
@@ -435,8 +436,14 @@ func (_ *compCallName) Name() string {
 }
 
 func (_ *compCallName) Selectors() []selector.Selector {
+	p, _ := selector.NewPattern(`\s*[A-Z0-9]+(?:_[A-Z0-9]+)*\s*`)
 	return []selector.Selector{
-		// TODO: complete it
+		selector.NewFilter(p, func(source []byte, index [][2]int) [][2]int {
+			if len(index) > 1 {
+				return [][2]int{index[0]}
+			}
+			return [][2]int{}
+		}),
 	}
 }
 
@@ -464,8 +471,9 @@ func (_ *compCallArgs) Name() string {
 }
 
 func (_ *compCallArgs) Selectors() []selector.Selector {
+	p, _ := selector.NewPattern(`([a-z][a-z0-9-]*)[\s\n\r]*=[\s\n\r]*(".*?"|\d+(?:\.\d+)?|true|false)`)
 	return []selector.Selector{
-		// TODO: complete it
+		p,
 	}
 }
 
@@ -484,7 +492,6 @@ func newCompCallArg() Rule {
 			rules: []Rule{
 				newCompCallArgName(),
 				newCompCallArgType(),
-				newCompCallArgValue(),
 			},
 		},
 	}
@@ -495,8 +502,9 @@ func (_ *compCallArg) Name() string {
 }
 
 func (_ *compCallArg) Selectors() []selector.Selector {
+	p, _ := selector.NewPattern(`([a-z][a-z0-9-]*)[\s\n\r]*=[\s\n\r]*(".*?"|\d+(?:\.\d+)?|true|false)`)
 	return []selector.Selector{
-		// TODO: complete it
+		p,
 	}
 }
 
@@ -522,8 +530,9 @@ func (_ *compCallArgName) Name() string {
 }
 
 func (_ *compCallArgName) Selectors() []selector.Selector {
+	seli, _ := selector.NewStartEndLeftInner(`([a-z][a-z0-9-]*)\s*`, `=`)
 	return []selector.Selector{
-		// TODO: complete it
+		seli,
 	}
 }
 
@@ -539,7 +548,11 @@ type compCallArgType struct {
 func newCompCallArgType() Rule {
 	return &compCallArgName{
 		scalable: scalable{
-			rules: []Rule{},
+			rules: []Rule{
+				newCompCallStringArg(),
+				newCompCallNumberArg(),
+				newCompCallBoolArg(),
+			},
 		},
 	}
 }
@@ -549,13 +562,103 @@ func (_ *compCallArgType) Name() string {
 }
 
 func (_ *compCallArgType) Selectors() []selector.Selector {
+	p, _ := selector.NewPattern(`[\s\n\r]*(".*?"|\d+(?:\.\d+)?|true|false)`)
 	return []selector.Selector{
-		// TODO: complete it
+		p,
 	}
 }
 
 func (ccat *compCallArgType) Rules() []Rule {
 	return ccat.rules
+}
+
+// Component call's string argument
+type compCallStringArg struct {
+	scalable
+}
+
+func newCompCallStringArg() Rule {
+	return &compCallStringArg{
+		scalable: scalable{
+			rules: []Rule{
+				newCompCallArgValue(),
+			},
+		},
+	}
+}
+
+func (_ *compCallStringArg) Name() string {
+	return "comp-call-string-arg"
+}
+
+func (_ *compCallStringArg) Selectors() []selector.Selector {
+	return []selector.Selector{
+		selector.NewStartEndInner(`[\s\n\r]*"`, `"[\s\n\r]*`),
+	}
+}
+
+func (ccsa *compCallStringArg) Rules() []Rule {
+	return ccsa.rules
+}
+
+// Component call's number argument
+type compCallNumberArg struct {
+	scalable
+}
+
+func newCompCallNumberArg() Rule {
+	return &compCallNumberArg{
+		scalable: scalable{
+			rules: []Rule{
+				newCompCallArgValue(),
+			},
+		},
+	}
+}
+
+func (_ *compCallNumberArg) Name() string {
+	return "comp-call-number-arg"
+}
+
+func (_ *compCallNumberArg) Selectors() []selector.Selector {
+	p, _ := selector.NewPattern(`\d+(?:\.\d+)?`)
+	return []selector.Selector{
+		p,
+	}
+}
+
+func (ccna *compCallNumberArg) Rules() []Rule {
+	return ccna.rules
+}
+
+// Component call's bool argument
+type compCallBoolArg struct {
+	scalable
+}
+
+func newCompCallBoolArg() Rule {
+	return &compCallBoolArg{
+		scalable: scalable{
+			rules: []Rule{
+				newCompCallArgValue(),
+			},
+		},
+	}
+}
+
+func (_ *compCallBoolArg) Name() string {
+	return "comp-call-arg-value"
+}
+
+func (_ *compCallBoolArg) Selectors() []selector.Selector {
+	p, _ := selector.NewPattern(`true|false`)
+	return []selector.Selector{
+		p,
+	}
+}
+
+func (ccba *compCallBoolArg) Rules() []Rule {
+	return ccba.rules
 }
 
 // Component call argument value
@@ -577,7 +680,7 @@ func (_ *compCallArgValue) Name() string {
 
 func (_ *compCallArgValue) Selectors() []selector.Selector {
 	return []selector.Selector{
-		// TODO: complete it
+		selector.NewAll(),
 	}
 }
 
