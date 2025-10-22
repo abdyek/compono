@@ -15,7 +15,9 @@ type Node interface {
 }
 
 func DefaultNode() Node {
-	return &node{}
+	node := &node{}
+	node.SetRule(&rule.Root{})
+	return node
 }
 
 type node struct {

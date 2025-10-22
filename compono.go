@@ -3,6 +3,7 @@ package compono
 import (
 	"io"
 
+	"github.com/umono-cms/compono/ast"
 	"github.com/umono-cms/compono/logger"
 	"github.com/umono-cms/compono/parser"
 	"github.com/umono-cms/compono/renderer"
@@ -43,7 +44,7 @@ type compono struct {
 }
 
 func (c *compono) Convert(source []byte, writer io.Writer) error {
-	root := c.parser.Parse(source)
+	root := c.parser.Parse(source, ast.DefaultNode())
 	return c.renderer.Render(writer, root)
 }
 

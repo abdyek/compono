@@ -10,7 +10,7 @@ import (
 )
 
 type Parser interface {
-	Parse(source []byte) ast.Node
+	Parse(source []byte, node ast.Node) ast.Node
 }
 
 func DefaultParser(log logger.Logger) Parser {
@@ -21,13 +21,11 @@ type parser struct {
 	logger logger.Logger
 }
 
-func (p *parser) Parse(source []byte) ast.Node {
+func (p *parser) Parse(source []byte, root ast.Node) ast.Node {
 	p.logger.Enter(logger.Parser, "Parser started")
-	rootNode := ast.DefaultNode()
-	rootNode.SetRule(&rule.Root{})
-	rootNode = p.parse(source, rootNode, rootNode.Rule().Rules())
+	node := p.parse(source, root, root.Rule().Rules())
 	p.logger.Exit(logger.Parser, "Parser finished")
-	return rootNode
+	return node
 }
 
 func (p *parser) parse(source []byte, parentNode ast.Node, rules []rule.Rule) ast.Node {
