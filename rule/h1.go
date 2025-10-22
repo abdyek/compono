@@ -41,7 +41,7 @@ func newH1Content() Rule {
 			rules: []Rule{
 				newEm(),
 				newStrong(),
-				newCompCall(),
+				newInlineCompCall(),
 				newPlain(),
 			},
 		},

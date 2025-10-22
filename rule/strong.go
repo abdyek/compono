@@ -39,6 +39,7 @@ func newStrongContent() Rule {
 	return &strongContent{
 		scalable: scalable{
 			rules: []Rule{
+				newInlineCompCall(),
 				newPlain(),
 			},
 		},

@@ -36,7 +36,7 @@ func newRootContent() Rule {
 				newH2(),
 				newH1(),
 				newP(),
-				newCompCall(),
+				newBlockCompCall(),
 			},
 		},
 	}

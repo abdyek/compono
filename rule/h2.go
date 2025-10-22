@@ -41,6 +41,7 @@ func newH2Content() Rule {
 			rules: []Rule{
 				newStrong(),
 				newEm(),
+				newInlineCompCall(),
 				newPlain(),
 			},
 		},

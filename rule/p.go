@@ -41,7 +41,7 @@ func newPContent() Rule {
 			rules: []Rule{
 				newStrong(),
 				newEm(),
-				newCompCall(),
+				newInlineCompCall(),
 				newPlain(),
 			},
 		},

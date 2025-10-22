@@ -445,6 +445,38 @@ func (prn *paramRefName) Rules() []Rule {
 	return prn.rules
 }
 
+// Block component call
+type blockCompCall struct {
+	*compCall
+}
+
+func newBlockCompCall() Rule {
+	cc := newCompCall()
+	return &blockCompCall{
+		compCall: cc.(*compCall),
+	}
+}
+
+func (_ *blockCompCall) Name() string {
+	return "block-comp-call"
+}
+
+// Inline component call
+type inlineCompCall struct {
+	*compCall
+}
+
+func newInlineCompCall() Rule {
+	cc := newCompCall()
+	return &inlineCompCall{
+		compCall: cc.(*compCall),
+	}
+}
+
+func (_ *inlineCompCall) Name() string {
+	return "inline-comp-call"
+}
+
 // Component call
 type compCall struct {
 	scalable

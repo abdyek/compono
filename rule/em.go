@@ -39,6 +39,7 @@ func newEmContent() Rule {
 	return &emContent{
 		scalable: scalable{
 			rules: []Rule{
+				newInlineCompCall(),
 				newPlain(),
 			},
 		},
