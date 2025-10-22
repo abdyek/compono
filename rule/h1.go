@@ -2,62 +2,50 @@ package rule
 
 import "github.com/umono-cms/compono/selector"
 
-type h1 struct {
-	scalable
-}
+type h1 struct{}
 
 func newH1() Rule {
-	return &h1{
-		scalable: scalable{
-			rules: []Rule{
-				newH1Content(),
-			},
-		},
-	}
+	return &h1{}
 }
 
-func (h *h1) Name() string {
+func (_ *h1) Name() string {
 	return "h1"
 }
 
-func (h *h1) Selectors() []selector.Selector {
+func (_ *h1) Selectors() []selector.Selector {
 	seSelector, _ := selector.NewStartEnd(`(?m)[ \t]*# `, `\n|\z`)
 	return []selector.Selector{
 		seSelector,
 	}
 }
 
-func (h *h1) Rules() []Rule {
-	return h.rules
-}
-
-type h1Content struct {
-	scalable
-}
-
-func newH1Content() Rule {
-	return &h1Content{
-		scalable: scalable{
-			rules: []Rule{
-				newEm(),
-				newStrong(),
-				newInlineCompCall(),
-				newPlain(),
-			},
-		},
+func (_ *h1) Rules() []Rule {
+	return []Rule{
+		newH1Content(),
 	}
 }
 
-func (*h1Content) Name() string {
+type h1Content struct{}
+
+func newH1Content() Rule {
+	return &h1Content{}
+}
+
+func (_ *h1Content) Name() string {
 	return "h1-content"
 }
 
-func (*h1Content) Selectors() []selector.Selector {
+func (_ *h1Content) Selectors() []selector.Selector {
 	return []selector.Selector{
 		selector.NewStartEndInner(`(?m)[ \t]*# `, `\n|\z`),
 	}
 }
 
-func (h1c *h1Content) Rules() []Rule {
-	return h1c.rules
+func (_ *h1Content) Rules() []Rule {
+	return []Rule{
+		newEm(),
+		newStrong(),
+		newInlineCompCall(),
+		newPlain(),
+	}
 }

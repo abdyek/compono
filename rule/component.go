@@ -3,18 +3,10 @@ package rule
 import "github.com/umono-cms/compono/selector"
 
 // Global and local components definition wrapper
-type compDefWrapper struct {
-	scalable
-}
+type compDefWrapper struct{}
 
 func newCompDefWrapper() Rule {
-	return &compDefWrapper{
-		scalable: scalable{
-			rules: []Rule{
-				newLocalCompDef(),
-			},
-		},
-	}
+	return &compDefWrapper{}
 }
 
 func (_ *compDefWrapper) Name() string {
@@ -27,24 +19,17 @@ func (_ *compDefWrapper) Selectors() []selector.Selector {
 	}
 }
 
-func (cdw *compDefWrapper) Rules() []Rule {
-	return cdw.rules
+func (_ *compDefWrapper) Rules() []Rule {
+	return []Rule{
+		newLocalCompDef(),
+	}
 }
 
 // Local component definition
-type localCompDef struct {
-	scalable
-}
+type localCompDef struct{}
 
 func newLocalCompDef() Rule {
-	return &localCompDef{
-		scalable: scalable{
-			rules: []Rule{
-				newLocalCompDefHead(),
-				newLocalCompDefContent(),
-			},
-		},
-	}
+	return &localCompDef{}
 }
 
 func (_ *localCompDef) Name() string {
@@ -58,24 +43,18 @@ func (_ *localCompDef) Selectors() []selector.Selector {
 	}
 }
 
-func (lcd *localCompDef) Rules() []Rule {
-	return lcd.rules
+func (_ *localCompDef) Rules() []Rule {
+	return []Rule{
+		newLocalCompDefHead(),
+		newLocalCompDefContent(),
+	}
 }
 
 // Local component definition head
-type localCompDefHead struct {
-	scalable
-}
+type localCompDefHead struct{}
 
 func newLocalCompDefHead() Rule {
-	return &localCompDefHead{
-		scalable: scalable{
-			rules: []Rule{
-				newLocalCompName(),
-				newLocalCompParams(),
-			},
-		},
-	}
+	return &localCompDefHead{}
 }
 
 func (_ *localCompDefHead) Name() string {
@@ -89,21 +68,18 @@ func (_ *localCompDefHead) Selectors() []selector.Selector {
 	}
 }
 
-func (lcdh *localCompDefHead) Rules() []Rule {
-	return lcdh.rules
+func (_ *localCompDefHead) Rules() []Rule {
+	return []Rule{
+		newLocalCompName(),
+		newLocalCompParams(),
+	}
 }
 
 // Local component name
-type localCompName struct {
-	scalable
-}
+type localCompName struct{}
 
 func newLocalCompName() Rule {
-	return &localCompName{
-		scalable: scalable{
-			rules: []Rule{},
-		},
-	}
+	return &localCompName{}
 }
 
 func (_ *localCompName) Name() string {
@@ -116,23 +92,15 @@ func (_ *localCompName) Selectors() []selector.Selector {
 	}
 }
 
-func (lcn *localCompName) Rules() []Rule {
-	return lcn.rules
+func (_ *localCompName) Rules() []Rule {
+	return []Rule{}
 }
 
 // Local component parameters
-type localCompParams struct {
-	scalable
-}
+type localCompParams struct{}
 
 func newLocalCompParams() Rule {
-	return &localCompParams{
-		scalable: scalable{
-			rules: []Rule{
-				newLocalCompParam(),
-			},
-		},
-	}
+	return &localCompParams{}
 }
 
 func (_ *localCompParams) Name() string {
@@ -147,24 +115,17 @@ func (_ *localCompParams) Selectors() []selector.Selector {
 	}
 }
 
-func (lcp *localCompParams) Rules() []Rule {
-	return lcp.rules
+func (_ *localCompParams) Rules() []Rule {
+	return []Rule{
+		newLocalCompParam(),
+	}
 }
 
 // Local component parameter
-type localCompParam struct {
-	scalable
-}
+type localCompParam struct{}
 
 func newLocalCompParam() Rule {
-	return &localCompParam{
-		scalable: scalable{
-			rules: []Rule{
-				newLocalCompParamName(),
-				newLocalCompParamType(),
-			},
-		},
-	}
+	return &localCompParam{}
 }
 
 func (_ *localCompParam) Name() string {
@@ -178,21 +139,18 @@ func (_ *localCompParam) Selectors() []selector.Selector {
 	}
 }
 
-func (lcp *localCompParam) Rules() []Rule {
-	return lcp.rules
+func (_ *localCompParam) Rules() []Rule {
+	return []Rule{
+		newLocalCompParamName(),
+		newLocalCompParamType(),
+	}
 }
 
 // Local component parameter name
-type localCompParamName struct {
-	scalable
-}
+type localCompParamName struct{}
 
 func newLocalCompParamName() Rule {
-	return &localCompParamName{
-		scalable: scalable{
-			rules: []Rule{},
-		},
-	}
+	return &localCompParamName{}
 }
 
 func (_ *localCompParamName) Name() string {
@@ -206,25 +164,15 @@ func (_ *localCompParamName) Selectors() []selector.Selector {
 	}
 }
 
-func (lcpn *localCompParamName) Rules() []Rule {
-	return lcpn.rules
+func (_ *localCompParamName) Rules() []Rule {
+	return []Rule{}
 }
 
 // Local component parameter type
-type localCompParamType struct {
-	scalable
-}
+type localCompParamType struct{}
 
 func newLocalCompParamType() Rule {
-	return &localCompParamType{
-		scalable: scalable{
-			rules: []Rule{
-				newLocalCompStringParam(),
-				newLocalCompNumberParam(),
-				newLocalCompBoolParam(),
-			},
-		},
-	}
+	return &localCompParamType{}
 }
 
 func (_ *localCompParamType) Name() string {
@@ -238,23 +186,19 @@ func (_ *localCompParamType) Selectors() []selector.Selector {
 	}
 }
 
-func (lcpt *localCompParamType) Rules() []Rule {
-	return lcpt.rules
+func (_ *localCompParamType) Rules() []Rule {
+	return []Rule{
+		newLocalCompStringParam(),
+		newLocalCompNumberParam(),
+		newLocalCompBoolParam(),
+	}
 }
 
 // Local component's string parameter
-type localCompStringParam struct {
-	scalable
-}
+type localCompStringParam struct{}
 
 func newLocalCompStringParam() Rule {
-	return &localCompStringParam{
-		scalable: scalable{
-			rules: []Rule{
-				newLocalCompParamDefaValue(),
-			},
-		},
-	}
+	return &localCompStringParam{}
 }
 
 func (_ *localCompStringParam) Name() string {
@@ -267,23 +211,17 @@ func (_ *localCompStringParam) Selectors() []selector.Selector {
 	}
 }
 
-func (lcsp *localCompStringParam) Rules() []Rule {
-	return lcsp.rules
+func (_ *localCompStringParam) Rules() []Rule {
+	return []Rule{
+		newLocalCompParamDefaValue(),
+	}
 }
 
 // Local component's number parameter
-type localCompNumberParam struct {
-	scalable
-}
+type localCompNumberParam struct{}
 
 func newLocalCompNumberParam() Rule {
-	return &localCompNumberParam{
-		scalable: scalable{
-			rules: []Rule{
-				newLocalCompParamDefaValue(),
-			},
-		},
-	}
+	return &localCompNumberParam{}
 }
 
 func (_ *localCompNumberParam) Name() string {
@@ -297,23 +235,17 @@ func (_ *localCompNumberParam) Selectors() []selector.Selector {
 	}
 }
 
-func (lcnp *localCompNumberParam) Rules() []Rule {
-	return lcnp.rules
+func (_ *localCompNumberParam) Rules() []Rule {
+	return []Rule{
+		newLocalCompParamDefaValue(),
+	}
 }
 
 // Local component's bool parameter
-type localCompBoolParam struct {
-	scalable
-}
+type localCompBoolParam struct{}
 
 func newLocalCompBoolParam() Rule {
-	return &localCompBoolParam{
-		scalable: scalable{
-			rules: []Rule{
-				newLocalCompParamDefaValue(),
-			},
-		},
-	}
+	return &localCompBoolParam{}
 }
 
 func (_ *localCompBoolParam) Name() string {
@@ -327,21 +259,17 @@ func (_ *localCompBoolParam) Selectors() []selector.Selector {
 	}
 }
 
-func (lcbp *localCompBoolParam) Rules() []Rule {
-	return lcbp.rules
+func (_ *localCompBoolParam) Rules() []Rule {
+	return []Rule{
+		newLocalCompParamDefaValue(),
+	}
 }
 
 // Local component parameter default value
-type localCompParamDefaValue struct {
-	scalable
-}
+type localCompParamDefaValue struct{}
 
 func newLocalCompParamDefaValue() Rule {
-	return &localCompParamDefaValue{
-		scalable: scalable{
-			rules: []Rule{},
-		},
-	}
+	return &localCompParamDefaValue{}
 }
 
 func (_ *localCompParamDefaValue) Name() string {
@@ -354,23 +282,15 @@ func (_ *localCompParamDefaValue) Selectors() []selector.Selector {
 	}
 }
 
-func (lcpdf *localCompParamDefaValue) Rules() []Rule {
-	return lcpdf.rules
+func (_ *localCompParamDefaValue) Rules() []Rule {
+	return []Rule{}
 }
 
 // Local component definition content
-type localCompDefContent struct {
-	scalable
-}
+type localCompDefContent struct{}
 
 func newLocalCompDefContent() Rule {
-	return &localCompDefContent{
-		scalable: scalable{
-			rules: []Rule{
-				newParamRef(),
-			},
-		},
-	}
+	return &localCompDefContent{}
 }
 
 func (_ *localCompDefContent) Name() string {
@@ -384,23 +304,17 @@ func (_ *localCompDefContent) Selectors() []selector.Selector {
 	}
 }
 
-func (lcdc *localCompDefContent) Rules() []Rule {
-	return lcdc.rules
+func (_ *localCompDefContent) Rules() []Rule {
+	return []Rule{
+		newParamRef(),
+	}
 }
 
 // Parameter reference
-type paramRef struct {
-	scalable
-}
+type paramRef struct{}
 
 func newParamRef() Rule {
-	return &paramRef{
-		scalable: scalable{
-			rules: []Rule{
-				newParamRefName(),
-			},
-		},
-	}
+	return &paramRef{}
 }
 
 func (_ *paramRef) Name() string {
@@ -414,21 +328,17 @@ func (_ *paramRef) Selectors() []selector.Selector {
 	}
 }
 
-func (pr *paramRef) Rules() []Rule {
-	return pr.rules
+func (_ *paramRef) Rules() []Rule {
+	return []Rule{
+		newParamRefName(),
+	}
 }
 
 // Parameter reference's name
-type paramRefName struct {
-	scalable
-}
+type paramRefName struct{}
 
 func newParamRefName() Rule {
-	return &paramRefName{
-		scalable: scalable{
-			rules: []Rule{},
-		},
-	}
+	return &paramRefName{}
 }
 
 func (_ *paramRefName) Name() string {
@@ -441,8 +351,8 @@ func (_ *paramRefName) Selectors() []selector.Selector {
 	}
 }
 
-func (prn *paramRefName) Rules() []Rule {
-	return prn.rules
+func (_ *paramRefName) Rules() []Rule {
+	return []Rule{}
 }
 
 // Block component call
@@ -478,19 +388,10 @@ func (_ *inlineCompCall) Name() string {
 }
 
 // Component call
-type compCall struct {
-	scalable
-}
+type compCall struct{}
 
 func newCompCall() Rule {
-	return &compCall{
-		scalable: scalable{
-			rules: []Rule{
-				newCompCallName(),
-				newCompCallArgs(),
-			},
-		},
-	}
+	return &compCall{}
 }
 
 func (_ *compCall) Name() string {
@@ -504,21 +405,18 @@ func (_ *compCall) Selectors() []selector.Selector {
 	}
 }
 
-func (cc *compCall) Rules() []Rule {
-	return cc.rules
+func (_ *compCall) Rules() []Rule {
+	return []Rule{
+		newCompCallName(),
+		newCompCallArgs(),
+	}
 }
 
 // Component call name
-type compCallName struct {
-	scalable
-}
+type compCallName struct{}
 
 func newCompCallName() Rule {
-	return &compCallName{
-		scalable: scalable{
-			rules: []Rule{},
-		},
-	}
+	return &compCallName{}
 }
 
 func (_ *compCallName) Name() string {
@@ -537,23 +435,15 @@ func (_ *compCallName) Selectors() []selector.Selector {
 	}
 }
 
-func (ccn *compCallName) Rules() []Rule {
-	return ccn.rules
+func (_ *compCallName) Rules() []Rule {
+	return []Rule{}
 }
 
 // Commponent call arguments
-type compCallArgs struct {
-	scalable
-}
+type compCallArgs struct{}
 
 func newCompCallArgs() Rule {
-	return &compCallArgs{
-		scalable: scalable{
-			rules: []Rule{
-				newCompCallArg(),
-			},
-		},
-	}
+	return &compCallArgs{}
 }
 
 func (_ *compCallArgs) Name() string {
@@ -567,24 +457,17 @@ func (_ *compCallArgs) Selectors() []selector.Selector {
 	}
 }
 
-func (cca *compCallArgs) Rules() []Rule {
-	return cca.rules
+func (_ *compCallArgs) Rules() []Rule {
+	return []Rule{
+		newCompCallArg(),
+	}
 }
 
 // Component call argument
-type compCallArg struct {
-	scalable
-}
+type compCallArg struct{}
 
 func newCompCallArg() Rule {
-	return &compCallArg{
-		scalable: scalable{
-			rules: []Rule{
-				newCompCallArgName(),
-				newCompCallArgType(),
-			},
-		},
-	}
+	return &compCallArg{}
 }
 
 func (_ *compCallArg) Name() string {
@@ -598,21 +481,18 @@ func (_ *compCallArg) Selectors() []selector.Selector {
 	}
 }
 
-func (cca *compCallArg) Rules() []Rule {
-	return cca.rules
+func (_ *compCallArg) Rules() []Rule {
+	return []Rule{
+		newCompCallArgName(),
+		newCompCallArgType(),
+	}
 }
 
 // Component call argument name
-type compCallArgName struct {
-	scalable
-}
+type compCallArgName struct{}
 
 func newCompCallArgName() Rule {
-	return &compCallArgName{
-		scalable: scalable{
-			rules: []Rule{},
-		},
-	}
+	return &compCallArgName{}
 }
 
 func (_ *compCallArgName) Name() string {
@@ -626,25 +506,15 @@ func (_ *compCallArgName) Selectors() []selector.Selector {
 	}
 }
 
-func (ccan *compCallArgName) Rules() []Rule {
-	return ccan.rules
+func (_ *compCallArgName) Rules() []Rule {
+	return []Rule{}
 }
 
 // Component call argument type
-type compCallArgType struct {
-	scalable
-}
+type compCallArgType struct{}
 
 func newCompCallArgType() Rule {
-	return &compCallArgName{
-		scalable: scalable{
-			rules: []Rule{
-				newCompCallStringArg(),
-				newCompCallNumberArg(),
-				newCompCallBoolArg(),
-			},
-		},
-	}
+	return &compCallArgName{}
 }
 
 func (_ *compCallArgType) Name() string {
@@ -658,23 +528,19 @@ func (_ *compCallArgType) Selectors() []selector.Selector {
 	}
 }
 
-func (ccat *compCallArgType) Rules() []Rule {
-	return ccat.rules
+func (_ *compCallArgType) Rules() []Rule {
+	return []Rule{
+		newCompCallStringArg(),
+		newCompCallNumberArg(),
+		newCompCallBoolArg(),
+	}
 }
 
 // Component call's string argument
-type compCallStringArg struct {
-	scalable
-}
+type compCallStringArg struct{}
 
 func newCompCallStringArg() Rule {
-	return &compCallStringArg{
-		scalable: scalable{
-			rules: []Rule{
-				newCompCallArgValue(),
-			},
-		},
-	}
+	return &compCallStringArg{}
 }
 
 func (_ *compCallStringArg) Name() string {
@@ -687,23 +553,17 @@ func (_ *compCallStringArg) Selectors() []selector.Selector {
 	}
 }
 
-func (ccsa *compCallStringArg) Rules() []Rule {
-	return ccsa.rules
+func (_ *compCallStringArg) Rules() []Rule {
+	return []Rule{
+		newCompCallArgValue(),
+	}
 }
 
 // Component call's number argument
-type compCallNumberArg struct {
-	scalable
-}
+type compCallNumberArg struct{}
 
 func newCompCallNumberArg() Rule {
-	return &compCallNumberArg{
-		scalable: scalable{
-			rules: []Rule{
-				newCompCallArgValue(),
-			},
-		},
-	}
+	return &compCallNumberArg{}
 }
 
 func (_ *compCallNumberArg) Name() string {
@@ -717,23 +577,17 @@ func (_ *compCallNumberArg) Selectors() []selector.Selector {
 	}
 }
 
-func (ccna *compCallNumberArg) Rules() []Rule {
-	return ccna.rules
+func (_ *compCallNumberArg) Rules() []Rule {
+	return []Rule{
+		newCompCallArgValue(),
+	}
 }
 
 // Component call's bool argument
-type compCallBoolArg struct {
-	scalable
-}
+type compCallBoolArg struct{}
 
 func newCompCallBoolArg() Rule {
-	return &compCallBoolArg{
-		scalable: scalable{
-			rules: []Rule{
-				newCompCallArgValue(),
-			},
-		},
-	}
+	return &compCallBoolArg{}
 }
 
 func (_ *compCallBoolArg) Name() string {
@@ -747,21 +601,17 @@ func (_ *compCallBoolArg) Selectors() []selector.Selector {
 	}
 }
 
-func (ccba *compCallBoolArg) Rules() []Rule {
-	return ccba.rules
+func (_ *compCallBoolArg) Rules() []Rule {
+	return []Rule{
+		newCompCallArgValue(),
+	}
 }
 
 // Component call argument value
-type compCallArgValue struct {
-	scalable
-}
+type compCallArgValue struct{}
 
 func newCompCallArgValue() Rule {
-	return &compCallArgValue{
-		scalable: scalable{
-			rules: []Rule{},
-		},
-	}
+	return &compCallArgValue{}
 }
 
 func (_ *compCallArgValue) Name() string {
@@ -774,6 +624,6 @@ func (_ *compCallArgValue) Selectors() []selector.Selector {
 	}
 }
 
-func (ccav *compCallArgValue) Rules() []Rule {
-	return ccav.rules
+func (_ *compCallArgValue) Rules() []Rule {
+	return []Rule{}
 }

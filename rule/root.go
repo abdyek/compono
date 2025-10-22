@@ -2,11 +2,9 @@ package rule
 
 import "github.com/umono-cms/compono/selector"
 
-type Root struct {
-	scalable
-}
+type Root struct{}
 
-func (*Root) Name() string {
+func (_ *Root) Name() string {
 	return "root"
 }
 
@@ -14,44 +12,38 @@ func newRoot() Rule {
 	return &Root{}
 }
 
-func (*Root) Selectors() []selector.Selector {
+func (_ *Root) Selectors() []selector.Selector {
 	return []selector.Selector{}
 }
 
-func (*Root) Rules() []Rule {
+func (_ *Root) Rules() []Rule {
 	return []Rule{
 		newRootContent(),
 		newCompDefWrapper(),
 	}
 }
 
-type rootContent struct {
-	scalable
-}
+type rootContent struct{}
 
 func newRootContent() Rule {
-	return &rootContent{
-		scalable: scalable{
-			rules: []Rule{
-				newH2(),
-				newH1(),
-				newP(),
-				newBlockCompCall(),
-			},
-		},
-	}
+	return &rootContent{}
 }
 
-func (*rootContent) Name() string {
+func (_ *rootContent) Name() string {
 	return "root-content"
 }
 
-func (*rootContent) Selectors() []selector.Selector {
+func (_ *rootContent) Selectors() []selector.Selector {
 	return []selector.Selector{
 		selector.NewUntilFirstMatch(`\n~\s+[A-Z0-9]+(?:_[A-Z0-9]+)*\s*\n`),
 	}
 }
 
-func (rc *rootContent) Rules() []Rule {
-	return rc.rules
+func (_ *rootContent) Rules() []Rule {
+	return []Rule{
+		newH2(),
+		newH1(),
+		newP(),
+		newBlockCompCall(),
+	}
 }

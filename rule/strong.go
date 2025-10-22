@@ -2,48 +2,33 @@ package rule
 
 import "github.com/umono-cms/compono/selector"
 
-type strong struct {
-	scalable
-}
+type strong struct{}
 
 func newStrong() Rule {
-	return &strong{
-		scalable: scalable{
-			rules: []Rule{
-				newStrongContent(),
-			},
-		},
-	}
+	return &strong{}
 }
 
-func (s *strong) Name() string {
+func (_ *strong) Name() string {
 	return "strong"
 }
 
-func (s *strong) Selectors() []selector.Selector {
+func (_ *strong) Selectors() []selector.Selector {
 	seSelector, _ := selector.NewStartEnd(`\*\*[^\s]`, `[^\s]\*\*`)
 	return []selector.Selector{
 		seSelector,
 	}
 }
 
-func (s *strong) Rules() []Rule {
-	return s.rules
+func (_ *strong) Rules() []Rule {
+	return []Rule{
+		newStrongContent(),
+	}
 }
 
-type strongContent struct {
-	scalable
-}
+type strongContent struct{}
 
 func newStrongContent() Rule {
-	return &strongContent{
-		scalable: scalable{
-			rules: []Rule{
-				newInlineCompCall(),
-				newPlain(),
-			},
-		},
-	}
+	return &strongContent{}
 }
 
 func (sc *strongContent) Name() string {
@@ -56,6 +41,9 @@ func (sc *strongContent) Selectors() []selector.Selector {
 	}
 }
 
-func (sc *strongContent) Rules() []Rule {
-	return sc.rules
+func (_ *strongContent) Rules() []Rule {
+	return []Rule{
+		newInlineCompCall(),
+		newPlain(),
+	}
 }

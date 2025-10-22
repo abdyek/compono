@@ -6,19 +6,6 @@ type Rule interface {
 	Name() string
 	Selectors() []selector.Selector
 	Rules() []Rule
-	scalability
-}
-
-type scalability interface {
-	RewriteRules([]Rule)
-}
-
-type scalable struct {
-	rules []Rule
-}
-
-func (s *scalable) RewriteRules(rules []Rule) {
-	s.rules = rules
 }
 
 func OverrideRules(rules []Rule, dominantRules []Rule) []Rule {
