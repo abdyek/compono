@@ -366,8 +366,9 @@ type localCompDefContent struct {
 func newLocalCompDefContent() Rule {
 	return &localCompDefContent{
 		scalable: scalable{
-			// NOTE: It must be BLOCK or INLINE
-			rules: []Rule{},
+			rules: []Rule{
+				newParamRef(),
+			},
 		},
 	}
 }
@@ -385,6 +386,63 @@ func (_ *localCompDefContent) Selectors() []selector.Selector {
 
 func (lcdc *localCompDefContent) Rules() []Rule {
 	return lcdc.rules
+}
+
+// Parameter reference
+type paramRef struct {
+	scalable
+}
+
+func newParamRef() Rule {
+	return &paramRef{
+		scalable: scalable{
+			rules: []Rule{
+				newParamRefName(),
+			},
+		},
+	}
+}
+
+func (_ *paramRef) Name() string {
+	return "param-ref"
+}
+
+func (_ *paramRef) Selectors() []selector.Selector {
+	p, _ := selector.NewPattern(`\$[a-z][a-z0-9-]*`)
+	return []selector.Selector{
+		p,
+	}
+}
+
+func (pr *paramRef) Rules() []Rule {
+	return pr.rules
+}
+
+// Parameter reference's name
+type paramRefName struct {
+	scalable
+}
+
+func newParamRefName() Rule {
+	return &paramRefName{
+		scalable: scalable{
+			rules: []Rule{},
+		},
+	}
+}
+
+func (_ *paramRefName) Name() string {
+	return "param-ref-name"
+}
+
+func (_ *paramRefName) Selectors() []selector.Selector {
+	return []selector.Selector{
+		selector.NewStartEndInner(`\$`, `\z`),
+	}
+}
+
+func (prn *paramRefName) Rules() []Rule {
+	return prn.rules
 }
 
 // Component call
@@ -408,7 +466,7 @@ func (_ *compCall) Name() string {
 }
 
 func (_ *compCall) Selectors() []selector.Selector {
-	seSelector, _ := selector.NewStartEnd(`\{\{\s*`, `\s*\}\}`)
+	seSelector, _ := selector.NewStartEnd(`\{\{\s*[A-Z0-9]+(?:_[A-Z0-9]+)`, `\s*\}\}`)
 	return []selector.Selector{
 		seSelector,
 	}
