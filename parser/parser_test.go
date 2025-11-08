@@ -25,59 +25,59 @@ func (s *parserTestSuite) TestParse() {
 	}{
 		{
 			source: `AAABBBCCC`,
-			node: mocks.NewNode(
-				mocks.NewRule("abc-wrapper",
-					[]selector.Selector{
-						mocks.NewSelector(func([]byte, ...[2]int) [][2]int {
-							return [][2]int{[2]int{0, 9}}
-						}),
-					},
-					[]rule.Rule{
-						mocks.NewRule("a", []selector.Selector{
-							mocks.NewSelector(func([]byte, ...[2]int) [][2]int {
-								return [][2]int{[2]int{0, 3}}
-							}),
-						}, nil),
-						mocks.NewRule("b", []selector.Selector{
-							mocks.NewSelector(func([]byte, ...[2]int) [][2]int {
-								return [][2]int{[2]int{3, 6}}
-							}),
-						}, nil),
-						mocks.NewRule("c", []selector.Selector{
-							mocks.NewSelector(func([]byte, ...[2]int) [][2]int {
-								return [][2]int{[2]int{6, 9}}
-							}),
-						}, nil),
-					}), nil, nil, nil,
-			),
-			result: mocks.NewNode(nil, nil, []ast.Node{
-				mocks.NewNode(
-					mocks.NewRule("a", []selector.Selector{
+			node: mocks.NewNodeBuilder().WithRule(
+				mocks.NewRuleBuilder().WithName("abc-wrapper").WithSelectors([]selector.Selector{
+					mocks.NewSelector(func([]byte, ...[2]int) [][2]int {
+						return [][2]int{[2]int{0, 9}}
+					}),
+				}).WithRules([]rule.Rule{
+					mocks.NewRuleBuilder().WithName("a").WithSelectors([]selector.Selector{
 						mocks.NewSelector(func([]byte, ...[2]int) [][2]int {
 							return [][2]int{[2]int{0, 3}}
 						}),
-					}, nil), nil, nil, nil,
-				),
-				mocks.NewNode(
-					mocks.NewRule("b", []selector.Selector{
+					}).Build(),
+					mocks.NewRuleBuilder().WithName("b").WithSelectors([]selector.Selector{
 						mocks.NewSelector(func([]byte, ...[2]int) [][2]int {
 							return [][2]int{[2]int{3, 6}}
 						}),
-					}, nil), nil, nil, nil,
-				),
-				mocks.NewNode(
-					mocks.NewRule("c", []selector.Selector{
+					}).Build(),
+					mocks.NewRuleBuilder().WithName("c").WithSelectors([]selector.Selector{
 						mocks.NewSelector(func([]byte, ...[2]int) [][2]int {
 							return [][2]int{[2]int{6, 9}}
 						}),
-					}, nil), nil, nil, nil,
-				),
-			}, []byte(`AAABBBCCC`)),
+					}).Build(),
+				}).Build(),
+			).Build(),
+			result: mocks.NewNodeBuilder().WithChildren(
+				[]ast.Node{
+					mocks.NewNodeBuilder().WithRule(
+						mocks.NewRuleBuilder().WithName("a").WithSelectors([]selector.Selector{
+							mocks.NewSelector(func([]byte, ...[2]int) [][2]int {
+								return [][2]int{[2]int{0, 3}}
+							}),
+						}).Build(),
+					).Build(),
+					mocks.NewNodeBuilder().WithRule(
+						mocks.NewRuleBuilder().WithName("b").WithSelectors([]selector.Selector{
+							mocks.NewSelector(func([]byte, ...[2]int) [][2]int {
+								return [][2]int{[2]int{3, 6}}
+							}),
+						}).Build(),
+					).Build(),
+					mocks.NewNodeBuilder().WithRule(
+						mocks.NewRuleBuilder().WithName("c").WithSelectors([]selector.Selector{
+							mocks.NewSelector(func([]byte, ...[2]int) [][2]int {
+								return [][2]int{[2]int{6, 9}}
+							}),
+						}).Build(),
+					).Build(),
+				},
+			).WithRaw([]byte(`AAABBBCCC`)).Build(),
 		},
 		// TODO: increase test cases
 	} {
-		log := logger.NewLogger()
-		p := DefaultParser(log)
+		// TODO: Improve it
+		p := DefaultParser(logger.NewLogger())
 		resNode := p.Parse([]byte(tt.source), tt.node)
 		assert.Equal(s.T(), 3, len(resNode.Children()))
 	}

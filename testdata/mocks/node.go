@@ -12,7 +12,7 @@ type node struct {
 	raw      []byte
 }
 
-func NewNode(rule rulepkg.Rule, parent ast.Node, children []ast.Node, raw []byte) ast.Node {
+func newNode(rule rulepkg.Rule, parent ast.Node, children []ast.Node, raw []byte) ast.Node {
 	return &node{
 		rule:     rule,
 		parent:   parent,
@@ -58,4 +58,39 @@ func (n *node) Raw() []byte {
 
 func (n *node) SetRaw(raw []byte) {
 	n.raw = raw
+}
+
+type nodeBuilder struct {
+	rule     rulepkg.Rule
+	parent   ast.Node
+	children []ast.Node
+	raw      []byte
+}
+
+func NewNodeBuilder() *nodeBuilder {
+	return &nodeBuilder{}
+}
+
+func (b *nodeBuilder) WithRule(rule rulepkg.Rule) *nodeBuilder {
+	b.rule = rule
+	return b
+}
+
+func (b *nodeBuilder) WithParent(parent ast.Node) *nodeBuilder {
+	b.parent = parent
+	return b
+}
+
+func (b *nodeBuilder) WithChildren(children []ast.Node) *nodeBuilder {
+	b.children = children
+	return b
+}
+
+func (b *nodeBuilder) WithRaw(raw []byte) *nodeBuilder {
+	b.raw = raw
+	return b
+}
+
+func (b *nodeBuilder) Build() ast.Node {
+	return newNode(b.rule, b.parent, b.children, b.raw)
 }
