@@ -23,12 +23,14 @@ type parser struct {
 
 func (p *parser) Parse(source []byte, root ast.Node) ast.Node {
 	p.logger.Enter(logger.Parser, "Parser started")
-	node := p.parse(source, root, root.Rule().Rules())
+	node := p.parse(source, root)
 	p.logger.Exit(logger.Parser, "Parser finished")
 	return node
 }
 
-func (p *parser) parse(source []byte, parentNode ast.Node, rules []rule.Rule) ast.Node {
+func (p *parser) parse(source []byte, parentNode ast.Node) ast.Node {
+
+	parentNode.SetRaw(source)
 
 	p.logger.Enter(logger.Parser, "Parser started for %s", parentNode.Rule().Name())
 
@@ -36,7 +38,7 @@ func (p *parser) parse(source []byte, parentNode ast.Node, rules []rule.Rule) as
 
 	found := []foundRule{}
 
-	for _, rule := range rules {
+	for _, rule := range parentNode.Rule().Rules() {
 
 		p.logger.Enter(logger.Parser|logger.Detail, "Started searching for selectors of %s rule", logger.Colorize(logger.Bold(rule.Name()), logger.Green))
 
@@ -93,11 +95,12 @@ func (p *parser) parse(source []byte, parentNode ast.Node, rules []rule.Rule) as
 		nodeForm := ast.DefaultNode()
 		nodeForm.SetRule(f.rule)
 		nodeForm.SetRaw(source[f.start:f.end])
+		nodeForm.SetParent(parentNode)
 		children = append(children, nodeForm)
 	}
 
 	for i := 0; i < len(children); i++ {
-		children[i] = p.parse(children[i].Raw(), children[i], children[i].Rule().Rules())
+		children[i] = p.parse(children[i].Raw(), children[i])
 	}
 
 	parentNode.SetChildren(children)
