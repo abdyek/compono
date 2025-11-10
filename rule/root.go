@@ -19,7 +19,7 @@ func (_ *Root) Selectors() []selector.Selector {
 func (_ *Root) Rules() []Rule {
 	return []Rule{
 		newRootContent(),
-		newCompDefWrapper(),
+		newLocalCompDefWrapper(),
 	}
 }
 

@@ -2,24 +2,24 @@ package rule
 
 import "github.com/umono-cms/compono/selector"
 
-// Global and local components definition wrapper
-type compDefWrapper struct{}
+// Local components definition wrapper
+type localCompDefWrapper struct{}
 
-func newCompDefWrapper() Rule {
-	return &compDefWrapper{}
+func newLocalCompDefWrapper() Rule {
+	return &localCompDefWrapper{}
 }
 
-func (_ *compDefWrapper) Name() string {
-	return "comp-def-wrapper"
+func (_ *localCompDefWrapper) Name() string {
+	return "local-comp-def-wrapper"
 }
 
-func (_ *compDefWrapper) Selectors() []selector.Selector {
+func (_ *localCompDefWrapper) Selectors() []selector.Selector {
 	return []selector.Selector{
 		selector.NewSinceFirstMatchInner(`\n*~\s+[A-Z0-9]+(?:_[A-Z0-9]+)*\s*\n`),
 	}
 }
 
-func (_ *compDefWrapper) Rules() []Rule {
+func (_ *localCompDefWrapper) Rules() []Rule {
 	return []Rule{
 		newLocalCompDef(),
 	}
