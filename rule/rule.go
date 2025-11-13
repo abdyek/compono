@@ -7,27 +7,3 @@ type Rule interface {
 	Selectors() []selector.Selector
 	Rules() []Rule
 }
-
-func OverrideRules(rules []Rule, dominantRules []Rule) []Rule {
-	overridden := append([]Rule{}, rules...)
-
-	for _, dc := range dominantRules {
-		i, _ := FindRuleIndexByName(overridden, dc.Name())
-		if i == -1 {
-			overridden = append(overridden, dc)
-		} else {
-			overridden[i] = dc
-		}
-	}
-
-	return overridden
-}
-
-func FindRuleIndexByName(rules []Rule, name string) (int, Rule) {
-	for i, r := range rules {
-		if r.Name() == name {
-			return i, r
-		}
-	}
-	return -1, nil
-}

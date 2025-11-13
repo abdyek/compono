@@ -2,21 +2,21 @@ package rule
 
 import "github.com/umono-cms/compono/selector"
 
-type Root struct{}
+type root struct{}
 
-func (_ *Root) Name() string {
+func (_ *root) Name() string {
 	return "root"
 }
 
-func newRoot() Rule {
-	return &Root{}
+func NewRoot() Rule {
+	return &root{}
 }
 
-func (_ *Root) Selectors() []selector.Selector {
+func (_ *root) Selectors() []selector.Selector {
 	return []selector.Selector{}
 }
 
-func (_ *Root) Rules() []Rule {
+func (_ *root) Rules() []Rule {
 	return []Rule{
 		newRootContent(),
 		newLocalCompDefWrapper(),

@@ -14,10 +14,14 @@ type Node interface {
 	SetRaw([]byte)
 }
 
-func DefaultNode() Node {
-	node := &node{}
-	node.SetRule(&rule.Root{})
+func DefaultRootNode() Node {
+	node := DefaultEmptyNode()
+	node.SetRule(rule.NewRoot())
 	return node
+}
+
+func DefaultEmptyNode() Node {
+	return &node{}
 }
 
 type node struct {

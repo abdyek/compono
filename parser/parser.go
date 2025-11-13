@@ -92,7 +92,7 @@ func (p *parser) parse(source []byte, parentNode ast.Node) ast.Node {
 	children := []ast.Node{}
 
 	for _, f := range found {
-		nodeForm := ast.DefaultNode()
+		nodeForm := ast.DefaultEmptyNode()
 		nodeForm.SetRule(f.rule)
 		nodeForm.SetRaw(source[f.start:f.end])
 		nodeForm.SetParent(parentNode)
