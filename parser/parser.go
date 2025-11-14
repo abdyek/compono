@@ -10,7 +10,7 @@ import (
 )
 
 type Parser interface {
-	Parse(source []byte) ast.Node
+	Parse(source []byte, node ast.Node) ast.Node
 }
 
 func DefaultParser(log logger.Logger) Parser {
@@ -21,26 +21,26 @@ type parser struct {
 	logger logger.Logger
 }
 
-func (p *parser) Parse(source []byte) ast.Node {
+func (p *parser) Parse(source []byte, root ast.Node) ast.Node {
 	p.logger.Enter(logger.Parser, "Parser started")
-	rootNode := ast.DefaultNode()
-	rootNode.SetRule(&rule.Root{})
-	rootNode = p.parse(source, rootNode, rootNode.Rule().Rules())
-	p.logger.Exit(logger.Parser, "Parser stopped")
-	return rootNode
+	node := p.parse(source, root)
+	p.logger.Exit(logger.Parser, "Parser finished")
+	return node
 }
 
-func (p *parser) parse(source []byte, parentNode ast.Node, rules []rule.Rule) ast.Node {
+func (p *parser) parse(source []byte, parentNode ast.Node) ast.Node {
 
-	p.logger.Enter(logger.Parser, "Started for %s", parentNode.Rule().Name())
+	parentNode.SetRaw(source)
+
+	p.logger.Enter(logger.Parser, "Parser started for %s", parentNode.Rule().Name())
 
 	alreadySelected := [][2]int{}
 
 	found := []foundRule{}
 
-	for _, rule := range rules {
+	for _, rule := range parentNode.Rule().Rules() {
 
-		p.logger.Enter(logger.Parser|logger.Detail, "Started searching for selectors of %s rule", rule.Name())
+		p.logger.Enter(logger.Parser|logger.Detail, "Started searching for selectors of %s rule", logger.Colorize(logger.Bold(rule.Name()), logger.Green))
 
 		for _, slctr := range rule.Selectors() {
 
@@ -49,7 +49,7 @@ func (p *parser) parse(source []byte, parentNode ast.Node, rules []rule.Rule) as
 				slctrName = n.Name()
 			}
 
-			p.logger.Log(logger.Parser|logger.Detail, "Started searching for %s selector", slctrName)
+			p.logger.Log(logger.Parser|logger.Detail, "Started searching for %s selector", logger.Colorize(logger.Bold(slctrName), logger.Green))
 
 			sort.Slice(alreadySelected, func(i, j int) bool {
 				return alreadySelected[i][0] < alreadySelected[j][0]
@@ -57,7 +57,20 @@ func (p *parser) parse(source []byte, parentNode ast.Node, rules []rule.Rule) as
 
 			indexes := slctr.Select(source, alreadySelected...)
 
-			p.logger.Log(logger.Parser|logger.Detail, "Find indexes %v for the source %s", indexes, source)
+			// TODO: Move it into the logger msg function. Because Parser don't need ordered indexes.
+			sort.Slice(indexes, func(i, j int) bool {
+				return indexes[i][0] < indexes[j][0]
+			})
+			// ^^^^ here
+
+			if len(indexes) != 0 {
+				p.logger.Log(logger.Parser|logger.Detail, "Found indexes %v", indexes)
+				p.logger.LogMultiline(logger.Parser|logger.Detail, "Source:\n%s", logger.Highlight(source, indexes, func(s string) string {
+					return logger.Colorize(s, logger.Yellow)
+				}))
+			} else {
+				p.logger.Log(logger.Parser|logger.Detail, "No indexes found")
+			}
 
 			for _, index := range indexes {
 				found = append(found, foundRule{
@@ -69,7 +82,7 @@ func (p *parser) parse(source []byte, parentNode ast.Node, rules []rule.Rule) as
 			}
 		}
 
-		p.logger.Exit(logger.Parser|logger.Detail, "Stopped searching for selectors of %s rule", rule.Name())
+		p.logger.Exit(logger.Parser|logger.Detail, "Finished searching for selectors of %s rule", logger.Colorize(logger.Bold(rule.Name()), logger.Green))
 	}
 
 	sort.Slice(found, func(i, j int) bool {
@@ -79,19 +92,20 @@ func (p *parser) parse(source []byte, parentNode ast.Node, rules []rule.Rule) as
 	children := []ast.Node{}
 
 	for _, f := range found {
-		nodeForm := ast.DefaultNode()
+		nodeForm := ast.DefaultEmptyNode()
 		nodeForm.SetRule(f.rule)
 		nodeForm.SetRaw(source[f.start:f.end])
+		nodeForm.SetParent(parentNode)
 		children = append(children, nodeForm)
 	}
 
 	for i := 0; i < len(children); i++ {
-		children[i] = p.parse(children[i].Raw(), children[i], children[i].Rule().Rules())
+		children[i] = p.parse(children[i].Raw(), children[i])
 	}
 
 	parentNode.SetChildren(children)
 
-	p.logger.Exit(logger.Parser, "[PARSER] Parser stopped for %s", parentNode.Rule().Name())
+	p.logger.Exit(logger.Parser, "Parser finished parsing for %s", parentNode.Rule().Name())
 
 	return parentNode
 }

@@ -4,24 +4,22 @@ import (
 	"github.com/umono-cms/compono/selector"
 )
 
-type plain struct {
-	scalable
-}
+type plain struct{}
 
 func newPlain() Rule {
 	return &plain{}
 }
 
-func (*plain) Name() string {
+func (_ *plain) Name() string {
 	return "plain"
 }
 
-func (*plain) Selectors() []selector.Selector {
+func (_ *plain) Selectors() []selector.Selector {
 	return []selector.Selector{
 		selector.NewAll(),
 	}
 }
 
-func (*plain) Rules() []Rule {
+func (_ *plain) Rules() []Rule {
 	return []Rule{}
 }

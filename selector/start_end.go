@@ -1,67 +1,90 @@
 package selector
 
 import (
+	"fmt"
 	"regexp"
+
+	"github.com/umono-cms/compono/util"
 )
 
 type startEnd struct {
-	startWith string
-	endWith   string
+	reStart *regexp.Regexp
+	reEnd   *regexp.Regexp
 }
 
-func NewStartEnd(startWith, endWith string) *startEnd {
-	return &startEnd{
-		startWith: startWith,
-		endWith:   endWith,
+func NewStartEnd(startWith, endWith string) (Selector, error) {
+
+	reStart, err := regexp.Compile(startWith)
+	if err != nil {
+		return nil, fmt.Errorf("invalid start regex: %w", err)
 	}
+
+	reEnd, err := regexp.Compile(endWith)
+	if err != nil {
+		return nil, fmt.Errorf("invalid end regex: %w", err)
+	}
+
+	return &startEnd{
+		reStart: reStart,
+		reEnd:   reEnd,
+	}, nil
 }
 
 func (_ *startEnd) Name() string {
 	return "start_end"
 }
 
+// Select returns matched index ranges in the given source.
+// The order of returned ranges is not guaranteed.
+// Nested matches are ignored; only the outermost ranges are returned.
+// The 'without' ranges must be provided in ascending (left-to-right) order.
 func (se *startEnd) Select(source []byte, without ...[2]int) [][2]int {
 	if len(source) == 0 {
-		return nil
+		return [][2]int{}
 	}
 
-	startRe := regexp.MustCompile(se.startWith)
-	endRe := regexp.MustCompile(se.endWith)
+	results := [][2]int{}
 
-	var results [][2]int
-	offset := 0
-
-	for {
-		startLoc := startRe.FindIndex(source[offset:])
-		if startLoc == nil {
-			break
-		}
-		startAbs := offset + startLoc[0]
-		searchAfterStart := offset + startLoc[1]
-
-		endLoc := endRe.FindIndex(source[searchAfterStart:])
-		if endLoc == nil {
-			break
-		}
-		endAbs := searchAfterStart + endLoc[1]
-
-		skip := false
-		for _, w := range without {
-			if intersects(startAbs, endAbs, w[0], w[1]) {
-				skip = true
-				break
-			}
-		}
-		if !skip {
-			results = append(results, [2]int{startAbs, endAbs})
-		}
-
-		offset = endAbs
+	noSelected := filterNoSelected(without, len(source))
+	for _, ns := range noSelected {
+		results = append(results, se.slct(source, ns[0], ns[1])...)
 	}
 
 	return results
 }
 
-func intersects(aStart, aEnd, bStart, bEnd int) bool {
-	return aStart < bEnd && bStart < aEnd
+func (se *startEnd) slct(source []byte, start, end int) [][2]int {
+	offset := start
+	piece := source[start:end]
+
+	startLocs := se.reStart.FindAllIndex(piece, -1)
+	endLocs := se.reEnd.FindAllIndex(piece, -1)
+
+	lenOfSL := len(startLocs)
+	matchedEL := []int{}
+	results := [][2]int{}
+
+	for i := lenOfSL - 1; i >= 0; i-- {
+		found, endIndex := se.findEL(endLocs, matchedEL, startLocs[i][1])
+		if !found {
+			continue
+		}
+		matchedEL = append(matchedEL, endIndex)
+		results = append(results, [2]int{
+			offset + startLocs[i][0],
+			offset + endIndex,
+		})
+	}
+
+	return eliminateNested(results)
+}
+
+func (_ *startEnd) findEL(endLocs [][]int, matchedEL []int, after int) (bool, int) {
+	for _, el := range endLocs {
+		if el[0] < after || util.InSliceInt(el[1], matchedEL) {
+			continue
+		}
+		return true, el[1]
+	}
+	return false, 0
 }

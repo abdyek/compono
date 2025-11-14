@@ -2,50 +2,34 @@ package rule
 
 import "github.com/umono-cms/compono/selector"
 
-// Global and local components definition wrapper
-type compDefWrapper struct {
-	scalable
+// Local components definition wrapper
+type localCompDefWrapper struct{}
+
+func newLocalCompDefWrapper() Rule {
+	return &localCompDefWrapper{}
 }
 
-func newCompDefWrapper() Rule {
-	return &compDefWrapper{
-		scalable: scalable{
-			rules: []Rule{
-				newLocalCompDef(),
-			},
-		},
-	}
+func (_ *localCompDefWrapper) Name() string {
+	return "local-comp-def-wrapper"
 }
 
-func (_ *compDefWrapper) Name() string {
-	return "comp-def-wrapper"
-}
-
-func (_ *compDefWrapper) Selectors() []selector.Selector {
+func (_ *localCompDefWrapper) Selectors() []selector.Selector {
 	return []selector.Selector{
 		selector.NewSinceFirstMatchInner(`\n*~\s+[A-Z0-9]+(?:_[A-Z0-9]+)*\s*\n`),
 	}
 }
 
-func (cdw *compDefWrapper) Rules() []Rule {
-	return cdw.rules
+func (_ *localCompDefWrapper) Rules() []Rule {
+	return []Rule{
+		newLocalCompDef(),
+	}
 }
 
 // Local component definition
-type localCompDef struct {
-	scalable
-}
+type localCompDef struct{}
 
 func newLocalCompDef() Rule {
-	return &localCompDef{
-		scalable: scalable{
-			rules: []Rule{
-				newLocalCompDefName(),
-				newLocalCompParams(),
-				newLocalCompDefContent(),
-			},
-		},
-	}
+	return &localCompDef{}
 }
 
 func (_ *localCompDef) Name() string {
@@ -53,195 +37,260 @@ func (_ *localCompDef) Name() string {
 }
 
 func (_ *localCompDef) Selectors() []selector.Selector {
+	seli, _ := selector.NewStartEndLeftInner(`\n~\s+[A-Z0-9]+(?:_[A-Z0-9]+)*\s*\n`, `\n~\s+[A-Z0-9]+(?:_[A-Z0-9]+)*\s*\n|\z`)
 	return []selector.Selector{
-		selector.NewStartEndLeftInner(`\n~\s+[A-Z0-9]+(?:_[A-Z0-9]+)*\s*\n`, `\n~\s+[A-Z0-9]+(?:_[A-Z0-9]+)*\s*\n|\z`),
+		seli,
 	}
 }
 
-func (lcd *localCompDef) Rules() []Rule {
-	return lcd.rules
-}
-
-// Local component definition name
-type localCompDefName struct {
-	scalable
-}
-
-func newLocalCompDefName() Rule {
-	return &localCompDefName{
-		scalable: scalable{
-			rules: []Rule{},
-		},
+func (_ *localCompDef) Rules() []Rule {
+	return []Rule{
+		newLocalCompDefHead(),
+		newLocalCompDefContent(),
 	}
 }
 
-func (_ *localCompDefName) Name() string {
-	return "local-comp-def-name"
+// Local component definition head
+type localCompDefHead struct{}
+
+func newLocalCompDefHead() Rule {
+	return &localCompDefHead{}
 }
 
-func (_ *localCompDefName) Selectors() []selector.Selector {
+func (_ *localCompDefHead) Name() string {
+	return "local-comp-def-head"
+}
+
+func (_ *localCompDefHead) Selectors() []selector.Selector {
+	se, _ := selector.NewStartEnd(`\n~\s+`, `\s*\n\n|\z`)
+	return []selector.Selector{
+		se,
+	}
+}
+
+func (_ *localCompDefHead) Rules() []Rule {
+	return []Rule{
+		newLocalCompName(),
+		newCompParams(),
+	}
+}
+
+// Local component name
+type localCompName struct{}
+
+func newLocalCompName() Rule {
+	return &localCompName{}
+}
+
+func (_ *localCompName) Name() string {
+	return "local-comp-name"
+}
+
+func (_ *localCompName) Selectors() []selector.Selector {
 	return []selector.Selector{
 		selector.NewStartEndInner(`\n~\s+`, `\s*\n`),
 	}
 }
 
-func (lcdn *localCompDefName) Rules() []Rule {
-	return lcdn.rules
+func (_ *localCompName) Rules() []Rule {
+	return []Rule{}
 }
 
-// Local component parameters
-type localCompParams struct {
-	scalable
+// Component parameters
+type compParams struct{}
+
+func newCompParams() Rule {
+	return &compParams{}
 }
 
-func newLocalCompParams() Rule {
-	return &localCompParams{
-		scalable: scalable{
-			rules: []Rule{
-				newLocalCompParam(),
-			},
-		},
-	}
+func (_ *compParams) Name() string {
+	return "comp-params"
 }
 
-func (_ *localCompParams) Name() string {
-	return "local-comp-params"
-}
-
-func (_ *localCompParams) Selectors() []selector.Selector {
+func (_ *compParams) Selectors() []selector.Selector {
+	se, _ := selector.NewStartEnd(`\n`, `.`)
+	p, _ := selector.NewPattern(`([a-z][a-z0-9-]*)[\s\n\r]*=[\s\n\r]*(".*?"|\d+(?:\.\d+)?|true|false)`)
 	return []selector.Selector{
-		// TODO: complete it
+		selector.NewBounds(se, p),
 	}
 }
 
-func (lcp *localCompParams) Rules() []Rule {
-	return lcp.rules
-}
-
-// Local component parameter
-type localCompParam struct {
-	scalable
-}
-
-func newLocalCompParam() Rule {
-	return &localCompParam{
-		scalable: scalable{
-			rules: []Rule{
-				newLocalCompParamName(),
-				newLocalCompParamType(),
-				newLocalCompParamDefaValue(),
-			},
-		},
+func (_ *compParams) Rules() []Rule {
+	return []Rule{
+		newCompParam(),
 	}
 }
 
-func (_ *localCompParam) Name() string {
-	return "local-comp-param"
+// Component parameter
+type compParam struct{}
+
+func newCompParam() Rule {
+	return &compParam{}
 }
 
-func (_ *localCompParam) Selectors() []selector.Selector {
+func (_ *compParam) Name() string {
+	return "comp-param"
+}
+
+func (_ *compParam) Selectors() []selector.Selector {
+	p, _ := selector.NewPattern(`([a-z][a-z0-9-]*)[\s\n\r]*=[\s\n\r]*(".*?"|\d+(?:\.\d+)?|true|false)`)
 	return []selector.Selector{
-		// TODO: complete it
+		p,
 	}
 }
 
-func (lcp *localCompParam) Rules() []Rule {
-	return lcp.rules
-}
-
-// Local component parameter name
-type localCompParamName struct {
-	scalable
-}
-
-func newLocalCompParamName() Rule {
-	return &localCompParam{
-		scalable: scalable{
-			rules: []Rule{},
-		},
+func (_ *compParam) Rules() []Rule {
+	return []Rule{
+		newCompParamName(),
+		newCompParamType(),
 	}
 }
 
-func (_ *localCompParamName) Name() string {
-	return "local-comp-param-name"
+// Component parameter name
+type compParamName struct{}
+
+func newCompParamName() Rule {
+	return &compParamName{}
 }
 
-func (_ *localCompParamName) Selectors() []selector.Selector {
+func (_ *compParamName) Name() string {
+	return "comp-param-name"
+}
+
+func (_ *compParamName) Selectors() []selector.Selector {
+	seli, _ := selector.NewStartEndLeftInner(`([a-z][a-z0-9-]*)\s*`, `=`)
 	return []selector.Selector{
-		// TODO: complete it
+		seli,
 	}
 }
 
-func (lcpn *localCompParamName) Rules() []Rule {
-	return lcpn.rules
+func (_ *compParamName) Rules() []Rule {
+	return []Rule{}
 }
 
-// Local component parameter type
-type localCompParamType struct {
-	scalable
+// Component parameter type
+type compParamType struct{}
+
+func newCompParamType() Rule {
+	return &compParamType{}
 }
 
-func newLocalCompParamType() Rule {
-	return &localCompParamType{
-		scalable: scalable{
-			rules: []Rule{},
-		},
-	}
+func (_ *compParamType) Name() string {
+	return "comp-param-type"
 }
 
-func (_ *localCompParamType) Name() string {
-	return "local-comp-param-type"
-}
-
-func (_ *localCompParamType) Selectors() []selector.Selector {
+func (_ *compParamType) Selectors() []selector.Selector {
+	p, _ := selector.NewPattern(`[\s\n\r]*(".*?"|\d+(?:\.\d+)?|true|false)`)
 	return []selector.Selector{
-		// TODO: complete it
+		p,
 	}
 }
 
-func (lcpt *localCompParamType) Rules() []Rule {
-	return lcpt.rules
-}
-
-// Local component parameter default value
-type localCompParamDefaValue struct {
-	scalable
-}
-
-func newLocalCompParamDefaValue() Rule {
-	return &localCompParamDefaValue{
-		scalable: scalable{
-			rules: []Rule{},
-		},
+func (_ *compParamType) Rules() []Rule {
+	return []Rule{
+		newCompStringParam(),
+		newCompNumberParam(),
+		newCompBoolParam(),
 	}
 }
 
-func (_ *localCompParamDefaValue) Name() string {
-	return "local-comp-param-defa-value"
+// Component's string parameter
+type compStringParam struct{}
+
+func newCompStringParam() Rule {
+	return &compStringParam{}
 }
 
-func (_ *localCompParamDefaValue) Selectors() []selector.Selector {
+func (_ *compStringParam) Name() string {
+	return "comp-string-param"
+}
+
+func (_ *compStringParam) Selectors() []selector.Selector {
 	return []selector.Selector{
-		// TODO: complete it
+		selector.NewStartEndInner(`[\s\n\r]*"`, `"[\s\n\r]*`),
 	}
 }
 
-func (lcpdf *localCompParamDefaValue) Rules() []Rule {
-	return lcpdf.rules
+func (_ *compStringParam) Rules() []Rule {
+	return []Rule{
+		newCompParamDefaValue(),
+	}
+}
+
+// Component's number parameter
+type compNumberParam struct{}
+
+func newCompNumberParam() Rule {
+	return &compNumberParam{}
+}
+
+func (_ *compNumberParam) Name() string {
+	return "comp-number-param"
+}
+
+func (_ *compNumberParam) Selectors() []selector.Selector {
+	p, _ := selector.NewPattern(`\d+(?:\.\d+)?`)
+	return []selector.Selector{
+		p,
+	}
+}
+
+func (_ *compNumberParam) Rules() []Rule {
+	return []Rule{
+		newCompParamDefaValue(),
+	}
+}
+
+// Component's bool parameter
+type compBoolParam struct{}
+
+func newCompBoolParam() Rule {
+	return &compBoolParam{}
+}
+
+func (_ *compBoolParam) Name() string {
+	return "comp-bool-param"
+}
+
+func (_ *compBoolParam) Selectors() []selector.Selector {
+	p, _ := selector.NewPattern(`true|false`)
+	return []selector.Selector{
+		p,
+	}
+}
+
+func (_ *compBoolParam) Rules() []Rule {
+	return []Rule{
+		newCompParamDefaValue(),
+	}
+}
+
+// Component parameter default value
+type compParamDefaValue struct{}
+
+func newCompParamDefaValue() Rule {
+	return &compParamDefaValue{}
+}
+
+func (_ *compParamDefaValue) Name() string {
+	return "comp-param-defa-value"
+}
+
+func (_ *compParamDefaValue) Selectors() []selector.Selector {
+	return []selector.Selector{
+		selector.NewAll(),
+	}
+}
+
+func (_ *compParamDefaValue) Rules() []Rule {
+	return []Rule{}
 }
 
 // Local component definition content
-type localCompDefContent struct {
-	scalable
-}
+type localCompDefContent struct{}
 
 func newLocalCompDefContent() Rule {
-	return &localCompDefContent{
-		scalable: scalable{
-			// NOTE: It must be BLOCK or INLINE
-			rules: []Rule{},
-		},
-	}
+	return &localCompDefContent{}
 }
 
 func (_ *localCompDefContent) Name() string {
@@ -249,28 +298,101 @@ func (_ *localCompDefContent) Name() string {
 }
 
 func (_ *localCompDefContent) Selectors() []selector.Selector {
+	seli, _ := selector.NewStartEndLeftInner(`^`, `\n~\s+[A-Z0-9]+(?:_[A-Z0-9]+)*|\z`)
 	return []selector.Selector{
-		// TODO: complete it
+		seli,
 	}
 }
 
-func (lcdc *localCompDefContent) Rules() []Rule {
-	return lcdc.rules
+func (_ *localCompDefContent) Rules() []Rule {
+	return []Rule{
+		// TODO: Fill it
+		newParamRef(),
+	}
+}
+
+// Parameter reference
+type paramRef struct{}
+
+func newParamRef() Rule {
+	return &paramRef{}
+}
+
+func (_ *paramRef) Name() string {
+	return "param-ref"
+}
+
+func (_ *paramRef) Selectors() []selector.Selector {
+	p, _ := selector.NewPattern(`\$[a-z][a-z0-9-]*`)
+	return []selector.Selector{
+		p,
+	}
+}
+
+func (_ *paramRef) Rules() []Rule {
+	return []Rule{
+		newParamRefName(),
+	}
+}
+
+// Parameter reference's name
+type paramRefName struct{}
+
+func newParamRefName() Rule {
+	return &paramRefName{}
+}
+
+func (_ *paramRefName) Name() string {
+	return "param-ref-name"
+}
+
+func (_ *paramRefName) Selectors() []selector.Selector {
+	return []selector.Selector{
+		selector.NewStartEndInner(`\$`, `\z`),
+	}
+}
+
+func (_ *paramRefName) Rules() []Rule {
+	return []Rule{}
+}
+
+// Block component call
+type blockCompCall struct {
+	*compCall
+}
+
+func newBlockCompCall() Rule {
+	cc := newCompCall()
+	return &blockCompCall{
+		compCall: cc.(*compCall),
+	}
+}
+
+func (_ *blockCompCall) Name() string {
+	return "block-comp-call"
+}
+
+// Inline component call
+type inlineCompCall struct {
+	*compCall
+}
+
+func newInlineCompCall() Rule {
+	cc := newCompCall()
+	return &inlineCompCall{
+		compCall: cc.(*compCall),
+	}
+}
+
+func (_ *inlineCompCall) Name() string {
+	return "inline-comp-call"
 }
 
 // Component call
-type compCall struct {
-	scalable
-}
+type compCall struct{}
 
 func newCompCall() Rule {
-	return &compCall{
-		scalable: scalable{
-			rules: []Rule{
-				newCompCallName(),
-			},
-		},
-	}
+	return &compCall{}
 }
 
 func (_ *compCall) Name() string {
@@ -278,26 +400,24 @@ func (_ *compCall) Name() string {
 }
 
 func (_ *compCall) Selectors() []selector.Selector {
+	seSelector, _ := selector.NewStartEnd(`\{\{\s*[A-Z0-9]+(?:_[A-Z0-9]+)`, `\s*\}\}`)
 	return []selector.Selector{
-		selector.NewStartEnd(`\{\{\s*`, `\s*\}\}`),
+		seSelector,
 	}
 }
 
-func (cc *compCall) Rules() []Rule {
-	return cc.rules
+func (_ *compCall) Rules() []Rule {
+	return []Rule{
+		newCompCallName(),
+		newCompCallArgs(),
+	}
 }
 
 // Component call name
-type compCallName struct {
-	scalable
-}
+type compCallName struct{}
 
 func newCompCallName() Rule {
-	return &compCallName{
-		scalable: scalable{
-			rules: []Rule{},
-		},
-	}
+	return &compCallName{}
 }
 
 func (_ *compCallName) Name() string {
@@ -305,28 +425,26 @@ func (_ *compCallName) Name() string {
 }
 
 func (_ *compCallName) Selectors() []selector.Selector {
+	p, _ := selector.NewPattern(`\s*[A-Z0-9]+(?:_[A-Z0-9]+)*\s*`)
 	return []selector.Selector{
-		// TODO: complete it
+		selector.NewFilter(p, func(source []byte, index [][2]int) [][2]int {
+			if len(index) > 1 {
+				return [][2]int{index[0]}
+			}
+			return [][2]int{}
+		}),
 	}
 }
 
-func (ccn *compCallName) Rules() []Rule {
-	return ccn.rules
+func (_ *compCallName) Rules() []Rule {
+	return []Rule{}
 }
 
 // Commponent call arguments
-type compCallArgs struct {
-	scalable
-}
+type compCallArgs struct{}
 
 func newCompCallArgs() Rule {
-	return &compCallArgs{
-		scalable: scalable{
-			rules: []Rule{
-				newCompCallArg(),
-			},
-		},
-	}
+	return &compCallArgs{}
 }
 
 func (_ *compCallArgs) Name() string {
@@ -334,30 +452,23 @@ func (_ *compCallArgs) Name() string {
 }
 
 func (_ *compCallArgs) Selectors() []selector.Selector {
+	p, _ := selector.NewPattern(`([a-z][a-z0-9-]*)[\s\n\r]*=[\s\n\r]*(".*?"|\d+(?:\.\d+)?|true|false)`)
 	return []selector.Selector{
-		// TODO: complete it
+		p,
 	}
 }
 
-func (cca *compCallArgs) Rules() []Rule {
-	return cca.rules
+func (_ *compCallArgs) Rules() []Rule {
+	return []Rule{
+		newCompCallArg(),
+	}
 }
 
 // Component call argument
-type compCallArg struct {
-	scalable
-}
+type compCallArg struct{}
 
 func newCompCallArg() Rule {
-	return &compCallArg{
-		scalable: scalable{
-			rules: []Rule{
-				newCompCallArgName(),
-				newCompCallArgType(),
-				newCompCallArgValue(),
-			},
-		},
-	}
+	return &compCallArg{}
 }
 
 func (_ *compCallArg) Name() string {
@@ -365,26 +476,24 @@ func (_ *compCallArg) Name() string {
 }
 
 func (_ *compCallArg) Selectors() []selector.Selector {
+	p, _ := selector.NewPattern(`([a-z][a-z0-9-]*)[\s\n\r]*=[\s\n\r]*(".*?"|\d+(?:\.\d+)?|true|false)`)
 	return []selector.Selector{
-		// TODO: complete it
+		p,
 	}
 }
 
-func (cca *compCallArg) Rules() []Rule {
-	return cca.rules
+func (_ *compCallArg) Rules() []Rule {
+	return []Rule{
+		newCompCallArgName(),
+		newCompCallArgType(),
+	}
 }
 
 // Component call argument name
-type compCallArgName struct {
-	scalable
-}
+type compCallArgName struct{}
 
 func newCompCallArgName() Rule {
-	return &compCallArgName{
-		scalable: scalable{
-			rules: []Rule{},
-		},
-	}
+	return &compCallArgName{}
 }
 
 func (_ *compCallArgName) Name() string {
@@ -392,26 +501,21 @@ func (_ *compCallArgName) Name() string {
 }
 
 func (_ *compCallArgName) Selectors() []selector.Selector {
+	seli, _ := selector.NewStartEndLeftInner(`([a-z][a-z0-9-]*)\s*`, `=`)
 	return []selector.Selector{
-		// TODO: complete it
+		seli,
 	}
 }
 
-func (ccan *compCallArgName) Rules() []Rule {
-	return ccan.rules
+func (_ *compCallArgName) Rules() []Rule {
+	return []Rule{}
 }
 
 // Component call argument type
-type compCallArgType struct {
-	scalable
-}
+type compCallArgType struct{}
 
 func newCompCallArgType() Rule {
-	return &compCallArgName{
-		scalable: scalable{
-			rules: []Rule{},
-		},
-	}
+	return &compCallArgName{}
 }
 
 func (_ *compCallArgType) Name() string {
@@ -419,26 +523,96 @@ func (_ *compCallArgType) Name() string {
 }
 
 func (_ *compCallArgType) Selectors() []selector.Selector {
+	p, _ := selector.NewPattern(`[\s\n\r]*(".*?"|\d+(?:\.\d+)?|true|false)`)
 	return []selector.Selector{
-		// TODO: complete it
+		p,
 	}
 }
 
-func (ccat *compCallArgType) Rules() []Rule {
-	return ccat.rules
+func (_ *compCallArgType) Rules() []Rule {
+	return []Rule{
+		newCompCallStringArg(),
+		newCompCallNumberArg(),
+		newCompCallBoolArg(),
+	}
+}
+
+// Component call's string argument
+type compCallStringArg struct{}
+
+func newCompCallStringArg() Rule {
+	return &compCallStringArg{}
+}
+
+func (_ *compCallStringArg) Name() string {
+	return "comp-call-string-arg"
+}
+
+func (_ *compCallStringArg) Selectors() []selector.Selector {
+	return []selector.Selector{
+		selector.NewStartEndInner(`[\s\n\r]*"`, `"[\s\n\r]*`),
+	}
+}
+
+func (_ *compCallStringArg) Rules() []Rule {
+	return []Rule{
+		newCompCallArgValue(),
+	}
+}
+
+// Component call's number argument
+type compCallNumberArg struct{}
+
+func newCompCallNumberArg() Rule {
+	return &compCallNumberArg{}
+}
+
+func (_ *compCallNumberArg) Name() string {
+	return "comp-call-number-arg"
+}
+
+func (_ *compCallNumberArg) Selectors() []selector.Selector {
+	p, _ := selector.NewPattern(`\d+(?:\.\d+)?`)
+	return []selector.Selector{
+		p,
+	}
+}
+
+func (_ *compCallNumberArg) Rules() []Rule {
+	return []Rule{
+		newCompCallArgValue(),
+	}
+}
+
+// Component call's bool argument
+type compCallBoolArg struct{}
+
+func newCompCallBoolArg() Rule {
+	return &compCallBoolArg{}
+}
+
+func (_ *compCallBoolArg) Name() string {
+	return "comp-call-arg-value"
+}
+
+func (_ *compCallBoolArg) Selectors() []selector.Selector {
+	p, _ := selector.NewPattern(`true|false`)
+	return []selector.Selector{
+		p,
+	}
+}
+
+func (_ *compCallBoolArg) Rules() []Rule {
+	return []Rule{
+		newCompCallArgValue(),
+	}
 }
 
 // Component call argument value
-type compCallArgValue struct {
-	scalable
-}
+type compCallArgValue struct{}
 
 func newCompCallArgValue() Rule {
-	return &compCallArgValue{
-		scalable: scalable{
-			rules: []Rule{},
-		},
-	}
+	return &compCallArgValue{}
 }
 
 func (_ *compCallArgValue) Name() string {
@@ -447,10 +621,96 @@ func (_ *compCallArgValue) Name() string {
 
 func (_ *compCallArgValue) Selectors() []selector.Selector {
 	return []selector.Selector{
-		// TODO: complete it
+		selector.NewAll(),
 	}
 }
 
-func (ccav *compCallArgValue) Rules() []Rule {
-	return ccav.rules
+func (_ *compCallArgValue) Rules() []Rule {
+	return []Rule{}
+}
+
+// Global components definition wrapper
+type globalCompDefWrapper struct{}
+
+func NewGlobalCompDefWrapper() Rule {
+	return &globalCompDefWrapper{}
+}
+
+func (_ *globalCompDefWrapper) Name() string {
+	return "global-comp-def-wrapper"
+}
+
+func (_ *globalCompDefWrapper) Selectors() []selector.Selector {
+	return []selector.Selector{}
+}
+
+func (_ *globalCompDefWrapper) Rules() []Rule {
+	return []Rule{}
+}
+
+// Global component definition
+type globalCompDef struct{}
+
+func NewGlobalCompDef() Rule {
+	return &globalCompDef{}
+}
+
+func (_ *globalCompDef) Name() string {
+	return "global-comp-def"
+}
+
+func (_ *globalCompDef) Selectors() []selector.Selector {
+	return []selector.Selector{
+		selector.NewAll(),
+	}
+}
+
+func (_ *globalCompDef) Rules() []Rule {
+	return []Rule{
+		newCompParams(),
+		newGlobalCompDefContent(),
+		newLocalCompDefWrapper(),
+	}
+}
+
+// Global component name
+type globalCompName struct{}
+
+func NewGlobalCompName() Rule {
+	return &globalCompName{}
+}
+
+func (_ *globalCompName) Name() string {
+	return "global-comp-name"
+}
+
+func (_ *globalCompName) Selectors() []selector.Selector {
+	return []selector.Selector{}
+}
+
+func (_ *globalCompName) Rules() []Rule {
+	return []Rule{}
+}
+
+// Global component definition content
+type globalCompDefContent struct{}
+
+func newGlobalCompDefContent() Rule {
+	return &globalCompDefContent{}
+}
+
+func (_ *globalCompDefContent) Name() string {
+	return "global-comp-def-content"
+}
+
+func (_ *globalCompDefContent) Selectors() []selector.Selector {
+	return []selector.Selector{
+		selector.NewUntilFirstMatch(`\n~\s+[A-Z0-9]+(?:_[A-Z0-9]+)*\s*\n`),
+	}
+}
+
+func (_ *globalCompDefContent) Rules() []Rule {
+	return []Rule{
+		// TODO: complete it
+	}
 }

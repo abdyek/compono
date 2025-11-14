@@ -2,60 +2,50 @@ package rule
 
 import "github.com/umono-cms/compono/selector"
 
-type h2 struct {
-	scalable
-}
+type h2 struct{}
 
 func newH2() Rule {
-	return &h2{
-		scalable: scalable{
-			rules: []Rule{
-				newH2Content(),
-			},
-		},
-	}
+	return &h2{}
 }
 
-func (h *h2) Name() string {
+func (_ *h2) Name() string {
 	return "h2"
 }
 
-func (h *h2) Selectors() []selector.Selector {
+func (_ *h2) Selectors() []selector.Selector {
+	seSelector, _ := selector.NewStartEnd(`(?m)[ \t]*## `, `\n|\z`)
 	return []selector.Selector{
-		selector.NewStartEnd(`\s*## `, `\n|\z`),
+		seSelector,
 	}
 }
 
-func (h *h2) Rules() []Rule {
-	return h.rules
+func (_ *h2) Rules() []Rule {
+	return []Rule{
+		newH2Content(),
+	}
 }
 
-type h2Content struct {
-	scalable
-}
+type h2Content struct{}
 
 func newH2Content() Rule {
-	return &h2Content{
-		scalable: scalable{
-			rules: []Rule{
-				newStrong(),
-				newEm(),
-				newPlain(),
-			},
-		},
-	}
+	return &h2Content{}
 }
 
-func (h2c *h2Content) Name() string {
+func (_ *h2Content) Name() string {
 	return "h2-content"
 }
 
-func (h2c *h2Content) Selectors() []selector.Selector {
+func (_ *h2Content) Selectors() []selector.Selector {
 	return []selector.Selector{
-		selector.NewStartEndInner(`\s*## `, `\n|\z`),
+		selector.NewStartEndInner(`(?m)[ \t]*## `, `\n|\z`),
 	}
 }
 
-func (h2c *h2Content) Rules() []Rule {
-	return h2c.rules
+func (_ *h2Content) Rules() []Rule {
+	return []Rule{
+		newStrong(),
+		newEm(),
+		newInlineCompCall(),
+		newPlain(),
+	}
 }

@@ -1,19 +1,19 @@
 package selector
 
-import (
-	"regexp"
-)
-
 type startEndLeftInner struct {
-	startWith string
-	endWith   string
+	endWith  string
+	startEnd *startEnd
 }
 
-func NewStartEndLeftInner(startWith, endWith string) *startEndLeftInner {
-	return &startEndLeftInner{
-		startWith: startWith,
-		endWith:   endWith,
+func NewStartEndLeftInner(startWith, endWith string) (Selector, error) {
+	se, err := NewStartEnd(startWith, endWith)
+	if err != nil {
+		return nil, err
 	}
+	return &startEndLeftInner{
+		endWith:  endWith,
+		startEnd: se.(*startEnd),
+	}, nil
 }
 
 func (_ *startEndLeftInner) Name() string {
@@ -21,41 +21,15 @@ func (_ *startEndLeftInner) Name() string {
 }
 
 func (seli *startEndLeftInner) Select(source []byte, without ...[2]int) [][2]int {
-	if len(source) == 0 {
-		return nil
+	selected := seli.startEnd.Select(source, without...)
+
+	for i, index := range selected {
+		matches := seli.startEnd.reEnd.FindAllIndex(source[index[0]:index[1]], -1)
+		if len(matches) > 0 {
+			last := matches[len(matches)-1]
+			selected[i][1] = index[0] + last[0]
+		}
 	}
 
-	var results [][2]int
-
-	startRe := regexp.MustCompile(seli.startWith)
-	endRe := regexp.MustCompile(seli.endWith)
-
-	i := 0
-OUTER:
-	for i < len(source) {
-		startLoc := startRe.FindIndex(source[i:])
-		if startLoc == nil {
-			break
-		}
-		startAbs := i + startLoc[0]
-
-		endLoc := endRe.FindIndex(source[startAbs:])
-		if endLoc == nil {
-			break
-		}
-		contentEnd := startAbs + endLoc[0]
-		endAbs := startAbs + endLoc[1]
-
-		for _, w := range without {
-			if startAbs < w[1] && contentEnd > w[0] {
-				i = endAbs
-				continue OUTER
-			}
-		}
-
-		results = append(results, [2]int{startAbs, contentEnd})
-		i = endAbs
-	}
-
-	return results
+	return selected
 }

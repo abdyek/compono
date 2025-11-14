@@ -2,61 +2,50 @@ package rule
 
 import "github.com/umono-cms/compono/selector"
 
-type p struct {
-	scalable
-}
+type p struct{}
 
 func newP() Rule {
-	return &p{
-		scalable: scalable{
-			rules: []Rule{
-				newPContent(),
-			},
-		},
-	}
+	return &p{}
 }
 
-func (*p) Name() string {
+func (_ *p) Name() string {
 	return "p"
 }
 
-func (*p) Selectors() []selector.Selector {
+func (_ *p) Selectors() []selector.Selector {
+	seSelector, _ := selector.NewStartEnd(`^`, `\n\n|\z`)
 	return []selector.Selector{
-		selector.NewAll(),
+		seSelector,
 	}
 }
 
-func (p *p) Rules() []Rule {
-	return p.rules
+func (_ *p) Rules() []Rule {
+	return []Rule{
+		newPContent(),
+	}
 }
 
-type pContent struct {
-	scalable
-}
+type pContent struct{}
 
 func newPContent() Rule {
-	return &pContent{
-		scalable: scalable{
-			rules: []Rule{
-				newStrong(),
-				newEm(),
-				newCompCall(),
-				newPlain(),
-			},
-		},
-	}
+	return &pContent{}
 }
 
-func (pc *pContent) Name() string {
+func (_ *pContent) Name() string {
 	return "p-content"
 }
 
-func (pc *pContent) Selectors() []selector.Selector {
+func (_ *pContent) Selectors() []selector.Selector {
 	return []selector.Selector{
 		selector.NewAll(),
 	}
 }
 
-func (pc *pContent) Rules() []Rule {
-	return pc.rules
+func (_ *pContent) Rules() []Rule {
+	return []Rule{
+		newStrong(),
+		newEm(),
+		newInlineCompCall(),
+		newPlain(),
+	}
 }

@@ -14,7 +14,13 @@ type Node interface {
 	SetRaw([]byte)
 }
 
-func DefaultNode() Node {
+func DefaultRootNode() Node {
+	node := DefaultEmptyNode()
+	node.SetRule(rule.NewRoot())
+	return node
+}
+
+func DefaultEmptyNode() Node {
 	return &node{}
 }
 

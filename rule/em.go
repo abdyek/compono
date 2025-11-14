@@ -2,18 +2,10 @@ package rule
 
 import "github.com/umono-cms/compono/selector"
 
-type em struct {
-	scalable
-}
+type em struct{}
 
 func newEm() Rule {
-	return &em{
-		scalable: scalable{
-			rules: []Rule{
-				newEmContent(),
-			},
-		},
-	}
+	return &em{}
 }
 
 func (_ *em) Name() string {
@@ -21,27 +13,22 @@ func (_ *em) Name() string {
 }
 
 func (_ *em) Selectors() []selector.Selector {
+	seSelector, _ := selector.NewStartEnd(`\*[^\s\*]`, `[^\s\*]\*`)
 	return []selector.Selector{
-		selector.NewStartEnd(`\*`, `\*`),
+		seSelector,
 	}
 }
 
-func (e *em) Rules() []Rule {
-	return e.rules
+func (_ *em) Rules() []Rule {
+	return []Rule{
+		newEmContent(),
+	}
 }
 
-type emContent struct {
-	scalable
-}
+type emContent struct{}
 
 func newEmContent() Rule {
-	return &emContent{
-		scalable: scalable{
-			rules: []Rule{
-				newPlain(),
-			},
-		},
-	}
+	return &emContent{}
 }
 
 func (_ *emContent) Name() string {
@@ -54,6 +41,9 @@ func (_ *emContent) Selectors() []selector.Selector {
 	}
 }
 
-func (ec *emContent) Rules() []Rule {
-	return ec.rules
+func (_ *emContent) Rules() []Rule {
+	return []Rule{
+		newInlineCompCall(),
+		newPlain(),
+	}
 }
