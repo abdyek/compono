@@ -7,10 +7,10 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 	"github.com/umono-cms/compono/ast"
+	"github.com/umono-cms/compono/internal/testutil/mocks"
 	"github.com/umono-cms/compono/logger"
 	"github.com/umono-cms/compono/rule"
 	"github.com/umono-cms/compono/selector"
-	"github.com/umono-cms/compono/testdata/mocks"
 )
 
 type parserTestSuite struct {
