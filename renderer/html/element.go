@@ -16,8 +16,8 @@ func newNonVoidElement(rend *renderer) renderableNode {
 	}
 }
 
-func (nve *nonVoidElement) Condition(node ast.Node) bool {
-	return nve.renderer.inRuleName(node, []string{
+func (_ *nonVoidElement) Condition(node ast.Node) bool {
+	return inRuleName(node, []string{
 		"h1",
 		"h2",
 		"p",
@@ -40,8 +40,8 @@ func newNonVoidElementContent(rend *renderer) renderableNode {
 	}
 }
 
-func (nvec *nonVoidElementContent) Condition(node ast.Node) bool {
-	return nvec.renderer.inRuleName(node, []string{
+func (_ *nonVoidElementContent) Condition(node ast.Node) bool {
+	return inRuleName(node, []string{
 		"h1-content",
 		"h2-content",
 		"p-content",

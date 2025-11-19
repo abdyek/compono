@@ -17,8 +17,8 @@ func newPlain(rend *renderer) renderableNode {
 	}
 }
 
-func (p *plain) Condition(node ast.Node) bool {
-	return p.renderer.isRuleName(node, "plain")
+func (_ *plain) Condition(node ast.Node) bool {
+	return isRuleName(node, "plain")
 }
 
 func (p *plain) Render(node ast.Node) string {

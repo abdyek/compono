@@ -5,7 +5,6 @@ import (
 
 	"github.com/umono-cms/compono/ast"
 	"github.com/umono-cms/compono/logger"
-	"github.com/umono-cms/compono/util"
 )
 
 type renderer struct {
@@ -70,20 +69,4 @@ func (r *renderer) findRenderable(node ast.Node) renderableNode {
 		}
 	}
 	return nil
-}
-
-func (r *renderer) isRuleName(node ast.Node, name string) bool {
-	rule := node.Rule()
-	if rule != nil && rule.Name() == name {
-		return true
-	}
-	return false
-}
-
-func (r *renderer) inRuleName(node ast.Node, names []string) bool {
-	rule := node.Rule()
-	if rule == nil {
-		return false
-	}
-	return util.InSliceString(rule.Name(), names)
 }

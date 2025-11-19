@@ -14,8 +14,8 @@ func newRoot(rend *renderer) renderableNode {
 	}
 }
 
-func (r *root) Condition(node ast.Node) bool {
-	return r.renderer.isRuleName(node, "root")
+func (_ *root) Condition(node ast.Node) bool {
+	return isRuleName(node, "root")
 }
 
 func (r *root) Render(node ast.Node) string {
@@ -32,8 +32,8 @@ func newRootContent(rend *renderer) renderableNode {
 	}
 }
 
-func (rc *rootContent) Condition(node ast.Node) bool {
-	return rc.renderer.isRuleName(node, "root-content")
+func (_ *rootContent) Condition(node ast.Node) bool {
+	return isRuleName(node, "root-content")
 }
 
 func (rc *rootContent) Render(node ast.Node) string {
