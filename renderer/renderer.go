@@ -5,6 +5,7 @@ import (
 
 	"github.com/umono-cms/compono/ast"
 	"github.com/umono-cms/compono/logger"
+	"github.com/umono-cms/compono/renderer/html"
 )
 
 type Renderer interface {
@@ -12,5 +13,5 @@ type Renderer interface {
 }
 
 func DefaultRenderer(log logger.Logger) Renderer {
-	return newHtmlRenderer(log)
+	return html.NewRenderer(log)
 }
