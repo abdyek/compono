@@ -29,32 +29,40 @@ func isRuleNil(node ast.Node) bool {
 	return false
 }
 
-func findChildByRuleName(children []ast.Node, name string) ast.Node {
-	return findChild(children, func(child ast.Node) bool {
-		if isRuleNil(child) {
+func findNodeByRuleName(nodes []ast.Node, name string) ast.Node {
+	return findNode(nodes, func(node ast.Node) bool {
+		if isRuleNil(node) {
 			return false
 		}
-		if child.Rule().Name() != name {
+		if node.Rule().Name() != name {
 			return false
 		}
 		return true
 	})
 }
 
-func filterChildren(children []ast.Node, filter func(ast.Node) bool) []ast.Node {
+func filterNodes(nodes []ast.Node, filter func(ast.Node) bool) []ast.Node {
 	filtered := []ast.Node{}
-	for _, child := range children {
-		if filter(child) {
-			filtered = append(filtered, child)
+	for _, node := range nodes {
+		if filter(node) {
+			filtered = append(filtered, node)
 		}
 	}
 	return filtered
 }
 
-func findChild(children []ast.Node, filter func(ast.Node) bool) ast.Node {
-	filtered := filterChildren(children, filter)
+func findNode(nodes []ast.Node, filter func(ast.Node) bool) ast.Node {
+	filtered := filterNodes(nodes, filter)
 	if len(filtered) > 0 {
 		return filtered[0]
 	}
 	return nil
+}
+
+func getAncestors(node ast.Node) []ast.Node {
+	parent := node.Parent()
+	if parent == nil {
+		return []ast.Node{}
+	}
+	return append([]ast.Node{parent}, getAncestors(parent)...)
 }

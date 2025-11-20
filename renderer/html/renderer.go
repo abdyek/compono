@@ -12,6 +12,7 @@ type renderer struct {
 	logger          logger.Logger
 	renderableNodes []renderableNode
 	root            ast.Node
+	builtinCompMap  map[string]builtinComponent
 }
 
 func NewRenderer(log logger.Logger) *renderer {
@@ -27,6 +28,16 @@ func NewRenderer(log logger.Logger) *renderer {
 		newNonVoidElement(r),
 		newNonVoidElementContent(r),
 		newPlain(r),
+	}
+
+	r.builtinCompMap = make(map[string]builtinComponent)
+
+	builtinComps := []builtinComponent{
+		NewLink(r),
+	}
+
+	for _, bc := range builtinComps {
+		r.builtinCompMap[bc.Name()] = bc
 	}
 
 	return r
@@ -72,13 +83,13 @@ func (r *renderer) findRenderable(node ast.Node) renderableNode {
 	return nil
 }
 
-func (r *renderer) findLocalCompDef(name string) ast.Node {
-	localCompDefWrapper := findChildByRuleName(r.root.Children(), "local-comp-def-wrapper")
+func (r *renderer) findLocalCompDef(srcNode ast.Node, name string) ast.Node {
+	localCompDefWrapper := findNodeByRuleName(srcNode.Children(), "local-comp-def-wrapper")
 	if localCompDefWrapper == nil {
 		return nil
 	}
 
-	return findChild(localCompDefWrapper.Children(), func(child ast.Node) bool {
+	return findNode(localCompDefWrapper.Children(), func(child ast.Node) bool {
 		if isRuleNil(child) {
 			return false
 		}
@@ -87,12 +98,12 @@ func (r *renderer) findLocalCompDef(name string) ast.Node {
 			return false
 		}
 
-		localCompDefHead := findChildByRuleName(child.Children(), "local-comp-def-head")
+		localCompDefHead := findNodeByRuleName(child.Children(), "local-comp-def-head")
 		if localCompDefHead == nil {
 			return false
 		}
 
-		localCompName := findChildByRuleName(localCompDefHead.Children(), "local-comp-name")
+		localCompName := findNodeByRuleName(localCompDefHead.Children(), "local-comp-name")
 		if localCompName == nil {
 			return false
 		}
@@ -106,12 +117,12 @@ func (r *renderer) findLocalCompDef(name string) ast.Node {
 }
 
 func (r *renderer) findGlobalCompDef(name string) ast.Node {
-	globalCompDefWrapper := findChildByRuleName(r.root.Children(), "global-comp-def-wrapper")
+	globalCompDefWrapper := findNodeByRuleName(r.root.Children(), "global-comp-def-wrapper")
 	if globalCompDefWrapper == nil {
 		return nil
 	}
 
-	return findChild(globalCompDefWrapper.Children(), func(child ast.Node) bool {
+	return findNode(globalCompDefWrapper.Children(), func(child ast.Node) bool {
 		if isRuleNil(child) {
 			return false
 		}
@@ -120,7 +131,7 @@ func (r *renderer) findGlobalCompDef(name string) ast.Node {
 			return false
 		}
 
-		globalCompName := findChildByRuleName(child.Children(), "global-comp-name")
+		globalCompName := findNodeByRuleName(child.Children(), "global-comp-name")
 		if globalCompName == nil {
 			return false
 		}
@@ -131,4 +142,12 @@ func (r *renderer) findGlobalCompDef(name string) ast.Node {
 
 		return true
 	})
+}
+
+func (r *renderer) findBuiltinComp(name string) builtinComponent {
+	bc, ok := r.builtinCompMap[strings.TrimSpace(name)]
+	if !ok {
+		return nil
+	}
+	return bc
 }

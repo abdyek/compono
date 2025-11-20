@@ -4,7 +4,6 @@ import (
 	"github.com/umono-cms/compono/ast"
 )
 
-// TODO: complete it
 type blockCompCall struct {
 	renderer *renderer
 }
@@ -20,16 +19,26 @@ func (_ *blockCompCall) Condition(node ast.Node) bool {
 }
 
 func (bcc *blockCompCall) Render(node ast.Node) string {
-	compCallName := findChildByRuleName(node.Children(), "comp-call-name")
+	compCallName := findNodeByRuleName(node.Children(), "comp-call-name")
 	if compCallName == nil {
 		return ""
 	}
 
-	// TODO: Add a condition for localCompDef(s) of globalCompDef(s)
+	globalCompDefAnc := findNode(getAncestors(node), func(anc ast.Node) bool {
+		if !isRuleNil(anc) && anc.Rule().Name() == "global-comp-def" {
+			return true
+		}
+		return false
+	})
 
-	localCompDef := bcc.renderer.findLocalCompDef(string(compCallName.Raw()))
+	localCompDefSrc := bcc.renderer.root
+	if globalCompDefAnc != nil {
+		localCompDefSrc = globalCompDefAnc
+	}
+
+	localCompDef := bcc.renderer.findLocalCompDef(localCompDefSrc, string(compCallName.Raw()))
 	if localCompDef != nil {
-		localCompDefContent := findChildByRuleName(localCompDef.Children(), "local-comp-def-content")
+		localCompDefContent := findNodeByRuleName(localCompDef.Children(), "local-comp-def-content")
 		if localCompDefContent == nil {
 			return ""
 		}
@@ -38,14 +47,17 @@ func (bcc *blockCompCall) Render(node ast.Node) string {
 
 	globalCompDef := bcc.renderer.findGlobalCompDef(string(compCallName.Raw()))
 	if globalCompDef != nil {
-		globalCompDefContent := findChildByRuleName(globalCompDef.Children(), "global-comp-def-content")
+		globalCompDefContent := findNodeByRuleName(globalCompDef.Children(), "global-comp-def-content")
 		if globalCompDefContent == nil {
 			return ""
 		}
 		return bcc.renderer.renderChildren(globalCompDefContent.Children())
 	}
 
-	// TODO: Add built-in component solution here
+	builtinComp := bcc.renderer.findBuiltinComp(string(compCallName.Raw()))
+	if builtinComp != nil {
+		return builtinComp.Render(node)
+	}
 
 	return "here will be warning placeholder"
 }
