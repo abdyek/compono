@@ -17,7 +17,7 @@ func newNonVoidElement(rend *renderer) renderableNode {
 }
 
 func (_ *nonVoidElement) Condition(node ast.Node) bool {
-	return inRuleName(node, []string{
+	return isRuleNameOneOf(node, []string{
 		"h1",
 		"h2",
 		"p",
@@ -41,7 +41,7 @@ func newNonVoidElementContent(rend *renderer) renderableNode {
 }
 
 func (_ *nonVoidElementContent) Condition(node ast.Node) bool {
-	return inRuleName(node, []string{
+	return isRuleNameOneOf(node, []string{
 		"h1-content",
 		"h2-content",
 		"p-content",

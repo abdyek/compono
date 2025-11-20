@@ -1,6 +1,8 @@
 package rule
 
-import "github.com/umono-cms/compono/selector"
+import (
+	"github.com/umono-cms/compono/selector"
+)
 
 // Local components definition wrapper
 type localCompDefWrapper struct{}
@@ -306,8 +308,11 @@ func (_ *localCompDefContent) Selectors() []selector.Selector {
 
 func (_ *localCompDefContent) Rules() []Rule {
 	return []Rule{
-		// TODO: Fill it
-		newParamRef(),
+		// newParamRef(), // TODO: the param-ref must be into h1-content, h2-content, p-content etc.
+		newH2(),
+		newH1(),
+		newBlockCompCall(),
+		newP(),
 	}
 }
 
@@ -428,7 +433,7 @@ func (_ *compCallName) Selectors() []selector.Selector {
 	p, _ := selector.NewPattern(`\s*[A-Z0-9]+(?:_[A-Z0-9]+)*\s*`)
 	return []selector.Selector{
 		selector.NewFilter(p, func(source []byte, index [][2]int) [][2]int {
-			if len(index) > 1 {
+			if len(index) > 0 {
 				return [][2]int{index[0]}
 			}
 			return [][2]int{}
@@ -711,6 +716,9 @@ func (_ *globalCompDefContent) Selectors() []selector.Selector {
 
 func (_ *globalCompDefContent) Rules() []Rule {
 	return []Rule{
-		// TODO: complete it
+		newH2(),
+		newH1(),
+		newBlockCompCall(),
+		newP(),
 	}
 }

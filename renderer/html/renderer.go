@@ -2,6 +2,7 @@ package html
 
 import (
 	"io"
+	"strings"
 
 	"github.com/umono-cms/compono/ast"
 	"github.com/umono-cms/compono/logger"
@@ -69,4 +70,65 @@ func (r *renderer) findRenderable(node ast.Node) renderableNode {
 		}
 	}
 	return nil
+}
+
+func (r *renderer) findLocalCompDef(name string) ast.Node {
+	localCompDefWrapper := findChildByRuleName(r.root.Children(), "local-comp-def-wrapper")
+	if localCompDefWrapper == nil {
+		return nil
+	}
+
+	return findChild(localCompDefWrapper.Children(), func(child ast.Node) bool {
+		if isRuleNil(child) {
+			return false
+		}
+
+		if !isRuleName(child, "local-comp-def") {
+			return false
+		}
+
+		localCompDefHead := findChildByRuleName(child.Children(), "local-comp-def-head")
+		if localCompDefHead == nil {
+			return false
+		}
+
+		localCompName := findChildByRuleName(localCompDefHead.Children(), "local-comp-name")
+		if localCompName == nil {
+			return false
+		}
+
+		if strings.TrimSpace(string(localCompName.Raw())) != strings.TrimSpace(name) {
+			return false
+		}
+
+		return true
+	})
+}
+
+func (r *renderer) findGlobalCompDef(name string) ast.Node {
+	globalCompDefWrapper := findChildByRuleName(r.root.Children(), "global-comp-def-wrapper")
+	if globalCompDefWrapper == nil {
+		return nil
+	}
+
+	return findChild(globalCompDefWrapper.Children(), func(child ast.Node) bool {
+		if isRuleNil(child) {
+			return false
+		}
+
+		if !isRuleName(child, "global-comp-def") {
+			return false
+		}
+
+		globalCompName := findChildByRuleName(child.Children(), "global-comp-name")
+		if globalCompName == nil {
+			return false
+		}
+
+		if strings.TrimSpace(string(globalCompName.Raw())) != strings.TrimSpace(name) {
+			return false
+		}
+
+		return true
+	})
 }
