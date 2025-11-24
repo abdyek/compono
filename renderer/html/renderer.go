@@ -24,7 +24,7 @@ func NewRenderer(log logger.Logger) *renderer {
 	r.renderableNodes = []renderableNode{
 		newRoot(r),
 		newRootContent(r),
-		newBlockCompCall(r),
+		newCompCall(r),
 		newNonVoidElement(r),
 		newNonVoidElementContent(r),
 		newPlain(r),

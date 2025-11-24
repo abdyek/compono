@@ -4,21 +4,26 @@ import (
 	"github.com/umono-cms/compono/ast"
 )
 
-type blockCompCall struct {
+type compCall struct {
 	renderer *renderer
 }
 
-func newBlockCompCall(rend *renderer) renderableNode {
-	return &blockCompCall{
+func newCompCall(rend *renderer) renderableNode {
+	return &compCall{
 		renderer: rend,
 	}
 }
 
-func (_ *blockCompCall) Condition(node ast.Node) bool {
-	return isRuleName(node, "block-comp-call")
+func (_ *compCall) Condition(node ast.Node) bool {
+	return isRuleNameOneOf(node, []string{"block-comp-call", "inline-comp-call"})
 }
 
-func (bcc *blockCompCall) Render(node ast.Node) string {
+func (cc *compCall) Render(node ast.Node) string {
+	inlineCompCall := false
+	if isRuleName(node, "inline-comp-call") {
+		inlineCompCall = true
+	}
+
 	compCallName := findNodeByRuleName(node.Children(), "comp-call-name")
 	if compCallName == nil {
 		return ""
@@ -31,33 +36,50 @@ func (bcc *blockCompCall) Render(node ast.Node) string {
 		return false
 	})
 
-	localCompDefSrc := bcc.renderer.root
+	localCompDefSrc := cc.renderer.root
 	if globalCompDefAnc != nil {
 		localCompDefSrc = globalCompDefAnc
 	}
 
-	localCompDef := bcc.renderer.findLocalCompDef(localCompDefSrc, string(compCallName.Raw()))
+	localCompDef := cc.renderer.findLocalCompDef(localCompDefSrc, string(compCallName.Raw()))
 	if localCompDef != nil {
 		localCompDefContent := findNodeByRuleName(localCompDef.Children(), "local-comp-def-content")
 		if localCompDefContent == nil {
 			return ""
 		}
-		return bcc.renderer.renderChildren(localCompDefContent.Children())
+		if inlineCompCall {
+			return cc.renderInlineCompCall(localCompDefContent)
+		}
+		return cc.renderer.renderChildren(localCompDefContent.Children())
 	}
 
-	globalCompDef := bcc.renderer.findGlobalCompDef(string(compCallName.Raw()))
+	globalCompDef := cc.renderer.findGlobalCompDef(string(compCallName.Raw()))
 	if globalCompDef != nil {
 		globalCompDefContent := findNodeByRuleName(globalCompDef.Children(), "global-comp-def-content")
 		if globalCompDefContent == nil {
 			return ""
 		}
-		return bcc.renderer.renderChildren(globalCompDefContent.Children())
+		if inlineCompCall {
+			return cc.renderInlineCompCall(globalCompDefContent)
+		}
+		return cc.renderer.renderChildren(globalCompDefContent.Children())
 	}
 
-	builtinComp := bcc.renderer.findBuiltinComp(string(compCallName.Raw()))
+	builtinComp := cc.renderer.findBuiltinComp(string(compCallName.Raw()))
 	if builtinComp != nil {
 		return builtinComp.Render(node)
 	}
 
 	return "here will be warning placeholder"
+}
+
+func (cc *compCall) renderInlineCompCall(compDefContent ast.Node) string {
+	childCount := len(compDefContent.Children())
+	if childCount == 0 {
+		return ""
+	}
+	if childCount > 1 || findNodeByRuleName(compDefContent.Children(), "p") == nil {
+		return "Block components are disallowed inside inline components."
+	}
+	return cc.renderer.renderChildren(compDefContent.Children())
 }
