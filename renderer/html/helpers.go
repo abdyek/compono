@@ -6,9 +6,6 @@ import (
 )
 
 func isRuleName(node ast.Node, name string) bool {
-	if isRuleNil(node) {
-		return false
-	}
 	if node.Rule().Name() != name {
 		return false
 	}
@@ -16,24 +13,11 @@ func isRuleName(node ast.Node, name string) bool {
 }
 
 func isRuleNameOneOf(node ast.Node, names []string) bool {
-	if isRuleNil(node) {
-		return false
-	}
 	return util.InSliceString(node.Rule().Name(), names)
-}
-
-func isRuleNil(node ast.Node) bool {
-	if node.Rule() == nil {
-		return true
-	}
-	return false
 }
 
 func findNodeByRuleName(nodes []ast.Node, name string) ast.Node {
 	return findNode(nodes, func(node ast.Node) bool {
-		if isRuleNil(node) {
-			return false
-		}
 		if node.Rule().Name() != name {
 			return false
 		}

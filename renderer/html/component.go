@@ -30,7 +30,7 @@ func (cc *compCall) Render(node ast.Node) string {
 	}
 
 	globalCompDefAnc := findNode(getAncestors(node), func(anc ast.Node) bool {
-		if !isRuleNil(anc) && anc.Rule().Name() == "global-comp-def" {
+		if anc.Rule().Name() == "global-comp-def" {
 			return true
 		}
 		return false

@@ -90,10 +90,6 @@ func (r *renderer) findLocalCompDef(srcNode ast.Node, name string) ast.Node {
 	}
 
 	return findNode(localCompDefWrapper.Children(), func(child ast.Node) bool {
-		if isRuleNil(child) {
-			return false
-		}
-
 		if !isRuleName(child, "local-comp-def") {
 			return false
 		}
@@ -123,10 +119,6 @@ func (r *renderer) findGlobalCompDef(name string) ast.Node {
 	}
 
 	return findNode(globalCompDefWrapper.Children(), func(child ast.Node) bool {
-		if isRuleNil(child) {
-			return false
-		}
-
 		if !isRuleName(child, "global-comp-def") {
 			return false
 		}
