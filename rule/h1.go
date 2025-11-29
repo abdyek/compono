@@ -46,6 +46,7 @@ func (_ *h1Content) Rules() []Rule {
 		newEm(),
 		newStrong(),
 		newInlineCompCall(),
+		newParamRef(),
 		newPlain(),
 	}
 }

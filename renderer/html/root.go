@@ -5,6 +5,7 @@ import (
 )
 
 type root struct {
+	baseRenderable
 	renderer *renderer
 }
 
@@ -19,10 +20,11 @@ func (_ *root) Condition(node ast.Node) bool {
 }
 
 func (r *root) Render(node ast.Node) string {
-	return r.renderer.renderChildren(node.Children())
+	return r.renderer.renderChildren(r, node.Children())
 }
 
 type rootContent struct {
+	baseRenderable
 	renderer *renderer
 }
 
@@ -37,5 +39,5 @@ func (_ *rootContent) Condition(node ast.Node) bool {
 }
 
 func (rc *rootContent) Render(node ast.Node) string {
-	return rc.renderer.renderChildren(node.Children())
+	return rc.renderer.renderChildren(rc, node.Children())
 }

@@ -8,6 +8,7 @@ import (
 )
 
 type plain struct {
+	baseRenderable
 	renderer *renderer
 }
 

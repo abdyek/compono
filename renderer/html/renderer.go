@@ -27,6 +27,7 @@ func NewRenderer(log logger.Logger) *renderer {
 		newCompCall(r),
 		newNonVoidElement(r),
 		newNonVoidElementContent(r),
+		newParamRef(r),
 		newPlain(r),
 	}
 
@@ -63,12 +64,12 @@ func (r *renderer) render(node ast.Node) string {
 	return ""
 }
 
-func (r *renderer) renderChildren(children []ast.Node) string {
+func (r *renderer) renderChildren(invoker renderableNode, children []ast.Node) string {
 	result := ""
 	for _, child := range children {
 		re := r.findRenderable(child)
 		if re != nil {
-			result += re.Render(child)
+			result += renderNode(re, invoker, child, re.Render)
 		}
 	}
 	return result

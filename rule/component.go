@@ -308,7 +308,6 @@ func (_ *localCompDefContent) Selectors() []selector.Selector {
 
 func (_ *localCompDefContent) Rules() []Rule {
 	return []Rule{
-		// newParamRef(), // TODO: the param-ref must be into h1-content, h2-content, p-content etc.
 		newH2(),
 		newH1(),
 		newBlockCompCall(),

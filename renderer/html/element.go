@@ -7,6 +7,7 @@ import (
 )
 
 type nonVoidElement struct {
+	baseRenderable
 	renderer *renderer
 }
 
@@ -27,10 +28,11 @@ func (_ *nonVoidElement) Condition(node ast.Node) bool {
 }
 
 func (nve *nonVoidElement) Render(node ast.Node) string {
-	return nve.renderer.renderChildren(node.Children())
+	return nve.renderer.renderChildren(nve, node.Children())
 }
 
 type nonVoidElementContent struct {
+	baseRenderable
 	renderer *renderer
 }
 
@@ -65,5 +67,5 @@ func (nvec *nonVoidElementContent) Render(node ast.Node) string {
 	}
 
 	tag := name[:idx]
-	return "<" + tag + ">" + nvec.renderer.renderChildren(node.Children()) + "</" + tag + ">"
+	return "<" + tag + ">" + nvec.renderer.renderChildren(nvec, node.Children()) + "</" + tag + ">"
 }
