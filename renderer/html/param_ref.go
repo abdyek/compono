@@ -1,6 +1,6 @@
 package html
 
-// TODO: refactor for clean coding
+// TODO: refactor for clean codes
 
 import (
 	"strings"
@@ -123,4 +123,36 @@ func (p *paramRefInLocalCompDefOfRoot) Render() string {
 	}).Children(), "comp-param-defa-value")
 
 	return strings.TrimSpace(string(compParamDefaValue.Raw()))
+}
+
+type paramRefInGlobalCompDef struct {
+	baseParamRef
+}
+
+func newParamRefInGlobalCompDef(rend *renderer) renderableNode {
+	return &paramRefInGlobalCompDef{
+		baseParamRef: baseParamRef{
+			renderer: rend,
+		},
+	}
+}
+
+func (_ *paramRefInGlobalCompDef) Condition(invoker renderableNode, node ast.Node) bool {
+	if !isRuleName(node, "param-ref") {
+		return false
+	}
+	localCompDef := findNodeByRuleName(getAncestors(node), "local-comp-def")
+	if localCompDef != nil {
+		return false
+	}
+	globalCompDef := findNodeByRuleName(getAncestors(node), "global-comp-def")
+	if globalCompDef == nil {
+		return false
+	}
+	return true
+}
+
+func (_ *paramRefInGlobalCompDef) Render() string {
+	// TODO: Complete it
+	return ""
 }
