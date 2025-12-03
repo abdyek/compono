@@ -519,7 +519,7 @@ func (_ *compCallArgName) Rules() []Rule {
 type compCallArgType struct{}
 
 func newCompCallArgType() Rule {
-	return &compCallArgName{}
+	return &compCallArgType{}
 }
 
 func (_ *compCallArgType) Name() string {
@@ -596,7 +596,7 @@ func newCompCallBoolArg() Rule {
 }
 
 func (_ *compCallBoolArg) Name() string {
-	return "comp-call-arg-value"
+	return "comp-call-bool-arg"
 }
 
 func (_ *compCallBoolArg) Selectors() []selector.Selector {

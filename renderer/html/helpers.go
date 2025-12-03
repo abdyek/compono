@@ -18,10 +18,7 @@ func isRuleNameOneOf(node ast.Node, names []string) bool {
 
 func findNodeByRuleName(nodes []ast.Node, name string) ast.Node {
 	return findNode(nodes, func(node ast.Node) bool {
-		if node.Rule().Name() != name {
-			return false
-		}
-		return true
+		return isRuleName(node, name)
 	})
 }
 
@@ -49,4 +46,12 @@ func getAncestors(node ast.Node) []ast.Node {
 		return []ast.Node{}
 	}
 	return append([]ast.Node{parent}, getAncestors(parent)...)
+}
+
+func getAncestorsByInvoker(rn renderableNode) []ast.Node {
+	invoker := rn.Invoker()
+	if invoker == nil {
+		return []ast.Node{}
+	}
+	return append([]ast.Node{invoker.Node()}, getAncestorsByInvoker(invoker)...)
 }

@@ -27,7 +27,8 @@ func NewRenderer(log logger.Logger) *renderer {
 		newCompCall(r),
 		newNonVoidElement(r),
 		newNonVoidElementContent(r),
-		newParamRef(r),
+		newParamRefInRootContent(r),
+		newParamRefInLocalCompDefOfRoot(r),
 		newPlain(r),
 	}
 
@@ -57,9 +58,9 @@ func (r *renderer) Render(writer io.Writer, root ast.Node) error {
 }
 
 func (r *renderer) render(node ast.Node) string {
-	rn := r.findRenderable(node)
+	rn := r.findRenderable(nil, node)
 	if rn != nil {
-		return rn.Render(node)
+		return renderNode(rn, nil, node, rn.Render)
 	}
 	return ""
 }
@@ -67,7 +68,7 @@ func (r *renderer) render(node ast.Node) string {
 func (r *renderer) renderChildren(invoker renderableNode, children []ast.Node) string {
 	result := ""
 	for _, child := range children {
-		re := r.findRenderable(child)
+		re := r.findRenderable(invoker, child)
 		if re != nil {
 			result += renderNode(re, invoker, child, re.Render)
 		}
@@ -75,9 +76,9 @@ func (r *renderer) renderChildren(invoker renderableNode, children []ast.Node) s
 	return result
 }
 
-func (r *renderer) findRenderable(node ast.Node) renderableNode {
+func (r *renderer) findRenderable(invoker renderableNode, node ast.Node) renderableNode {
 	for _, rn := range r.renderableNodes {
-		if cond := rn.Condition(node); cond {
+		if cond := rn.Condition(invoker, node); cond {
 			return rn
 		}
 	}

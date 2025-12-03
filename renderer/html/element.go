@@ -17,7 +17,7 @@ func newNonVoidElement(rend *renderer) renderableNode {
 	}
 }
 
-func (_ *nonVoidElement) Condition(node ast.Node) bool {
+func (_ *nonVoidElement) Condition(invoker renderableNode, node ast.Node) bool {
 	return isRuleNameOneOf(node, []string{
 		"h1",
 		"h2",
@@ -27,8 +27,8 @@ func (_ *nonVoidElement) Condition(node ast.Node) bool {
 	})
 }
 
-func (nve *nonVoidElement) Render(node ast.Node) string {
-	return nve.renderer.renderChildren(nve, node.Children())
+func (nve *nonVoidElement) Render() string {
+	return nve.renderer.renderChildren(nve, nve.Node().Children())
 }
 
 type nonVoidElementContent struct {
@@ -42,7 +42,7 @@ func newNonVoidElementContent(rend *renderer) renderableNode {
 	}
 }
 
-func (_ *nonVoidElementContent) Condition(node ast.Node) bool {
+func (_ *nonVoidElementContent) Condition(invoker renderableNode, node ast.Node) bool {
 	return isRuleNameOneOf(node, []string{
 		"h1-content",
 		"h2-content",
@@ -52,8 +52,8 @@ func (_ *nonVoidElementContent) Condition(node ast.Node) bool {
 	})
 }
 
-func (nvec *nonVoidElementContent) Render(node ast.Node) string {
-	rule := node.Rule()
+func (nvec *nonVoidElementContent) Render() string {
+	rule := nvec.Node().Rule()
 
 	if rule == nil {
 		return ""
@@ -67,5 +67,5 @@ func (nvec *nonVoidElementContent) Render(node ast.Node) string {
 	}
 
 	tag := name[:idx]
-	return "<" + tag + ">" + nvec.renderer.renderChildren(nvec, node.Children()) + "</" + tag + ">"
+	return "<" + tag + ">" + nvec.renderer.renderChildren(nvec, nvec.Node().Children()) + "</" + tag + ">"
 }

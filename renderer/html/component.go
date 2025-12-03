@@ -15,26 +15,23 @@ func newCompCall(rend *renderer) renderableNode {
 	}
 }
 
-func (_ *compCall) Condition(node ast.Node) bool {
+func (_ *compCall) Condition(invoker renderableNode, node ast.Node) bool {
 	return isRuleNameOneOf(node, []string{"block-comp-call", "inline-comp-call"})
 }
 
-func (cc *compCall) Render(node ast.Node) string {
+func (cc *compCall) Render() string {
 	inlineCompCall := false
-	if isRuleName(node, "inline-comp-call") {
+	if isRuleName(cc.Node(), "inline-comp-call") {
 		inlineCompCall = true
 	}
 
-	compCallName := findNodeByRuleName(node.Children(), "comp-call-name")
+	compCallName := findNodeByRuleName(cc.Node().Children(), "comp-call-name")
 	if compCallName == nil {
 		return ""
 	}
 
-	globalCompDefAnc := findNode(getAncestors(node), func(anc ast.Node) bool {
-		if anc.Rule().Name() == "global-comp-def" {
-			return true
-		}
-		return false
+	globalCompDefAnc := findNode(getAncestors(cc.Node()), func(anc ast.Node) bool {
+		return isRuleName(anc, "global-comp-def")
 	})
 
 	localCompDefSrc := cc.renderer.root
@@ -68,7 +65,7 @@ func (cc *compCall) Render(node ast.Node) string {
 
 	builtinComp := cc.renderer.findBuiltinComp(string(compCallName.Raw()))
 	if builtinComp != nil {
-		return builtinComp.Render(node)
+		return builtinComp.Render(cc.Node())
 	}
 
 	return "here will be warning placeholder"
@@ -83,24 +80,4 @@ func (cc *compCall) renderInlineCompCall(compDefContent ast.Node) string {
 		return "Block components are disallowed inside inline components."
 	}
 	return cc.renderer.renderChildren(cc, compDefContent.Children())
-}
-
-type paramRef struct {
-	baseRenderable
-	renderer *renderer
-}
-
-func newParamRef(rend *renderer) renderableNode {
-	return &paramRef{
-		renderer: rend,
-	}
-}
-
-func (_ *paramRef) Condition(node ast.Node) bool {
-	return isRuleName(node, "param-ref")
-}
-
-func (pr *paramRef) Render(node ast.Node) string {
-	// TODO: Complete it
-	return "we can fetch the argument value via pr.Invoker()"
 }

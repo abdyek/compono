@@ -15,12 +15,12 @@ func newRoot(rend *renderer) renderableNode {
 	}
 }
 
-func (_ *root) Condition(node ast.Node) bool {
+func (_ *root) Condition(invoker renderableNode, node ast.Node) bool {
 	return isRuleName(node, "root")
 }
 
-func (r *root) Render(node ast.Node) string {
-	return r.renderer.renderChildren(r, node.Children())
+func (r *root) Render() string {
+	return r.renderer.renderChildren(r, r.Node().Children())
 }
 
 type rootContent struct {
@@ -34,10 +34,10 @@ func newRootContent(rend *renderer) renderableNode {
 	}
 }
 
-func (_ *rootContent) Condition(node ast.Node) bool {
+func (_ *rootContent) Condition(invoker renderableNode, node ast.Node) bool {
 	return isRuleName(node, "root-content")
 }
 
-func (rc *rootContent) Render(node ast.Node) string {
-	return rc.renderer.renderChildren(rc, node.Children())
+func (rc *rootContent) Render() string {
+	return rc.renderer.renderChildren(rc, rc.Node().Children())
 }

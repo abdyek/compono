@@ -5,8 +5,8 @@ import (
 )
 
 type renderableNode interface {
-	Condition(ast.Node) bool
-	Render(ast.Node) string
+	Condition(invoker renderableNode, node ast.Node) bool
+	Render() string
 
 	Invoker() renderableNode
 	SetInvoker(renderableNode)
@@ -36,8 +36,8 @@ func (br *baseRenderable) SetNode(node ast.Node) {
 	br.node = node
 }
 
-func renderNode(rn renderableNode, invoker renderableNode, node ast.Node, render func(ast.Node) string) string {
+func renderNode(rn renderableNode, invoker renderableNode, node ast.Node, render func() string) string {
 	rn.SetInvoker(invoker)
 	rn.SetNode(node)
-	return render(node)
+	return render()
 }

@@ -18,10 +18,10 @@ func newPlain(rend *renderer) renderableNode {
 	}
 }
 
-func (_ *plain) Condition(node ast.Node) bool {
+func (_ *plain) Condition(invoker renderableNode, node ast.Node) bool {
 	return isRuleName(node, "plain")
 }
 
-func (p *plain) Render(node ast.Node) string {
-	return html.EscapeString(strings.TrimSpace(string(node.Raw())))
+func (p *plain) Render() string {
+	return html.EscapeString(strings.TrimSpace(string(p.Node().Raw())))
 }
