@@ -152,7 +152,53 @@ func (_ *paramRefInGlobalCompDef) Condition(invoker renderableNode, node ast.Nod
 	return true
 }
 
-func (_ *paramRefInGlobalCompDef) Render() string {
-	// TODO: Complete it
-	return ""
+func (p *paramRefInGlobalCompDef) Render() string {
+
+	paramRefName := p.paramRefName()
+
+	globalCompDef := findNodeByRuleName(getAncestors(p.Node()), "global-comp-def")
+	compParams := findNodeByRuleName(globalCompDef.Children(), "comp-params")
+
+	if compParams == nil {
+		return "invalid! the params not found"
+	}
+
+	compParam := findNode(compParams.Children(), func(cp ast.Node) bool {
+		compParamName := findNodeByRuleName(cp.Children(), "comp-param-name")
+		if strings.TrimSpace(string(compParamName.Raw())) == paramRefName {
+			return true
+		}
+		return false
+	})
+
+	if compParam == nil {
+		return "invalid! the param not found"
+	}
+
+	compCall := findNode(getAncestorsByInvoker(p), func(node ast.Node) bool {
+		return isRuleNameOneOf(node, []string{"block-comp-call", "inline-comp-call"})
+	})
+
+	compCallArgs := findNodeByRuleName(compCall.Children(), "comp-call-args")
+	if compCallArgs != nil {
+		compCallArg := findNode(compCallArgs.Children(), func(cca ast.Node) bool {
+			argName := findNodeByRuleName(cca.Children(), "comp-call-arg-name")
+			if strings.TrimSpace(string(argName.Raw())) == paramRefName {
+				return true
+			}
+			return false
+		})
+		if compCallArg != nil {
+			argValue := findNodeByRuleName(findNode(findNodeByRuleName(compCallArg.Children(), "comp-call-arg-type").Children(), func(node ast.Node) bool {
+				return isRuleNameOneOf(node, []string{"comp-call-string-arg", "comp-call-number-arg", "comp-call-bool-arg"})
+			}).Children(), "comp-call-arg-value")
+			return strings.TrimSpace(string(argValue.Raw()))
+		}
+	}
+
+	compParamDefaValue := findNodeByRuleName(findNode(findNodeByRuleName(compParam.Children(), "comp-param-type").Children(), func(node ast.Node) bool {
+		return isRuleNameOneOf(node, []string{"comp-string-param", "comp-call-param", "comp-bool-param"})
+	}).Children(), "comp-param-defa-value")
+
+	return strings.TrimSpace(string(compParamDefaValue.Raw()))
 }
