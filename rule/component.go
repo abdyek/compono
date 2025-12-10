@@ -708,8 +708,9 @@ func (_ *globalCompDefContent) Name() string {
 }
 
 func (_ *globalCompDefContent) Selectors() []selector.Selector {
+	seli, _ := selector.NewStartEndLeftInner(`^`, `\n~\s+[A-Z0-9]+(?:_[A-Z0-9]+)*|\z`)
 	return []selector.Selector{
-		selector.NewUntilFirstMatch(`\n~\s+[A-Z0-9]+(?:_[A-Z0-9]+)*\s*\n`),
+		seli,
 	}
 }
 
