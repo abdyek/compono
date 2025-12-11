@@ -1,6 +1,7 @@
 package compono
 
 import (
+	"errors"
 	"fmt"
 	"io"
 
@@ -18,6 +19,7 @@ const (
 	ErrInvalidGlobalName ErrorCode = iota + 1
 	ErrGlobalAlreadyRegistered
 	ErrGlobalNotExist
+	ErrInvalidNode
 	ErrRender
 )
 
@@ -60,11 +62,17 @@ type compono struct {
 
 func (c *compono) Convert(source []byte, writer io.Writer) error {
 	root := c.parser.Parse(source, ast.DefaultRootNode())
+
+	err := c.validateNode(root)
+	if err != nil {
+		return NewComponoError(ErrInvalidNode, err.Error())
+	}
+
 	root.SetChildren(append(root.Children(), c.globalWrapper))
 
-	err := c.renderer.Render(writer, root)
+	err = c.renderer.Render(writer, root)
 	if err != nil {
-		NewComponoError(ErrRender, err.Error())
+		return NewComponoError(ErrRender, err.Error())
 	}
 	return nil
 }
@@ -154,6 +162,18 @@ func (c *compono) getGlobalCompDefByName(name string) ast.Node {
 			if child.Rule().Name() == "global-comp-name" && name == string(child.Raw()) {
 				return gcd
 			}
+		}
+	}
+	return nil
+}
+
+func (c *compono) validateNode(node ast.Node) error {
+	if node.Rule() == nil {
+		return errors.New("Each node must have a rule.")
+	}
+	for _, child := range node.Children() {
+		if err := c.validateNode(child); err != nil {
+			return err
 		}
 	}
 	return nil

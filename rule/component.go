@@ -1,6 +1,8 @@
 package rule
 
-import "github.com/umono-cms/compono/selector"
+import (
+	"github.com/umono-cms/compono/selector"
+)
 
 // Local components definition wrapper
 type localCompDefWrapper struct{}
@@ -306,8 +308,10 @@ func (_ *localCompDefContent) Selectors() []selector.Selector {
 
 func (_ *localCompDefContent) Rules() []Rule {
 	return []Rule{
-		// TODO: Fill it
-		newParamRef(),
+		newH2(),
+		newH1(),
+		newBlockCompCall(),
+		newP(),
 	}
 }
 
@@ -428,7 +432,7 @@ func (_ *compCallName) Selectors() []selector.Selector {
 	p, _ := selector.NewPattern(`\s*[A-Z0-9]+(?:_[A-Z0-9]+)*\s*`)
 	return []selector.Selector{
 		selector.NewFilter(p, func(source []byte, index [][2]int) [][2]int {
-			if len(index) > 1 {
+			if len(index) > 0 {
 				return [][2]int{index[0]}
 			}
 			return [][2]int{}
@@ -515,7 +519,7 @@ func (_ *compCallArgName) Rules() []Rule {
 type compCallArgType struct{}
 
 func newCompCallArgType() Rule {
-	return &compCallArgName{}
+	return &compCallArgType{}
 }
 
 func (_ *compCallArgType) Name() string {
@@ -592,7 +596,7 @@ func newCompCallBoolArg() Rule {
 }
 
 func (_ *compCallBoolArg) Name() string {
-	return "comp-call-arg-value"
+	return "comp-call-bool-arg"
 }
 
 func (_ *compCallBoolArg) Selectors() []selector.Selector {
@@ -704,13 +708,17 @@ func (_ *globalCompDefContent) Name() string {
 }
 
 func (_ *globalCompDefContent) Selectors() []selector.Selector {
+	seli, _ := selector.NewStartEndLeftInner(`^`, `\n~\s+[A-Z0-9]+(?:_[A-Z0-9]+)*|\z`)
 	return []selector.Selector{
-		selector.NewUntilFirstMatch(`\n~\s+[A-Z0-9]+(?:_[A-Z0-9]+)*\s*\n`),
+		seli,
 	}
 }
 
 func (_ *globalCompDefContent) Rules() []Rule {
 	return []Rule{
-		// TODO: complete it
+		newH2(),
+		newH1(),
+		newBlockCompCall(),
+		newP(),
 	}
 }
