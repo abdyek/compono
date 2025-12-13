@@ -110,7 +110,7 @@ func (_ *compParams) Name() string {
 }
 
 func (_ *compParams) Selectors() []selector.Selector {
-	se, _ := selector.NewStartEnd(`\n`, `.`)
+	se, _ := selector.NewStartEnd(`.`, `.`)
 	p, _ := selector.NewPattern(`([a-z][a-z0-9-]*)[\s\n\r]*=[\s\n\r]*(".*?"|\d+(?:\.\d+)?|true|false)`)
 	return []selector.Selector{
 		selector.NewBounds(se, p),
@@ -671,7 +671,7 @@ func (_ *globalCompDef) Selectors() []selector.Selector {
 
 func (_ *globalCompDef) Rules() []Rule {
 	return []Rule{
-		newCompParams(),
+		NewGlobalCompDefHead(),
 		newGlobalCompDefContent(),
 		newLocalCompDefWrapper(),
 	}
@@ -694,6 +694,30 @@ func (_ *globalCompName) Selectors() []selector.Selector {
 
 func (_ *globalCompName) Rules() []Rule {
 	return []Rule{}
+}
+
+// Global component definition head
+type globalCompDefHead struct{}
+
+func NewGlobalCompDefHead() Rule {
+	return &globalCompDefHead{}
+}
+
+func (_ *globalCompDefHead) Name() string {
+	return "global-comp-def-head"
+}
+
+func (_ *globalCompDefHead) Selectors() []selector.Selector {
+	p, _ := selector.NewStartEnd(`^([a-z][a-z0-9-]*)[ \t\r\n]*=[ \t\r\n]*(".*?"|\d+(?:\.\d+)?|true|false)`, `\n\n|\z`)
+	return []selector.Selector{
+		p,
+	}
+}
+
+func (_ *globalCompDefHead) Rules() []Rule {
+	return []Rule{
+		newCompParams(),
+	}
 }
 
 // Global component definition content

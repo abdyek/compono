@@ -157,7 +157,8 @@ func (p *paramRefInGlobalCompDef) Render() string {
 	paramRefName := p.paramRefName()
 
 	globalCompDef := findNodeByRuleName(getAncestors(p.Node()), "global-comp-def")
-	compParams := findNodeByRuleName(globalCompDef.Children(), "comp-params")
+	globalCompDefHead := findNodeByRuleName(globalCompDef.Children(), "global-comp-def-head")
+	compParams := findNodeByRuleName(globalCompDefHead.Children(), "comp-params")
 
 	if compParams == nil {
 		return "invalid! the params not found"
