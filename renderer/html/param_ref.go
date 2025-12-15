@@ -50,23 +50,23 @@ func (_ *paramRefInRootContent) Render() string {
 	return "error placeholder"
 }
 
-type paramRefInLocalCompDefOfRoot struct {
+type paramRefInLocalCompDef struct {
 	baseParamRef
 }
 
-func newParamRefInLocalCompDefOfRoot(rend *renderer) renderableNode {
-	return &paramRefInLocalCompDefOfRoot{
+func newParamRefInLocalCompDef(rend *renderer) renderableNode {
+	return &paramRefInLocalCompDef{
 		baseParamRef: baseParamRef{
 			renderer: rend,
 		},
 	}
 }
 
-func (p *paramRefInLocalCompDefOfRoot) New() renderableNode {
-	return newParamRefInLocalCompDefOfRoot(p.renderer)
+func (p *paramRefInLocalCompDef) New() renderableNode {
+	return newParamRefInLocalCompDef(p.renderer)
 }
 
-func (_ *paramRefInLocalCompDefOfRoot) Condition(invoker renderableNode, node ast.Node) bool {
+func (_ *paramRefInLocalCompDef) Condition(invoker renderableNode, node ast.Node) bool {
 	if !isRuleName(node, "param-ref") {
 		return false
 	}
@@ -74,14 +74,10 @@ func (_ *paramRefInLocalCompDefOfRoot) Condition(invoker renderableNode, node as
 	if localCompDef == nil {
 		return false
 	}
-	globalCompDef := findNodeByRuleName(getAncestors(node), "global-comp-def")
-	if globalCompDef != nil {
-		return false
-	}
 	return true
 }
 
-func (p *paramRefInLocalCompDefOfRoot) Render() string {
+func (p *paramRefInLocalCompDef) Render() string {
 
 	paramRefName := p.paramRefName()
 
