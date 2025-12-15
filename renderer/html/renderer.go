@@ -28,9 +28,8 @@ func NewRenderer(log logger.Logger) *renderer {
 		newNonVoidElement(r),
 		newNonVoidElementContent(r),
 		newParamRefInRootContent(r),
-		newParamRefInLocalCompDefOfRoot(r),
+		newParamRefInLocalCompDef(r),
 		newParamRefInGlobalCompDef(r),
-		newParamRefInLocalCompDefOfGlobal(r),
 		newPlain(r),
 	}
 
