@@ -215,3 +215,64 @@ func (p *paramRefInGlobalCompDef) Render() string {
 
 	return strings.TrimSpace(string(compParamDefaValue.Raw()))
 }
+
+type paramRefInLocalCompDefOfGlobal struct {
+	baseParamRef
+}
+
+func newParamRefInLocalCompDefOfGlobal(rend *renderer) renderableNode {
+	return &paramRefInLocalCompDefOfGlobal{
+		baseParamRef: baseParamRef{
+			renderer: rend,
+		},
+	}
+}
+
+func (_ *paramRefInLocalCompDefOfGlobal) Condition(invoker renderableNode, node ast.Node) bool {
+	if !isRuleName(node, "param-ref") {
+		return false
+	}
+	localCompDef := findNodeByRuleName(getAncestors(node), "local-comp-def")
+	if localCompDef == nil {
+		return false
+	}
+	globalCompDef := findNodeByRuleName(getAncestors(node), "global-comp-def")
+	if globalCompDef == nil {
+		return false
+	}
+	return true
+}
+
+func (p *paramRefInLocalCompDefOfGlobal) Render() string {
+	paramRefName := p.paramRefName()
+
+	localCompDef := findNodeByRuleName(getAncestors(p.Node()), "local-comp-def")
+	localCompDefHead := findNodeByRuleName(localCompDef.Children(), "local-comp-def-head")
+	compParams := findNodeByRuleName(localCompDefHead.Children(), "comp-params")
+
+	if compParams == nil {
+		return "invalid! the params not found"
+	}
+
+	compParam := findNode(compParams.Children(), func(cp ast.Node) bool {
+		compParamName := findNodeByRuleName(cp.Children(), "comp-param-name")
+		if strings.TrimSpace(string(compParamName.Raw())) == paramRefName {
+			return true
+		}
+		return false
+	})
+
+	if compParam == nil {
+		return "invalid! the param not found"
+	}
+
+	compCall := findNode(getAncestorsByInvoker(p), func(node ast.Node) bool {
+		return isRuleNameOneOf(node, []string{"block-comp-call", "inline-comp-call"})
+	})
+
+	// TODO: Complete it.
+	_ = compCall
+	_ = paramRefName
+
+	return ""
+}

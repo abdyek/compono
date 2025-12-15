@@ -30,6 +30,7 @@ func NewRenderer(log logger.Logger) *renderer {
 		newParamRefInRootContent(r),
 		newParamRefInLocalCompDefOfRoot(r),
 		newParamRefInGlobalCompDef(r),
+		newParamRefInLocalCompDefOfGlobal(r),
 		newPlain(r),
 	}
 
