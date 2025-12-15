@@ -31,7 +31,6 @@ func NewRenderer(log logger.Logger) *renderer {
 		newParamRefInLocalCompDefOfRoot(r),
 		newParamRefInGlobalCompDef(r),
 		newPlain(r),
-		newDummy(),
 	}
 
 	r.builtinCompMap = make(map[string]builtinComponent)
