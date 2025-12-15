@@ -29,6 +29,10 @@ func newParamRefInRootContent(rend *renderer) renderableNode {
 	}
 }
 
+func (p *paramRefInRootContent) New() renderableNode {
+	return newParamRefInRootContent(p.renderer)
+}
+
 func (_ *paramRefInRootContent) Condition(invoker renderableNode, node ast.Node) bool {
 	if !isRuleName(node, "param-ref") {
 		return false
@@ -56,6 +60,10 @@ func newParamRefInLocalCompDefOfRoot(rend *renderer) renderableNode {
 			renderer: rend,
 		},
 	}
+}
+
+func (p *paramRefInLocalCompDefOfRoot) New() renderableNode {
+	return newParamRefInLocalCompDefOfRoot(p.renderer)
 }
 
 func (_ *paramRefInLocalCompDefOfRoot) Condition(invoker renderableNode, node ast.Node) bool {
@@ -135,6 +143,10 @@ func newParamRefInGlobalCompDef(rend *renderer) renderableNode {
 			renderer: rend,
 		},
 	}
+}
+
+func (p *paramRefInGlobalCompDef) New() renderableNode {
+	return newParamRefInGlobalCompDef(p.renderer)
 }
 
 func (_ *paramRefInGlobalCompDef) Condition(invoker renderableNode, node ast.Node) bool {

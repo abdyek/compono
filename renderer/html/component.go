@@ -15,6 +15,10 @@ func newCompCall(rend *renderer) renderableNode {
 	}
 }
 
+func (cc *compCall) New() renderableNode {
+	return newCompCall(cc.renderer)
+}
+
 func (_ *compCall) Condition(invoker renderableNode, node ast.Node) bool {
 	return isRuleNameOneOf(node, []string{"block-comp-call", "inline-comp-call"})
 }

@@ -5,6 +5,7 @@ import (
 )
 
 type renderableNode interface {
+	New() renderableNode
 	Condition(invoker renderableNode, node ast.Node) bool
 	Render() string
 
@@ -36,8 +37,8 @@ func (br *baseRenderable) SetNode(node ast.Node) {
 	br.node = node
 }
 
-func renderNode(rn renderableNode, invoker renderableNode, node ast.Node, render func() string) string {
+func renderNode(rn renderableNode, invoker renderableNode, node ast.Node) string {
 	rn.SetInvoker(invoker)
 	rn.SetNode(node)
-	return render()
+	return rn.Render()
 }

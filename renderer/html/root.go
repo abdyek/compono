@@ -15,6 +15,10 @@ func newRoot(rend *renderer) renderableNode {
 	}
 }
 
+func (r *root) New() renderableNode {
+	return newRoot(r.renderer)
+}
+
 func (_ *root) Condition(invoker renderableNode, node ast.Node) bool {
 	return isRuleName(node, "root")
 }
@@ -32,6 +36,10 @@ func newRootContent(rend *renderer) renderableNode {
 	return &rootContent{
 		renderer: rend,
 	}
+}
+
+func (rc *rootContent) New() renderableNode {
+	return newRootContent(rc.renderer)
 }
 
 func (_ *rootContent) Condition(invoker renderableNode, node ast.Node) bool {

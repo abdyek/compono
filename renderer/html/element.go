@@ -17,6 +17,10 @@ func newNonVoidElement(rend *renderer) renderableNode {
 	}
 }
 
+func (nve *nonVoidElement) New() renderableNode {
+	return newNonVoidElement(nve.renderer)
+}
+
 func (_ *nonVoidElement) Condition(invoker renderableNode, node ast.Node) bool {
 	return isRuleNameOneOf(node, []string{
 		"h1",
@@ -40,6 +44,10 @@ func newNonVoidElementContent(rend *renderer) renderableNode {
 	return &nonVoidElementContent{
 		renderer: rend,
 	}
+}
+
+func (nvec *nonVoidElementContent) New() renderableNode {
+	return newNonVoidElementContent(nvec.renderer)
 }
 
 func (_ *nonVoidElementContent) Condition(invoker renderableNode, node ast.Node) bool {
