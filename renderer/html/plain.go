@@ -18,6 +18,10 @@ func newPlain(rend *renderer) renderableNode {
 	}
 }
 
+func (p *plain) New() renderableNode {
+	return newPlain(p.renderer)
+}
+
 func (_ *plain) Condition(invoker renderableNode, node ast.Node) bool {
 	return isRuleName(node, "plain")
 }

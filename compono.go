@@ -68,6 +68,7 @@ func (c *compono) Convert(source []byte, writer io.Writer) error {
 		return NewComponoError(ErrInvalidNode, err.Error())
 	}
 
+	c.globalWrapper.SetParent(root)
 	root.SetChildren(append(root.Children(), c.globalWrapper))
 
 	err = c.renderer.Render(writer, root)
@@ -99,6 +100,7 @@ func (c *compono) RegisterGlobalComponent(name string, source []byte) error {
 
 	globalCompName := ast.DefaultEmptyNode()
 	globalCompName.SetRule(rule.NewGlobalCompName())
+	globalCompName.SetParent(parsed)
 	globalCompName.SetRaw([]byte(name))
 
 	parsed.SetChildren(append([]ast.Node{globalCompName}, parsed.Children()...))

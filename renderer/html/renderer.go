@@ -61,7 +61,7 @@ func (r *renderer) Render(writer io.Writer, root ast.Node) error {
 func (r *renderer) render(node ast.Node) string {
 	rn := r.findRenderable(nil, node)
 	if rn != nil {
-		return renderNode(rn, nil, node, rn.Render)
+		return renderNode(rn, nil, node)
 	}
 	return ""
 }
@@ -71,7 +71,7 @@ func (r *renderer) renderChildren(invoker renderableNode, children []ast.Node) s
 	for _, child := range children {
 		re := r.findRenderable(invoker, child)
 		if re != nil {
-			result += renderNode(re, invoker, child, re.Render)
+			result += renderNode(re, invoker, child)
 		}
 	}
 	return result
@@ -80,7 +80,7 @@ func (r *renderer) renderChildren(invoker renderableNode, children []ast.Node) s
 func (r *renderer) findRenderable(invoker renderableNode, node ast.Node) renderableNode {
 	for _, rn := range r.renderableNodes {
 		if cond := rn.Condition(invoker, node); cond {
-			return rn
+			return rn.New()
 		}
 	}
 	return nil
