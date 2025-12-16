@@ -404,7 +404,7 @@ func (_ *compCall) Name() string {
 }
 
 func (_ *compCall) Selectors() []selector.Selector {
-	seSelector, _ := selector.NewStartEnd(`\{\{\s*[A-Z0-9]+(?:_[A-Z0-9]+)`, `\s*\}\}`)
+	seSelector, _ := selector.NewStartEnd(`\{\{\s*[A-Z0-9]+(?:_[A-Z0-9]+)*`, `\s*\}\}`)
 	return []selector.Selector{
 		seSelector,
 	}
