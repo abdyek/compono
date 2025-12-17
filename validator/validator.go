@@ -21,10 +21,9 @@ func DefaultValidator() Validator {
 			},
 			"local-comp-def": []string{
 				"local-comp-def-head",
-				"local-comp-def-content",
 			},
 			"global-comp-def": []string{
-				"global-comp-def-content",
+				"global-comp-name",
 			},
 			"block-comp-call": []string{
 				"comp-call-name",

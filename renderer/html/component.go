@@ -30,10 +30,6 @@ func (cc *compCall) Render() string {
 	}
 
 	compCallName := findNodeByRuleName(cc.Node().Children(), "comp-call-name")
-	if compCallName == nil {
-		return ""
-	}
-
 	globalCompDefAnc := findNode(getAncestors(cc.Node()), func(anc ast.Node) bool {
 		return isRuleName(anc, "global-comp-def")
 	})
