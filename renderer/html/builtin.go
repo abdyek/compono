@@ -7,6 +7,7 @@ import (
 	"github.com/umono-cms/compono/ast"
 )
 
+// NOTE: builtinComponent can be improved. Now, It is enough.
 type builtinComponent interface {
 	New() builtinComponent
 	Name() string
@@ -32,7 +33,12 @@ func (_ *link) Name() string {
 }
 
 func (_ *link) Render(invoker renderableNode, node ast.Node) string {
-	return "<a href=\"" + getArgValueWithDefa(node, "url", "url") + "\" target='_blank'>" + getArgValueWithDefa(node, "text", "") + "</a>"
+	newTabStr := ""
+	newTab, ok := getBoolArgValue(node, "new-tab")
+	if ok && newTab {
+		newTabStr = ` target="_blank" rel="noopener noreferrer"`
+	}
+	return "<a href=\"" + getArgValueWithDefa(node, "url", "url") + "\"" + newTabStr + ">" + getArgValueWithDefa(node, "text", "") + "</a>"
 }
 
 func getArgValueWithDefa(compCall ast.Node, name string, defa string) string {
@@ -65,4 +71,18 @@ func getArgValue(compCall ast.Node, name string) (string, bool) {
 		return "", false
 	}
 	return html.EscapeString(strings.TrimSpace(string(argValue.Raw()))), true
+}
+
+func getBoolArgValue(compCall ast.Node, name string) (bool, bool) {
+	value, ok := getArgValue(compCall, name)
+	if !ok {
+		return false, false
+	}
+	if value == "false" {
+		return false, true
+	}
+	if value == "true" {
+		return true, true
+	}
+	return false, false
 }
