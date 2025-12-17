@@ -36,7 +36,7 @@ func NewRenderer(log logger.Logger) *renderer {
 	r.builtinCompMap = make(map[string]builtinComponent)
 
 	builtinComps := []builtinComponent{
-		NewLink(r),
+		newLink(r),
 	}
 
 	for _, bc := range builtinComps {
@@ -144,5 +144,5 @@ func (r *renderer) findBuiltinComp(name string) builtinComponent {
 	if !ok {
 		return nil
 	}
-	return bc
+	return bc.New()
 }
