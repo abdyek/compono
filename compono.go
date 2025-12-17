@@ -1,7 +1,6 @@
 package compono
 
 import (
-	"errors"
 	"fmt"
 	"io"
 
@@ -11,6 +10,7 @@ import (
 	"github.com/umono-cms/compono/renderer"
 	"github.com/umono-cms/compono/rule"
 	"github.com/umono-cms/compono/util"
+	"github.com/umono-cms/compono/validator"
 )
 
 type ErrorCode int
@@ -19,7 +19,7 @@ const (
 	ErrInvalidGlobalName ErrorCode = iota + 1
 	ErrGlobalAlreadyRegistered
 	ErrGlobalNotExist
-	ErrInvalidNode
+	ErrInvalidAST
 	ErrRender
 )
 
@@ -32,6 +32,8 @@ type Compono interface {
 	SetParser(parser.Parser)
 	Renderer() renderer.Renderer
 	SetRenderer(renderer.Renderer)
+	Validator() validator.Validator
+	SetValidator(validator.Validator)
 	Logger() logger.Logger
 	SetLogger(logger.Logger)
 }
@@ -41,6 +43,7 @@ func New() Compono {
 
 	p := parser.DefaultParser(log)
 	r := renderer.DefaultRenderer(log)
+	v := validator.DefaultValidator()
 
 	gw := ast.DefaultEmptyNode()
 	gw.SetRule(rule.NewGlobalCompDefWrapper())
@@ -48,6 +51,7 @@ func New() Compono {
 	return &compono{
 		parser:        p,
 		renderer:      r,
+		validator:     v,
 		logger:        log,
 		globalWrapper: gw,
 	}
@@ -56,20 +60,25 @@ func New() Compono {
 type compono struct {
 	parser        parser.Parser
 	renderer      renderer.Renderer
+	validator     validator.Validator
 	logger        logger.Logger
 	globalWrapper ast.Node
 }
 
 func (c *compono) Convert(source []byte, writer io.Writer) error {
-	root := c.parser.Parse(source, ast.DefaultRootNode())
-
-	err := c.validateNode(root)
-	if err != nil {
-		return NewComponoError(ErrInvalidNode, err.Error())
+	if len(source) == 0 {
+		return nil
 	}
+
+	root := c.parser.Parse(source, ast.DefaultRootNode())
 
 	c.globalWrapper.SetParent(root)
 	root.SetChildren(append(root.Children(), c.globalWrapper))
+
+	err := c.validator.Validate(root)
+	if err != nil {
+		return NewComponoError(ErrInvalidAST, err.Error())
+	}
 
 	err = c.renderer.Render(writer, root)
 	if err != nil {
@@ -147,6 +156,14 @@ func (c *compono) SetRenderer(renderer renderer.Renderer) {
 	c.renderer = renderer
 }
 
+func (c *compono) Validator() validator.Validator {
+	return c.validator
+}
+
+func (c *compono) SetValidator(vldtr validator.Validator) {
+	c.validator = vldtr
+}
+
 func (c *compono) Logger() logger.Logger {
 	return c.logger
 }
@@ -164,18 +181,6 @@ func (c *compono) getGlobalCompDefByName(name string) ast.Node {
 			if child.Rule().Name() == "global-comp-name" && name == string(child.Raw()) {
 				return gcd
 			}
-		}
-	}
-	return nil
-}
-
-func (c *compono) validateNode(node ast.Node) error {
-	if node.Rule() == nil {
-		return errors.New("Each node must have a rule.")
-	}
-	for _, child := range node.Children() {
-		if err := c.validateNode(child); err != nil {
-			return err
 		}
 	}
 	return nil
