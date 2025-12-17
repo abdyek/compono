@@ -458,7 +458,25 @@ func (_ *compCallArgs) Name() string {
 func (_ *compCallArgs) Selectors() []selector.Selector {
 	p, _ := selector.NewPattern(`([a-z][a-z0-9-]*)[\s\n\r]*=[\s\n\r]*(".*?"|\d+(?:\.\d+)?|true|false)`)
 	return []selector.Selector{
-		p,
+		selector.NewFilter(p, func(source []byte, index [][2]int) [][2]int {
+			if len(index) == 0 {
+				return [][2]int{}
+			}
+
+			start := index[0][0]
+			end := index[0][1]
+
+			for _, i := range index[1:] {
+				if i[0] < start {
+					start = i[0]
+				}
+				if i[1] > end {
+					end = i[1]
+				}
+			}
+
+			return [][2]int{{start, end}}
+		}),
 	}
 }
 
