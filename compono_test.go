@@ -54,7 +54,7 @@ func (s *componoTestSuite) TestGolden() {
 		golden, err := os.ReadFile(goldenPath)
 		require.Nil(s.T(), err, "golden file missing")
 
-		assert.Equal(s.T(), buf.String(), string(golden), "from %s", inputPath)
+		assert.Equal(s.T(), strings.TrimSpace(string(golden)), buf.String(), "from %s", inputPath)
 	}
 }
 
