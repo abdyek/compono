@@ -55,3 +55,19 @@ func getAncestorsByInvoker(rn renderableNode) []ast.Node {
 	}
 	return append([]ast.Node{invoker.Node()}, getAncestorsByInvoker(invoker)...)
 }
+
+func inlineError(title, description string) string {
+	return `<compono-error-inline><span slot="title">` +
+		title +
+		`</span><span slot="description">` +
+		description +
+		`</span></compono-error-inline>`
+}
+
+func blockError(title, description string) string {
+	return `<compono-error-block><div slot="title">` +
+		title +
+		`</div><div slot="description">` +
+		description +
+		`</div></compono-error-block>`
+}

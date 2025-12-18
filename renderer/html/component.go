@@ -1,6 +1,8 @@
 package html
 
 import (
+	"strings"
+
 	"github.com/umono-cms/compono/ast"
 )
 
@@ -46,7 +48,7 @@ func (cc *compCall) Render() string {
 			return ""
 		}
 		if inlineCompCall {
-			return cc.renderInlineCompCall(localCompDefContent)
+			return cc.renderInlineCompCall(strings.TrimSpace(string(compCallName.Raw())), localCompDefContent)
 		}
 		return cc.renderer.renderChildren(cc, localCompDefContent.Children())
 	}
@@ -58,7 +60,7 @@ func (cc *compCall) Render() string {
 			return ""
 		}
 		if inlineCompCall {
-			return cc.renderInlineCompCall(globalCompDefContent)
+			return cc.renderInlineCompCall(strings.TrimSpace(string(compCallName.Raw())), globalCompDefContent)
 		}
 		return cc.renderer.renderChildren(cc, globalCompDefContent.Children())
 	}
@@ -68,17 +70,22 @@ func (cc *compCall) Render() string {
 		return builtinComp.Render(cc.Invoker(), cc.Node())
 	}
 
-	return "here will be warning placeholder"
+	title := "Unknown component"
+	description := "The component <strong>" + strings.TrimSpace(string(compCallName.Raw())) + "</strong> is not defined or not registered."
+	if inlineCompCall {
+		return inlineError(title, description)
+	}
+	return blockError(title, description)
 }
 
-func (cc *compCall) renderInlineCompCall(compDefContent ast.Node) string {
+func (cc *compCall) renderInlineCompCall(compName string, compDefContent ast.Node) string {
 	childCount := len(compDefContent.Children())
 	if childCount == 0 {
 		return ""
 	}
 	p := findNodeByRuleName(compDefContent.Children(), "p")
 	if childCount > 1 || p == nil {
-		return "Block components are disallowed inside inline components."
+		return inlineError("Invalid component usage", "The component <strong>"+compName+"</strong> is a block component and cannot be used inline.")
 	}
 	pContent := findNodeByRuleName(p.Children(), "p-content")
 	return cc.renderer.renderChildren(cc, pContent.Children())
