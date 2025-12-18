@@ -38,12 +38,12 @@ func (s *componoTestSuite) TestGolden() {
 			globalInput, err := os.ReadFile(gPath)
 			require.Nil(s.T(), err)
 
-			err = comp.RegisterGlobalComponent(strings.TrimSuffix(globalCompName, ".comp"), globalInput)
+			err = comp.RegisterGlobalComponent(strings.TrimSuffix(globalCompName, ".comp"), []byte(strings.TrimSpace(string(globalInput))))
 			assert.Nil(s.T(), err)
 		}
 
 		var buf bytes.Buffer
-		err = comp.Convert(input, &buf)
+		err = comp.Convert([]byte(strings.TrimSpace(string(input))), &buf)
 		assert.Nil(s.T(), err)
 
 		goldenPath := filepath.Join(
