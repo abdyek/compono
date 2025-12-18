@@ -76,8 +76,10 @@ func (cc *compCall) renderInlineCompCall(compDefContent ast.Node) string {
 	if childCount == 0 {
 		return ""
 	}
-	if childCount > 1 || findNodeByRuleName(compDefContent.Children(), "p") == nil {
+	p := findNodeByRuleName(compDefContent.Children(), "p")
+	if childCount > 1 || p == nil {
 		return "Block components are disallowed inside inline components."
 	}
-	return cc.renderer.renderChildren(cc, compDefContent.Children())
+	pContent := findNodeByRuleName(p.Children(), "p-content")
+	return cc.renderer.renderChildren(cc, pContent.Children())
 }

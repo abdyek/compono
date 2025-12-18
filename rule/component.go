@@ -376,6 +376,13 @@ func (_ *blockCompCall) Name() string {
 	return "block-comp-call"
 }
 
+func (_ *blockCompCall) Selectors() []selector.Selector {
+	seSelector, _ := selector.NewStartEnd(`(^|\n)\s*\{\{\s*[A-Z0-9]+(?:_[A-Z0-9]+)*`, `\s*\}\}\s*(\n|\z)`)
+	return []selector.Selector{
+		seSelector,
+	}
+}
+
 // Inline component call
 type inlineCompCall struct {
 	*compCall

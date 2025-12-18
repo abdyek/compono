@@ -1,0 +1,5 @@
+{{ HEADER }}
+
+~ HEADER
+
+I am a local component and kill **HEADER** global component
