@@ -377,7 +377,7 @@ func (_ *blockCompCall) Name() string {
 }
 
 func (_ *blockCompCall) Selectors() []selector.Selector {
-	seSelector, _ := selector.NewStartEnd(`(^|\n)\s*\{\{\s*[A-Z0-9]+(?:_[A-Z0-9]+)*`, `\s*\}\}\s*(\n|\z)`)
+	seSelector, _ := selector.NewStartEnd(`(^|\n)\s*\{\{\s*[A-Z0-9]+(?:_[A-Z0-9]+)*`, `\s*\}\}`)
 	return []selector.Selector{
 		seSelector,
 	}
