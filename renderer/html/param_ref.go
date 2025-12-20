@@ -167,9 +167,14 @@ func (p *paramRefInGlobalCompDef) Render() string {
 
 	globalCompDef := findNodeByRuleName(getAncestors(p.Node()), "global-comp-def")
 	globalCompDefHead := findNodeByRuleName(globalCompDef.Children(), "global-comp-def-head")
-	compParams := findNodeByRuleName(globalCompDefHead.Children(), "comp-params")
 
 	unknownParamErr := inlineError("Unknown parameter", "The parameter <strong>"+paramRefName+"</strong> is not defined for this component.")
+
+	if globalCompDefHead == nil {
+		return unknownParamErr
+	}
+
+	compParams := findNodeByRuleName(globalCompDefHead.Children(), "comp-params")
 	if compParams == nil {
 		return unknownParamErr
 	}
