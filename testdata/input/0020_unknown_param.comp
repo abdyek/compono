@@ -1,0 +1,5 @@
+{{ HELLO }}
+
+~ HELLO
+
+$not-defined. Parameters must be defined in the comp-def-head.

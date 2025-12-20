@@ -1,0 +1,1 @@
+<h1>Say <compono-error-inline><span slot="title">Unknown component</span><span slot="description">The component <strong>HELLO</strong> is not defined or not registered.</span></compono-error-inline></h1>
