@@ -1,0 +1,1 @@
+<compono-error-block><div slot="title">Unknown component</div><div slot="description">The component <strong>HELLO</strong> is not defined or not registered.</div></compono-error-block>

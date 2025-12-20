@@ -1,0 +1,1 @@
+<h1><compono-error-inline><span slot="title">Invalid component usage</span><span slot="description">The component <strong>I_AM_A_BLOCK</strong> is a block component and cannot be used inline.</span></compono-error-inline></h1>
