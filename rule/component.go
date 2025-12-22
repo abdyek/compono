@@ -1,6 +1,8 @@
 package rule
 
 import (
+	"regexp"
+
 	"github.com/umono-cms/compono/selector"
 )
 
@@ -377,9 +379,24 @@ func (_ *blockCompCall) Name() string {
 }
 
 func (_ *blockCompCall) Selectors() []selector.Selector {
-	seSelector, _ := selector.NewStartEnd(`(^|\n)\s*\{\{\s*[A-Z0-9]+(?:_[A-Z0-9]+)*`, `\s*\}\}`)
+	se, _ := selector.NewStartEnd(`(^|\n)\s*\{\{\s*[A-Z0-9]+(?:_[A-Z0-9]+)*`, `\s*\}\}\s*(\n|\z)`)
 	return []selector.Selector{
-		seSelector,
+		selector.NewFilter(se, func(source []byte, index [][2]int) [][2]int {
+			if len(index) == 0 {
+				return [][2]int{}
+			}
+
+			filtered := [][2]int{}
+			for _, bccInd := range index {
+				re := regexp.MustCompile(`}}`)
+				closingInd := re.FindAllStringIndex(string(source[bccInd[0]:bccInd[1]]), -1)
+				if len(closingInd) == 1 {
+					filtered = append(filtered, bccInd)
+				}
+			}
+
+			return filtered
+		}),
 	}
 }
 
