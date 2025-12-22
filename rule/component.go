@@ -379,7 +379,7 @@ func (_ *blockCompCall) Name() string {
 }
 
 func (_ *blockCompCall) Selectors() []selector.Selector {
-	se, _ := selector.NewStartEnd(`(^|\n)\s*\{\{\s*[A-Z0-9]+(?:_[A-Z0-9]+)*`, `\s*\}\}\s*(\n|\z)`)
+	se, _ := selector.NewStartEnd(`\{\{\s*[A-Z0-9]+(?:_[A-Z0-9]+)*`, `\s*\}\}`)
 	return []selector.Selector{
 		selector.NewFilter(se, func(source []byte, index [][2]int) [][2]int {
 			if len(index) == 0 {
@@ -387,11 +387,35 @@ func (_ *blockCompCall) Selectors() []selector.Selector {
 			}
 
 			filtered := [][2]int{}
-			for _, bccInd := range index {
+
+			for _, ind := range index {
+				start, end := ind[0], ind[1]
+
+				leftOK := true
+				for i := start - 1; i >= 0 && source[i] != '\n'; i-- {
+					if source[i] != ' ' && source[i] != '\t' {
+						leftOK = false
+						break
+					}
+				}
+
+				rightOK := true
+				for i := end; i < len(source) && source[i] != '\n'; i++ {
+					if source[i] != ' ' && source[i] != '\t' {
+						rightOK = false
+						break
+					}
+				}
+
+				insideOK := true
 				re := regexp.MustCompile(`}}`)
-				closingInd := re.FindAllStringIndex(string(source[bccInd[0]:bccInd[1]]), -1)
-				if len(closingInd) == 1 {
-					filtered = append(filtered, bccInd)
+				closingInd := re.FindAllStringIndex(string(source[ind[0]:ind[1]]), -1)
+				if len(closingInd) > 1 {
+					insideOK = false
+				}
+
+				if leftOK && rightOK && insideOK {
+					filtered = append(filtered, ind)
 				}
 			}
 
