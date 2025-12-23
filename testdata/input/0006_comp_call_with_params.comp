@@ -1,7 +1,6 @@
 {{ HELLO surname = "Bulut" name = "Yunus Emre" }}
 
-~ HELLO
-name = "" surname = ""
+~ HELLO name = "" surname = ""
 
 # $name
 ## $surname
