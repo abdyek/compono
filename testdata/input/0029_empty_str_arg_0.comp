@@ -1,0 +1,4 @@
+{{ SAY_HELLO name = "" }}
+
+~ SAY_HELLO name = "default-value"
+Hello {{ name }}!
