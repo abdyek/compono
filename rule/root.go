@@ -42,6 +42,10 @@ func (_ *rootContent) Selectors() []selector.Selector {
 
 func (_ *rootContent) Rules() []Rule {
 	return []Rule{
+		newH6(),
+		newH5(),
+		newH4(),
+		newH3(),
 		newH2(),
 		newH1(),
 		newBlockCompCall(),
