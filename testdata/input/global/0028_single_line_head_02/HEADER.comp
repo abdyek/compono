@@ -1,6 +1,6 @@
 name = ""
-# $name
+# {{ name }}
 {{ LOCAL_COMP param = 123 }}
 
 ~ LOCAL_COMP param = 0
-$param
+{{ param }}

@@ -329,9 +329,9 @@ func (_ *paramRef) Name() string {
 }
 
 func (_ *paramRef) Selectors() []selector.Selector {
-	p, _ := selector.NewPattern(`\$[a-z][a-z0-9-]*`)
+	se, _ := selector.NewStartEnd(`\{\{\s*[a-z][a-z0-9-]*`, `\s*\}\}`)
 	return []selector.Selector{
-		p,
+		se,
 	}
 }
 
@@ -353,8 +353,9 @@ func (_ *paramRefName) Name() string {
 }
 
 func (_ *paramRefName) Selectors() []selector.Selector {
+	sei := selector.NewStartEndInner(`\{\{\s*`, `\s*\}\}`)
 	return []selector.Selector{
-		selector.NewStartEndInner(`\$`, `\z`),
+		sei,
 	}
 }
 
