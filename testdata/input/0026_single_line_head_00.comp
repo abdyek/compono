@@ -1,4 +1,4 @@
 {{ HELLO name = "Yunus Emre" }}
 
 ~ HELLO name = "yunus emre"
-# Hello $name!!
+# Hello {{name}}!!

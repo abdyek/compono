@@ -1,2 +1,2 @@
 age = 0 adult = false
-$adult $age
+{{ adult }} {{ age }}
