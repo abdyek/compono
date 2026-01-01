@@ -119,6 +119,9 @@ func (p *paramRefInLocalCompDef) Render() string {
 			argValue := findNodeByRuleName(findNode(findNodeByRuleName(compCallArg.Children(), "comp-call-arg-type").Children(), func(node ast.Node) bool {
 				return isRuleNameOneOf(node, []string{"comp-call-string-arg", "comp-call-number-arg", "comp-call-bool-arg"})
 			}).Children(), "comp-call-arg-value")
+			if argValue == nil {
+				return ""
+			}
 			return strings.TrimSpace(string(argValue.Raw()))
 		}
 	}
@@ -126,6 +129,10 @@ func (p *paramRefInLocalCompDef) Render() string {
 	compParamDefaValue := findNodeByRuleName(findNode(findNodeByRuleName(compParam.Children(), "comp-param-type").Children(), func(node ast.Node) bool {
 		return isRuleNameOneOf(node, []string{"comp-string-param", "comp-call-param", "comp-bool-param"})
 	}).Children(), "comp-param-defa-value")
+
+	if compParamDefaValue == nil {
+		return ""
+	}
 
 	return strings.TrimSpace(string(compParamDefaValue.Raw()))
 }
