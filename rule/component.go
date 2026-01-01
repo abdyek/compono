@@ -310,6 +310,10 @@ func (_ *localCompDefContent) Selectors() []selector.Selector {
 
 func (_ *localCompDefContent) Rules() []Rule {
 	return []Rule{
+		newH6(),
+		newH5(),
+		newH4(),
+		newH3(),
 		newH2(),
 		newH1(),
 		newBlockCompCall(),
@@ -807,6 +811,10 @@ func (_ *globalCompDefContent) Selectors() []selector.Selector {
 
 func (_ *globalCompDefContent) Rules() []Rule {
 	return []Rule{
+		newH6(),
+		newH5(),
+		newH4(),
+		newH3(),
 		newH2(),
 		newH1(),
 		newBlockCompCall(),
