@@ -1,0 +1,12 @@
+```
+
+  Global comp
+
+```
+
+{{ LOCAL_COMP_OF_GLOBAL_COMP }}
+
+~ LOCAL_COMP_OF_GLOBAL_COMP
+```c
+Another code block
+```
