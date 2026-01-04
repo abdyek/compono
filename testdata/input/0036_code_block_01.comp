@@ -1,0 +1,50 @@
+```
+```
+
+   ```
+valid
+```
+
+```
+valid
+     ```
+
+       ```
+valid
+    ```
+
+  ```go
+valid
+```
+
+```go
+valid
+      ```
+
+    ```js
+valid
+        ```
+
+ b ```
+ invalid
+```
+
+```
+ invalid
+ c ```
+
+ a   ```
+ invalid
+ c  ```
+
+``` a
+invalid
+```
+
+```
+invalid
+``` a
+
+```     d
+invalid
+```   t

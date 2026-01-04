@@ -23,6 +23,9 @@ func (p *plain) New() renderableNode {
 }
 
 func (_ *plain) Condition(invoker renderableNode, node ast.Node) bool {
+	if isRuleName(invoker.Node(), "code-block-content") {
+		return false
+	}
 	return isRuleName(node, "plain")
 }
 
