@@ -1,0 +1,7 @@
+<pre><code class="language-plaintext"></code></pre><pre><code class="language-plaintext">valid
+</code></pre><pre><code class="language-plaintext">valid
+     </code></pre><pre><code class="language-plaintext">valid
+    </code></pre><pre><code class="language-go">valid
+</code></pre><pre><code class="language-go">valid
+      </code></pre><pre><code class="language-js">valid
+        </code></pre><p> b ``` invalid```</p><p>``` invalid c ```</p><p> a   ``` invalid c  ```</p><p>``` ainvalid```</p><p>```invalid``` a</p><p>```     dinvalid```   t</p>

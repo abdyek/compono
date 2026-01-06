@@ -44,6 +44,7 @@ func (_ *pContent) Rules() []Rule {
 	return []Rule{
 		newStrong(),
 		newEm(),
+		newInlineCode(),
 		newInlineCompCall(),
 		newParamRef(),
 		newPlain(),

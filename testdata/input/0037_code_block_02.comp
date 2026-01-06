@@ -1,0 +1,6 @@
+{{ LOCAL_COMP }}
+
+~ LOCAL_COMP
+```js
+console.log('hello')
+```
