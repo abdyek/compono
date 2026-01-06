@@ -120,7 +120,7 @@ func (_ *codeBlockContent) Selectors() []selector.Selector {
 
 func (_ *codeBlockContent) Rules() []Rule {
 	return []Rule{
-		newPlain(),
+		newRaw(),
 	}
 }
 
