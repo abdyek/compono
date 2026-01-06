@@ -42,6 +42,7 @@ func (_ *pContent) Selectors() []selector.Selector {
 
 func (_ *pContent) Rules() []Rule {
 	return []Rule{
+		newLink(),
 		newStrong(),
 		newEm(),
 		newInlineCode(),

@@ -1,0 +1,91 @@
+package html
+
+import (
+	"html"
+	"strings"
+
+	"github.com/umono-cms/compono/ast"
+)
+
+type linkElement struct {
+	baseRenderable
+	renderer *renderer
+}
+
+func newLinkElement(rend *renderer) renderableNode {
+	return &linkElement{
+		renderer: rend,
+	}
+}
+
+func (l *linkElement) New() renderableNode {
+	return newLinkElement(l.renderer)
+}
+
+func (_ *linkElement) Condition(invoker renderableNode, node ast.Node) bool {
+	return isRuleName(node, "link")
+}
+
+func (l *linkElement) Render() string {
+	linkText := findNodeByRuleName(l.Node().Children(), "link-text")
+	linkURL := findNodeByRuleName(l.Node().Children(), "link-url")
+
+	text := ""
+	url := ""
+
+	if linkText != nil {
+		text = l.renderer.renderChildren(l, linkText.Children())
+	}
+
+	if linkURL != nil {
+		url = html.EscapeString(strings.TrimSpace(string(linkURL.Raw())))
+	}
+
+	return `<a href="` + url + `">` + text + `</a>`
+}
+
+type linkTextElement struct {
+	baseRenderable
+	renderer *renderer
+}
+
+func newLinkTextElement(rend *renderer) renderableNode {
+	return &linkTextElement{
+		renderer: rend,
+	}
+}
+
+func (lt *linkTextElement) New() renderableNode {
+	return newLinkTextElement(lt.renderer)
+}
+
+func (_ *linkTextElement) Condition(invoker renderableNode, node ast.Node) bool {
+	return isRuleName(node, "link-text")
+}
+
+func (lt *linkTextElement) Render() string {
+	return html.EscapeString(strings.TrimSpace(string(lt.Node().Raw())))
+}
+
+type linkURLElement struct {
+	baseRenderable
+	renderer *renderer
+}
+
+func newLinkURLElement(rend *renderer) renderableNode {
+	return &linkURLElement{
+		renderer: rend,
+	}
+}
+
+func (lu *linkURLElement) New() renderableNode {
+	return newLinkURLElement(lu.renderer)
+}
+
+func (_ *linkURLElement) Condition(invoker renderableNode, node ast.Node) bool {
+	return isRuleName(node, "link-url")
+}
+
+func (lu *linkURLElement) Render() string {
+	return html.EscapeString(strings.TrimSpace(string(lu.Node().Raw())))
+}
