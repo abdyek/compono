@@ -1,0 +1,27 @@
+`` I am not in code ``
+
+`{{ NO_COMP_CALL }}`
+
+`{{ no-param-ref }}`
+
+# `code` in h1
+## `code` in h2
+### `code` in h3
+#### `code` in h4
+##### `code` in h5
+###### `code` in h6
+
+*`code` in em*
+
+**`code` in strong**
+
+# `{{ NO_COMP_CALL }} {{ no-param-ref }}` in h1
+## `{{ NO_COMP_CALL }} {{ no-param-ref }}` in h2
+### `{{ NO_COMP_CALL }} {{ no-param-ref }}` in h3
+#### `{{ NO_COMP_CALL }} {{ no-param-ref }}` in h4
+##### `{{ NO_COMP_CALL }} {{ no-param-ref }}` in h5
+###### `{{ NO_COMP_CALL }} {{ no-param-ref }}` in h6
+
+*`{{ NO_COMP_CALL }} {{ no-param-ref }}` in em*
+
+**`{{ NO_COMP_CALL }} {{ no-param-ref }}` in strong**

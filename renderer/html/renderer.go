@@ -33,6 +33,8 @@ func NewRenderer(log logger.Logger) *renderer {
 		newPlain(r),
 		newCodeBlock(r),
 		newCodeBlockContent(r),
+		newInlineCode(r),
+		newInlineCodeContent(r),
 		newRaw(r),
 	}
 

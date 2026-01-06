@@ -60,3 +60,49 @@ func (_ *codeBlockContent) Condition(invoker renderableNode, node ast.Node) bool
 func (cbc *codeBlockContent) Render() string {
 	return cbc.renderer.renderChildren(cbc, cbc.Node().Children())
 }
+
+type inlineCode struct {
+	baseRenderable
+	renderer *renderer
+}
+
+func newInlineCode(rend *renderer) renderableNode {
+	return &inlineCode{
+		renderer: rend,
+	}
+}
+
+func (ic *inlineCode) New() renderableNode {
+	return newInlineCode(ic.renderer)
+}
+
+func (_ *inlineCode) Condition(_ renderableNode, node ast.Node) bool {
+	return isRuleName(node, "inline-code")
+}
+
+func (ic *inlineCode) Render() string {
+	return `<code style="white-space: pre">` + ic.renderer.renderChildren(ic, ic.Node().Children()) + "</code>"
+}
+
+type inlineCodeContent struct {
+	baseRenderable
+	renderer *renderer
+}
+
+func newInlineCodeContent(rend *renderer) renderableNode {
+	return &inlineCodeContent{
+		renderer: rend,
+	}
+}
+
+func (icc *inlineCodeContent) New() renderableNode {
+	return newInlineCodeContent(icc.renderer)
+}
+
+func (_ *inlineCodeContent) Condition(_ renderableNode, node ast.Node) bool {
+	return isRuleName(node, "inline-code-content")
+}
+
+func (icc *inlineCodeContent) Render() string {
+	return icc.renderer.renderChildren(icc, icc.Node().Children())
+}

@@ -24,7 +24,7 @@ func (cb *codeBlock) Selectors() []selector.Selector {
 				return [][2]int{}
 			}
 
-			noMirage := cb.filterOutMirage(index)
+			noMirage := filterOutMirage(index)
 			filtered := [][2]int{}
 
 			for _, ind := range noMirage {
@@ -82,30 +82,6 @@ func (_ *codeBlock) Rules() []Rule {
 	}
 }
 
-func (_ *codeBlock) filterOutMirage(indexes [][2]int) [][2]int {
-	if len(indexes) == 0 {
-		return indexes
-	}
-
-	sorted := make([][2]int, len(indexes))
-	copy(sorted, indexes)
-
-	sort.Slice(sorted, func(i, j int) bool {
-		return sorted[i][0] < sorted[j][0]
-	})
-
-	valid := make([][2]int, 0)
-
-	for _, interval := range sorted {
-		if len(valid) > 0 && interval[0] < valid[len(valid)-1][1] {
-			continue
-		}
-		valid = append(valid, interval)
-	}
-
-	return valid
-}
-
 type codeBlockLang struct{}
 
 func newCodeBlockLang() Rule {
@@ -146,4 +122,103 @@ func (_ *codeBlockContent) Rules() []Rule {
 	return []Rule{
 		newPlain(),
 	}
+}
+
+type inlineCode struct{}
+
+func newInlineCode() Rule {
+	return &inlineCode{}
+}
+
+func (_ *inlineCode) Name() string {
+	return "inline-code"
+}
+
+func (_ *inlineCode) Selectors() []selector.Selector {
+	se, _ := selector.NewStartEnd("`", "`")
+	return []selector.Selector{
+		selector.NewFilter(se, func(source []byte, index [][2]int) [][2]int {
+			if len(index) == 0 {
+				return [][2]int{}
+			}
+
+			noMirage := filterOutMirage(index)
+			filtered := [][2]int{}
+
+			for _, ind := range noMirage {
+				start, end := ind[0], ind[1]
+
+				noNewline := true
+				for i := start; i < end; i++ {
+					if source[i] == '\n' {
+						noNewline = true
+						break
+					}
+				}
+
+				single := true
+				if (start > 0 && source[start-1] == '`') || (end < len(source) && source[end] == '`') {
+					single = false
+				}
+
+				if noNewline && single {
+					filtered = append(filtered, ind)
+				}
+			}
+
+			return filtered
+		}),
+	}
+}
+
+func (_ *inlineCode) Rules() []Rule {
+	return []Rule{
+		newInlineCodeContent(),
+	}
+}
+
+type inlineCodeContent struct{}
+
+func newInlineCodeContent() Rule {
+	return &inlineCodeContent{}
+}
+
+func (_ *inlineCodeContent) Name() string {
+	return "inline-code-content"
+}
+
+func (_ *inlineCodeContent) Selectors() []selector.Selector {
+	return []selector.Selector{
+		selector.NewStartEndInner("`", "`"),
+	}
+}
+
+func (_ *inlineCodeContent) Rules() []Rule {
+	return []Rule{
+		newRaw(),
+	}
+}
+
+func filterOutMirage(indexes [][2]int) [][2]int {
+	if len(indexes) == 0 {
+		return indexes
+	}
+
+	sorted := make([][2]int, len(indexes))
+	copy(sorted, indexes)
+
+	sort.Slice(sorted, func(i, j int) bool {
+		return sorted[i][0] < sorted[j][0]
+	})
+
+	valid := make([][2]int, 0)
+
+	for _, interval := range sorted {
+		if len(valid) > 0 && interval[0] < valid[len(valid)-1][1] {
+			continue
+		}
+		valid = append(valid, interval)
+	}
+
+	return valid
 }

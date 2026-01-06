@@ -22,6 +22,9 @@ func (r *raw) New() renderableNode {
 }
 
 func (_ *raw) Condition(invoker renderableNode, node ast.Node) bool {
+	if isRuleName(node, "raw") {
+		return true
+	}
 	if !isRuleName(invoker.Node(), "code-block-content") {
 		return false
 	}

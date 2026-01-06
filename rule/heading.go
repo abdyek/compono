@@ -45,6 +45,7 @@ func (_ *h1Content) Rules() []Rule {
 	return []Rule{
 		newEm(),
 		newStrong(),
+		newInlineCode(),
 		newInlineCompCall(),
 		newParamRef(),
 		newPlain(),
@@ -94,6 +95,7 @@ func (_ *h2Content) Rules() []Rule {
 	return []Rule{
 		newStrong(),
 		newEm(),
+		newInlineCode(),
 		newInlineCompCall(),
 		newParamRef(),
 		newPlain(),
@@ -141,6 +143,7 @@ func (_ *h3Content) Rules() []Rule {
 	return []Rule{
 		newStrong(),
 		newEm(),
+		newInlineCode(),
 		newInlineCompCall(),
 		newParamRef(),
 		newPlain(),
@@ -188,6 +191,7 @@ func (_ *h4Content) Rules() []Rule {
 	return []Rule{
 		newStrong(),
 		newEm(),
+		newInlineCode(),
 		newInlineCompCall(),
 		newParamRef(),
 		newPlain(),
@@ -235,6 +239,7 @@ func (_ *h5Content) Rules() []Rule {
 	return []Rule{
 		newStrong(),
 		newEm(),
+		newInlineCode(),
 		newInlineCompCall(),
 		newParamRef(),
 		newPlain(),
@@ -282,6 +287,7 @@ func (_ *h6Content) Rules() []Rule {
 	return []Rule{
 		newStrong(),
 		newEm(),
+		newInlineCode(),
 		newInlineCompCall(),
 		newParamRef(),
 		newPlain(),
