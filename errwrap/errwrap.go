@@ -23,6 +23,7 @@ type errorWrapper struct {
 func (ew *errorWrapper) Wrap(root ast.Node) {
 	ew.root = root
 	ew.wrapInfiniteCompCall(root)
+	ew.wrapInvalidParamRef(root)
 }
 
 func (ew *errorWrapper) wrapInfiniteCompCall(root ast.Node) {
@@ -70,6 +71,85 @@ func (ew *errorWrapper) detectInfiniteCompCall(node ast.Node, callStack []string
 
 	for _, child := range node.Children() {
 		ew.detectInfiniteCompCall(child, callStack)
+	}
+}
+
+func (ew *errorWrapper) wrapInvalidParamRef(root ast.Node) {
+	paramRefs := ast.FilterNodesInTree(root, func(node ast.Node) bool {
+		return ast.IsRuleName(node, "param-ref")
+	})
+	for _, pr := range paramRefs {
+		compDefContent := ast.FindNode(ast.GetAncestors(pr), func(anc ast.Node) bool {
+			return ast.IsRuleNameOneOf(anc, []string{"local-comp-def-content", "global-comp-def-content"})
+		})
+
+		if compDefContent == nil {
+			ew.wrapWithErr(pr, "Invalid parameter usage", "Parameters cannot be used in the root context.", false)
+			continue
+		}
+
+		if ast.IsRuleName(compDefContent, "local-comp-def-content") {
+			parRefNa := strings.TrimSpace(string(ast.FindNodeByRuleName(pr.Children(), "param-ref-name").Raw()))
+
+			localCompDef := ast.FindNodeByRuleName(ast.GetAncestors(pr), "local-comp-def")
+			localCompDefHead := ast.FindNodeByRuleName(localCompDef.Children(), "local-comp-def-head")
+			compParams := ast.FindNodeByRuleName(localCompDefHead.Children(), "comp-params")
+
+			title := "Unknown parameter"
+			msg := "The parameter **" + parRefNa + "** is not defined for this component."
+
+			if compParams == nil {
+				ew.wrapWithErr(pr, title, msg, false)
+				continue
+			}
+
+			compParam := ast.FindNode(compParams.Children(), func(cp ast.Node) bool {
+				compParamName := ast.FindNodeByRuleName(cp.Children(), "comp-param-name")
+				if strings.TrimSpace(string(compParamName.Raw())) == parRefNa {
+					return true
+				}
+				return false
+			})
+
+			if compParam == nil {
+				ew.wrapWithErr(pr, title, msg, false)
+				continue
+			}
+		}
+
+		if ast.IsRuleName(compDefContent, "global-comp-def-content") {
+			parRefNa := strings.TrimSpace(string(ast.FindNodeByRuleName(pr.Children(), "param-ref-name").Raw()))
+
+			globalCompDef := ast.FindNodeByRuleName(ast.GetAncestors(pr), "global-comp-def")
+			globalCompDefHead := ast.FindNodeByRuleName(globalCompDef.Children(), "global-comp-def-head")
+
+			title := "Unknown parameter"
+			msg := "The parameter **" + parRefNa + "** is not defined for this component."
+
+			if globalCompDefHead == nil {
+				ew.wrapWithErr(pr, title, msg, false)
+				continue
+			}
+
+			compParams := ast.FindNodeByRuleName(globalCompDefHead.Children(), "comp-params")
+			if compParams == nil {
+				ew.wrapWithErr(pr, title, msg, false)
+				continue
+			}
+
+			compParam := ast.FindNode(compParams.Children(), func(cp ast.Node) bool {
+				compParamName := ast.FindNodeByRuleName(cp.Children(), "comp-param-name")
+				if strings.TrimSpace(string(compParamName.Raw())) == parRefNa {
+					return true
+				}
+				return false
+			})
+
+			if compParam == nil {
+				ew.wrapWithErr(pr, title, msg, false)
+				continue
+			}
+		}
 	}
 }
 
