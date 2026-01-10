@@ -5,6 +5,7 @@ import (
 	"io"
 
 	"github.com/umono-cms/compono/ast"
+	"github.com/umono-cms/compono/errwrap"
 	"github.com/umono-cms/compono/logger"
 	"github.com/umono-cms/compono/parser"
 	"github.com/umono-cms/compono/renderer"
@@ -34,6 +35,8 @@ type Compono interface {
 	SetRenderer(renderer.Renderer)
 	Validator() validator.Validator
 	SetValidator(validator.Validator)
+	ErrorWrapper() errwrap.ErrorWrapper
+	SetErrorWrapper(errwrap.ErrorWrapper)
 	Logger() logger.Logger
 	SetLogger(logger.Logger)
 }
@@ -44,6 +47,7 @@ func New() Compono {
 	p := parser.DefaultParser(log)
 	r := renderer.DefaultRenderer(log)
 	v := validator.DefaultValidator()
+	ew := errwrap.DefaultErrorWrapper()
 
 	gw := ast.DefaultEmptyNode()
 	gw.SetRule(rule.NewGlobalCompDefWrapper())
@@ -52,6 +56,7 @@ func New() Compono {
 		parser:        p,
 		renderer:      r,
 		validator:     v,
+		errorWrapper:  ew,
 		logger:        log,
 		globalWrapper: gw,
 	}
@@ -61,6 +66,7 @@ type compono struct {
 	parser        parser.Parser
 	renderer      renderer.Renderer
 	validator     validator.Validator
+	errorWrapper  errwrap.ErrorWrapper
 	logger        logger.Logger
 	globalWrapper ast.Node
 }
@@ -79,6 +85,8 @@ func (c *compono) Convert(source []byte, writer io.Writer) error {
 	if err != nil {
 		return NewComponoError(ErrInvalidAST, err.Error())
 	}
+
+	c.errorWrapper.Wrap(root)
 
 	err = c.renderer.Render(writer, root)
 	if err != nil {
@@ -162,6 +170,14 @@ func (c *compono) Validator() validator.Validator {
 
 func (c *compono) SetValidator(vldtr validator.Validator) {
 	c.validator = vldtr
+}
+
+func (c *compono) ErrorWrapper() errwrap.ErrorWrapper {
+	return c.errorWrapper
+}
+
+func (c *compono) SetErrorWrapper(ew errwrap.ErrorWrapper) {
+	c.errorWrapper = ew
 }
 
 func (c *compono) Logger() logger.Logger {
