@@ -22,8 +22,7 @@ func (e *err) New() renderableNode {
 }
 
 func (_ *err) Condition(_ renderableNode, node ast.Node) bool {
-	// TODO: separate as block-error and inline-error
-	return isRuleName(node, "error")
+	return isRuleNameOneOf(node, []string{"block-error", "inline-error"})
 }
 
 func (e *err) Render() string {
@@ -32,6 +31,10 @@ func (e *err) Render() string {
 
 	titleStr := strings.TrimSpace(string(title.Raw()))
 	messageStr := strings.TrimSpace(string(message.Raw()))
+
+	if isRuleName(e.Node(), "block-error") {
+		return blockError(titleStr, messageStr)
+	}
 
 	return inlineError(titleStr, messageStr)
 }

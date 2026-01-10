@@ -32,15 +32,20 @@ func (ew *errorWrapper) detectInfiniteCompCall(node ast.Node, callStack []string
 
 	ruleName := node.Rule().Name()
 
-	// TODO: separate as block and inline
 	if ruleName == "block-comp-call" || ruleName == "inline-comp-call" {
+
+		block := false
+		if ruleName == "block-comp-call" {
+			block = true
+		}
+
 		compCallName := ew.getCompCallName(node)
 		if compCallName == "" {
 			return
 		}
 
 		if ew.isInCallStack(compCallName, callStack) {
-			ew.markAsInfiniteLoop(node, callStack, compCallName)
+			ew.wrapAsInfiniteLoop(node, callStack, compCallName, block)
 			return
 		}
 
@@ -116,10 +121,31 @@ func (ew *errorWrapper) getCompDefContent(compDef ast.Node) ast.Node {
 	return nil
 }
 
-func (ew *errorWrapper) markAsInfiniteLoop(node ast.Node, callStack []string, compName string) {
+func (ew *errorWrapper) wrapAsInfiniteLoop(node ast.Node, callStack []string, compName string, block bool) {
+	title := "Infinite component call"
+	msg := "The call to component " + compName + " creates an infinite loop and was skipped."
 
-	// TODO: Refactor
-	err := rule.NewDynamic("error")
+	var errNode ast.Node
+	if block {
+		errNode = ew.createBlockError(node, title, msg)
+	} else {
+		errNode = ew.createInlineError(node, title, msg)
+	}
+	node.SetRule(errNode.Rule())
+	node.SetChildren(errNode.Children())
+	node.SetRaw(errNode.Raw())
+}
+
+func (ew *errorWrapper) createBlockError(node ast.Node, title, msg string) ast.Node {
+	return ew.createError("block-error", node, title, msg)
+}
+
+func (ew *errorWrapper) createInlineError(node ast.Node, title, msg string) ast.Node {
+	return ew.createError("inline-error", node, title, msg)
+}
+
+func (ew *errorWrapper) createError(errRuleName string, node ast.Node, title, msg string) ast.Node {
+	err := rule.NewDynamic(errRuleName)
 	errTitle := rule.NewDynamic("error-title")
 	errMsg := rule.NewDynamic("error-message")
 	self := rule.NewDynamic("self")
@@ -130,13 +156,12 @@ func (ew *errorWrapper) markAsInfiniteLoop(node ast.Node, callStack []string, co
 	errTitleNode := ast.DefaultEmptyNode()
 	errTitleNode.SetRule(errTitle)
 	errTitleNode.SetParent(errNode)
-	errTitleNode.SetRaw([]byte("infinite loop"))
+	errTitleNode.SetRaw([]byte(title))
 
 	errMsgNode := ast.DefaultEmptyNode()
 	errMsgNode.SetRule(errMsg)
 	errMsgNode.SetParent(errNode)
-	// TODO: Complete it
-	errMsgNode.SetRaw([]byte("intinite loop more details"))
+	errMsgNode.SetRaw([]byte(msg))
 
 	selfNode := ast.DefaultEmptyNode()
 	selfNode.SetRule(self)
@@ -149,7 +174,5 @@ func (ew *errorWrapper) markAsInfiniteLoop(node ast.Node, callStack []string, co
 		selfNode,
 	})
 
-	node.SetRule(err)
-	node.SetChildren(errNode.Children())
-	node.SetRaw(errNode.Raw())
+	return errNode
 }
