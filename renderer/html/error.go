@@ -1,6 +1,7 @@
 package html
 
 import (
+	"regexp"
 	"strings"
 
 	"github.com/umono-cms/compono/ast"
@@ -31,6 +32,10 @@ func (e *err) Render() string {
 
 	titleStr := strings.TrimSpace(string(title.Raw()))
 	messageStr := strings.TrimSpace(string(message.Raw()))
+
+	// TODO: This is an ugly hack
+	re := regexp.MustCompile(`\*\*([^*]+)\*\*`)
+	messageStr = re.ReplaceAllString(messageStr, "<strong>$1</strong>")
 
 	if isRuleName(e.Node(), "block-error") {
 		return blockError(titleStr, messageStr)

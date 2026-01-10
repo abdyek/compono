@@ -5,6 +5,7 @@ import (
 
 	"github.com/umono-cms/compono/ast"
 	"github.com/umono-cms/compono/rule"
+	"github.com/umono-cms/compono/util"
 )
 
 type ErrorWrapper interface {
@@ -44,14 +45,19 @@ func (ew *errorWrapper) detectInfiniteCompCall(node ast.Node, callStack []string
 			return
 		}
 
+		// TODO: This is an ugly hack for built-in components. Improve it later.
+		if util.InSliceString(compCallName, []string{"LINK"}) {
+			return
+		}
+
 		if ew.isInCallStack(compCallName, callStack) {
-			ew.wrapAsInfiniteLoop(node, callStack, compCallName, block)
+			ew.wrapWithErr(node, "Infinite component call", "The call to component **"+compCallName+"** creates an infinite loop and was skipped.", block)
 			return
 		}
 
 		compDef := ew.findCompDef(node, compCallName)
 		if compDef == nil {
-			// TODO: Move the unknown component error here from the renderer
+			ew.wrapWithErr(node, "Unknown component", "The component **"+compCallName+"** is not defined or not registered.", block)
 			return
 		}
 
@@ -121,19 +127,17 @@ func (ew *errorWrapper) getCompDefContent(compDef ast.Node) ast.Node {
 	return nil
 }
 
-func (ew *errorWrapper) wrapAsInfiniteLoop(node ast.Node, callStack []string, compName string, block bool) {
-	title := "Infinite component call"
-	msg := "The call to component " + compName + " creates an infinite loop and was skipped."
-
+func (ew *errorWrapper) wrapWithErr(self ast.Node, title, msg string, block bool) {
 	var errNode ast.Node
 	if block {
-		errNode = ew.createBlockError(node, title, msg)
+		errNode = ew.createBlockError(self, title, msg)
 	} else {
-		errNode = ew.createInlineError(node, title, msg)
+		errNode = ew.createInlineError(self, title, msg)
 	}
-	node.SetRule(errNode.Rule())
-	node.SetChildren(errNode.Children())
-	node.SetRaw(errNode.Raw())
+
+	self.SetRule(errNode.Rule())
+	self.SetChildren(errNode.Children())
+	self.SetRaw(errNode.Raw())
 }
 
 func (ew *errorWrapper) createBlockError(node ast.Node, title, msg string) ast.Node {
