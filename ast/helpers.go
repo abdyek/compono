@@ -101,3 +101,11 @@ func FindGlobalCompDef(root Node, name string) Node {
 		return true
 	})
 }
+
+func FilterNodesInTree(node Node, filter func(Node) bool) []Node {
+	filtered := FilterNodes(node.Children(), filter)
+	for _, child := range node.Children() {
+		filtered = append(filtered, FilterNodesInTree(child, filter)...)
+	}
+	return filtered
+}
