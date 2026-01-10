@@ -70,12 +70,7 @@ func (cc *compCall) Render() string {
 		return builtinComp.Render(cc.Invoker(), cc.Node())
 	}
 
-	title := "Unknown component"
-	description := "The component <strong>" + strings.TrimSpace(string(compCallName.Raw())) + "</strong> is not defined or not registered."
-	if inlineCompCall {
-		return inlineError(title, description)
-	}
-	return blockError(title, description)
+	return ""
 }
 
 func (cc *compCall) renderInlineCompCall(compName string, compDefContent ast.Node) string {
@@ -85,6 +80,7 @@ func (cc *compCall) renderInlineCompCall(compName string, compDefContent ast.Nod
 	}
 	p := findNodeByRuleName(compDefContent.Children(), "p")
 	if childCount > 1 || p == nil {
+		// TODO: Remove the error Compono level
 		return inlineError("Invalid component usage", "The component <strong>"+compName+"</strong> is a block component and cannot be used inline.")
 	}
 	pContent := findNodeByRuleName(p.Children(), "p-content")

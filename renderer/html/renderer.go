@@ -22,6 +22,7 @@ func NewRenderer(log logger.Logger) *renderer {
 	}
 
 	r.renderableNodes = []renderableNode{
+		newErr(r),
 		newRoot(r),
 		newRootContent(r),
 		newCompCall(r),
