@@ -1,7 +1,5 @@
 package html
 
-// TODO: refactor for clean codes
-
 import (
 	"strings"
 
@@ -16,38 +14,6 @@ type baseParamRef struct {
 func (bpr *baseParamRef) paramRefName() string {
 	paramRefName := findNodeByRuleName(bpr.Node().Children(), "param-ref-name")
 	return strings.TrimSpace(string(paramRefName.Raw()))
-}
-
-type paramRefInRootContent struct {
-	baseRenderable
-	renderer *renderer
-}
-
-func newParamRefInRootContent(rend *renderer) renderableNode {
-	return &paramRefInRootContent{
-		renderer: rend,
-	}
-}
-
-func (p *paramRefInRootContent) New() renderableNode {
-	return newParamRefInRootContent(p.renderer)
-}
-
-func (_ *paramRefInRootContent) Condition(invoker renderableNode, node ast.Node) bool {
-	if !isRuleName(node, "param-ref") {
-		return false
-	}
-	compDefContent := findNode(getAncestors(node), func(anc ast.Node) bool {
-		return isRuleNameOneOf(anc, []string{"local-comp-def-content", "global-comp-def-content"})
-	})
-	if compDefContent != nil {
-		return false
-	}
-	return true
-}
-
-func (_ *paramRefInRootContent) Render() string {
-	return inlineError("Invalid parameter usage", "Parameters cannot be used in the root context.")
 }
 
 type paramRefInLocalCompDef struct {
@@ -85,11 +51,6 @@ func (p *paramRefInLocalCompDef) Render() string {
 	localCompDefHead := findNodeByRuleName(localCompDef.Children(), "local-comp-def-head")
 	compParams := findNodeByRuleName(localCompDefHead.Children(), "comp-params")
 
-	unknownParamErr := inlineError("Unknown parameter", "The parameter <strong>"+paramRefName+"</strong> is not defined for this component.")
-	if compParams == nil {
-		return unknownParamErr
-	}
-
 	compParam := findNode(compParams.Children(), func(cp ast.Node) bool {
 		compParamName := findNodeByRuleName(cp.Children(), "comp-param-name")
 		if strings.TrimSpace(string(compParamName.Raw())) == paramRefName {
@@ -97,10 +58,6 @@ func (p *paramRefInLocalCompDef) Render() string {
 		}
 		return false
 	})
-
-	if compParam == nil {
-		return unknownParamErr
-	}
 
 	compCall := findNode(getAncestorsByInvoker(p), func(node ast.Node) bool {
 		return isRuleNameOneOf(node, []string{"block-comp-call", "inline-comp-call"})
@@ -175,16 +132,7 @@ func (p *paramRefInGlobalCompDef) Render() string {
 	globalCompDef := findNodeByRuleName(getAncestors(p.Node()), "global-comp-def")
 	globalCompDefHead := findNodeByRuleName(globalCompDef.Children(), "global-comp-def-head")
 
-	unknownParamErr := inlineError("Unknown parameter", "The parameter <strong>"+paramRefName+"</strong> is not defined for this component.")
-
-	if globalCompDefHead == nil {
-		return unknownParamErr
-	}
-
 	compParams := findNodeByRuleName(globalCompDefHead.Children(), "comp-params")
-	if compParams == nil {
-		return unknownParamErr
-	}
 
 	compParam := findNode(compParams.Children(), func(cp ast.Node) bool {
 		compParamName := findNodeByRuleName(cp.Children(), "comp-param-name")
@@ -193,10 +141,6 @@ func (p *paramRefInGlobalCompDef) Render() string {
 		}
 		return false
 	})
-
-	if compParam == nil {
-		return unknownParamErr
-	}
 
 	compCall := findNode(getAncestorsByInvoker(p), func(node ast.Node) bool {
 		return isRuleNameOneOf(node, []string{"block-comp-call", "inline-comp-call"})

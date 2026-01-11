@@ -79,10 +79,6 @@ func (cc *compCall) renderInlineCompCall(compName string, compDefContent ast.Nod
 		return ""
 	}
 	p := findNodeByRuleName(compDefContent.Children(), "p")
-	if childCount > 1 || p == nil {
-		// TODO: Remove the error Compono level
-		return inlineError("Invalid component usage", "The component <strong>"+compName+"</strong> is a block component and cannot be used inline.")
-	}
 	pContent := findNodeByRuleName(p.Children(), "p-content")
 	return cc.renderer.renderChildren(cc, pContent.Children())
 }

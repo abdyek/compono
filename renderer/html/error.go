@@ -38,8 +38,24 @@ func (e *err) Render() string {
 	messageStr = re.ReplaceAllString(messageStr, "<strong>$1</strong>")
 
 	if isRuleName(e.Node(), "block-error") {
-		return blockError(titleStr, messageStr)
+		return e.blockError(titleStr, messageStr)
 	}
 
-	return inlineError(titleStr, messageStr)
+	return e.inlineError(titleStr, messageStr)
+}
+
+func (e *err) blockError(title, msg string) string {
+	return `<compono-error-block><div slot="title">` +
+		title +
+		`</div><div slot="description">` +
+		msg +
+		`</div></compono-error-block>`
+}
+
+func (e *err) inlineError(title, msg string) string {
+	return `<compono-error-inline><span slot="title">` +
+		title +
+		`</span><span slot="description">` +
+		msg +
+		`</span></compono-error-inline>`
 }
