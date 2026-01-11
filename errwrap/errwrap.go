@@ -24,6 +24,7 @@ func (ew *errorWrapper) Wrap(root ast.Node) {
 	ew.root = root
 	ew.wrapInfiniteCompCall(root)
 	ew.wrapInvalidParamRef(root)
+	ew.wrapInvalidCompCall(root)
 }
 
 func (ew *errorWrapper) wrapInfiniteCompCall(root ast.Node) {
@@ -149,6 +150,26 @@ func (ew *errorWrapper) wrapInvalidParamRef(root ast.Node) {
 				ew.wrapWithErr(pr, title, msg, false)
 				continue
 			}
+		}
+	}
+}
+
+func (ew *errorWrapper) wrapInvalidCompCall(root ast.Node) {
+	inlineCompCalls := ast.FilterNodesInTree(root, func(node ast.Node) bool {
+		return ast.IsRuleName(node, "inline-comp-call")
+	})
+
+	for _, icc := range inlineCompCalls {
+		compCallName := ew.getCompCallName(icc)
+		compDef := ew.findCompDef(icc, compCallName)
+		compDefContent := ew.getCompDefContent(compDef)
+		childrenCount := len(compDefContent.Children())
+		if childrenCount == 0 {
+			continue
+		}
+		p := ast.FindNodeByRuleName(compDefContent.Children(), "p")
+		if childrenCount > 1 || p == nil {
+			ew.wrapWithErr(icc, "Invalid component usage", "The component **"+compCallName+"** is a block component and cannot be used inline.", false)
 		}
 	}
 }
