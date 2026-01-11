@@ -23,12 +23,12 @@ func (e *err) New() renderableNode {
 }
 
 func (_ *err) Condition(_ renderableNode, node ast.Node) bool {
-	return isRuleNameOneOf(node, []string{"block-error", "inline-error"})
+	return ast.IsRuleNameOneOf(node, []string{"block-error", "inline-error"})
 }
 
 func (e *err) Render() string {
-	title := findNodeByRuleName(e.Node().Children(), "error-title")
-	message := findNodeByRuleName(e.Node().Children(), "error-message")
+	title := ast.FindNodeByRuleName(e.Node().Children(), "error-title")
+	message := ast.FindNodeByRuleName(e.Node().Children(), "error-message")
 
 	titleStr := strings.TrimSpace(string(title.Raw()))
 	messageStr := strings.TrimSpace(string(message.Raw()))
@@ -37,9 +37,25 @@ func (e *err) Render() string {
 	re := regexp.MustCompile(`\*\*([^*]+)\*\*`)
 	messageStr = re.ReplaceAllString(messageStr, "<strong>$1</strong>")
 
-	if isRuleName(e.Node(), "block-error") {
-		return blockError(titleStr, messageStr)
+	if ast.IsRuleName(e.Node(), "block-error") {
+		return e.blockError(titleStr, messageStr)
 	}
 
-	return inlineError(titleStr, messageStr)
+	return e.inlineError(titleStr, messageStr)
+}
+
+func (e *err) blockError(title, msg string) string {
+	return `<compono-error-block><div slot="title">` +
+		title +
+		`</div><div slot="description">` +
+		msg +
+		`</div></compono-error-block>`
+}
+
+func (e *err) inlineError(title, msg string) string {
+	return `<compono-error-inline><span slot="title">` +
+		title +
+		`</span><span slot="description">` +
+		msg +
+		`</span></compono-error-inline>`
 }

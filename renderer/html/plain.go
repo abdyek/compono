@@ -23,7 +23,7 @@ func (p *plain) New() renderableNode {
 }
 
 func (_ *plain) Condition(invoker renderableNode, node ast.Node) bool {
-	return isRuleName(node, "plain")
+	return ast.IsRuleName(node, "plain")
 }
 
 func (p *plain) Render() string {

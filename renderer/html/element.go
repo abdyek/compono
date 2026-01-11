@@ -22,7 +22,7 @@ func (nve *nonVoidElement) New() renderableNode {
 }
 
 func (_ *nonVoidElement) Condition(invoker renderableNode, node ast.Node) bool {
-	return isRuleNameOneOf(node, []string{
+	return ast.IsRuleNameOneOf(node, []string{
 		"h1",
 		"h2",
 		"h3",
@@ -55,7 +55,7 @@ func (nvec *nonVoidElementContent) New() renderableNode {
 }
 
 func (_ *nonVoidElementContent) Condition(invoker renderableNode, node ast.Node) bool {
-	return isRuleNameOneOf(node, []string{
+	return ast.IsRuleNameOneOf(node, []string{
 		"h1-content",
 		"h2-content",
 		"h3-content",

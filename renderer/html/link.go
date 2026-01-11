@@ -23,12 +23,12 @@ func (l *linkElement) New() renderableNode {
 }
 
 func (_ *linkElement) Condition(invoker renderableNode, node ast.Node) bool {
-	return isRuleName(node, "link")
+	return ast.IsRuleName(node, "link")
 }
 
 func (l *linkElement) Render() string {
-	linkText := findNodeByRuleName(l.Node().Children(), "link-text")
-	linkURL := findNodeByRuleName(l.Node().Children(), "link-url")
+	linkText := ast.FindNodeByRuleName(l.Node().Children(), "link-text")
+	linkURL := ast.FindNodeByRuleName(l.Node().Children(), "link-url")
 
 	text := ""
 	url := ""
@@ -60,7 +60,7 @@ func (lt *linkTextElement) New() renderableNode {
 }
 
 func (_ *linkTextElement) Condition(invoker renderableNode, node ast.Node) bool {
-	return isRuleName(node, "link-text")
+	return ast.IsRuleName(node, "link-text")
 }
 
 func (lt *linkTextElement) Render() string {
@@ -83,7 +83,7 @@ func (lu *linkURLElement) New() renderableNode {
 }
 
 func (_ *linkURLElement) Condition(invoker renderableNode, node ast.Node) bool {
-	return isRuleName(node, "link-url")
+	return ast.IsRuleName(node, "link-url")
 }
 
 func (lu *linkURLElement) Render() string {
