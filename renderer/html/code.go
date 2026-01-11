@@ -23,12 +23,12 @@ func (cb *codeBlock) New() renderableNode {
 }
 
 func (_ *codeBlock) Condition(invoker renderableNode, node ast.Node) bool {
-	return isRuleName(node, "code-block")
+	return ast.IsRuleName(node, "code-block")
 }
 
 func (cb *codeBlock) Render() string {
 	langClass := "language-plaintext"
-	cbl := findNodeByRuleName(cb.Node().Children(), "code-block-lang")
+	cbl := ast.FindNodeByRuleName(cb.Node().Children(), "code-block-lang")
 	if cbl != nil {
 		lang := html.EscapeString(strings.TrimSpace(string(cbl.Raw())))
 		if lang != "" {
@@ -54,7 +54,7 @@ func (cbc *codeBlockContent) New() renderableNode {
 }
 
 func (_ *codeBlockContent) Condition(invoker renderableNode, node ast.Node) bool {
-	return isRuleName(node, "code-block-content")
+	return ast.IsRuleName(node, "code-block-content")
 }
 
 func (cbc *codeBlockContent) Render() string {
@@ -77,7 +77,7 @@ func (ic *inlineCode) New() renderableNode {
 }
 
 func (_ *inlineCode) Condition(_ renderableNode, node ast.Node) bool {
-	return isRuleName(node, "inline-code")
+	return ast.IsRuleName(node, "inline-code")
 }
 
 func (ic *inlineCode) Render() string {
@@ -100,7 +100,7 @@ func (icc *inlineCodeContent) New() renderableNode {
 }
 
 func (_ *inlineCodeContent) Condition(_ renderableNode, node ast.Node) bool {
-	return isRuleName(node, "inline-code-content")
+	return ast.IsRuleName(node, "inline-code-content")
 }
 
 func (icc *inlineCodeContent) Render() string {

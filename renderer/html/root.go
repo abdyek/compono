@@ -20,7 +20,7 @@ func (r *root) New() renderableNode {
 }
 
 func (_ *root) Condition(invoker renderableNode, node ast.Node) bool {
-	return isRuleName(node, "root")
+	return ast.IsRuleName(node, "root")
 }
 
 func (r *root) Render() string {
@@ -43,7 +43,7 @@ func (rc *rootContent) New() renderableNode {
 }
 
 func (_ *rootContent) Condition(invoker renderableNode, node ast.Node) bool {
-	return isRuleName(node, "root-content")
+	return ast.IsRuleName(node, "root-content")
 }
 
 func (rc *rootContent) Render() string {

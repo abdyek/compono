@@ -95,22 +95,22 @@ func (r *renderer) findRenderable(invoker renderableNode, node ast.Node) rendera
 }
 
 func (r *renderer) findLocalCompDef(srcNode ast.Node, name string) ast.Node {
-	localCompDefWrapper := findNodeByRuleName(srcNode.Children(), "local-comp-def-wrapper")
+	localCompDefWrapper := ast.FindNodeByRuleName(srcNode.Children(), "local-comp-def-wrapper")
 	if localCompDefWrapper == nil {
 		return nil
 	}
 
-	return findNode(localCompDefWrapper.Children(), func(child ast.Node) bool {
-		if !isRuleName(child, "local-comp-def") {
+	return ast.FindNode(localCompDefWrapper.Children(), func(child ast.Node) bool {
+		if !ast.IsRuleName(child, "local-comp-def") {
 			return false
 		}
 
-		localCompDefHead := findNodeByRuleName(child.Children(), "local-comp-def-head")
+		localCompDefHead := ast.FindNodeByRuleName(child.Children(), "local-comp-def-head")
 		if localCompDefHead == nil {
 			return false
 		}
 
-		localCompName := findNodeByRuleName(localCompDefHead.Children(), "local-comp-name")
+		localCompName := ast.FindNodeByRuleName(localCompDefHead.Children(), "local-comp-name")
 		if localCompName == nil {
 			return false
 		}
@@ -124,17 +124,17 @@ func (r *renderer) findLocalCompDef(srcNode ast.Node, name string) ast.Node {
 }
 
 func (r *renderer) findGlobalCompDef(name string) ast.Node {
-	globalCompDefWrapper := findNodeByRuleName(r.root.Children(), "global-comp-def-wrapper")
+	globalCompDefWrapper := ast.FindNodeByRuleName(r.root.Children(), "global-comp-def-wrapper")
 	if globalCompDefWrapper == nil {
 		return nil
 	}
 
-	return findNode(globalCompDefWrapper.Children(), func(child ast.Node) bool {
-		if !isRuleName(child, "global-comp-def") {
+	return ast.FindNode(globalCompDefWrapper.Children(), func(child ast.Node) bool {
+		if !ast.IsRuleName(child, "global-comp-def") {
 			return false
 		}
 
-		globalCompName := findNodeByRuleName(child.Children(), "global-comp-name")
+		globalCompName := ast.FindNodeByRuleName(child.Children(), "global-comp-name")
 		if globalCompName == nil {
 			return false
 		}

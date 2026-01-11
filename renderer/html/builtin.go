@@ -50,12 +50,12 @@ func getArgValueWithDefa(compCall ast.Node, name string, defa string) string {
 }
 
 func getArgValue(compCall ast.Node, name string) (string, bool) {
-	compCallArgs := findNodeByRuleName(compCall.Children(), "comp-call-args")
+	compCallArgs := ast.FindNodeByRuleName(compCall.Children(), "comp-call-args")
 	if compCallArgs == nil {
 		return "", false
 	}
-	compCallArg := findNode(compCallArgs.Children(), func(node ast.Node) bool {
-		argName := findNodeByRuleName(node.Children(), "comp-call-arg-name")
+	compCallArg := ast.FindNode(compCallArgs.Children(), func(node ast.Node) bool {
+		argName := ast.FindNodeByRuleName(node.Children(), "comp-call-arg-name")
 		if strings.TrimSpace(string(argName.Raw())) == name {
 			return true
 		}
@@ -64,8 +64,8 @@ func getArgValue(compCall ast.Node, name string) (string, bool) {
 	if compCallArg == nil {
 		return "", false
 	}
-	argValue := findNodeByRuleName(findNode(findNodeByRuleName(compCallArg.Children(), "comp-call-arg-type").Children(), func(node ast.Node) bool {
-		return isRuleNameOneOf(node, []string{"comp-call-string-arg", "comp-call-number-arg", "comp-call-bool-arg"})
+	argValue := ast.FindNodeByRuleName(ast.FindNode(ast.FindNodeByRuleName(compCallArg.Children(), "comp-call-arg-type").Children(), func(node ast.Node) bool {
+		return ast.IsRuleNameOneOf(node, []string{"comp-call-string-arg", "comp-call-number-arg", "comp-call-bool-arg"})
 	}).Children(), "comp-call-arg-value")
 	if argValue == nil {
 		return "", false

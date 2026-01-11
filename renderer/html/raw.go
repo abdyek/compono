@@ -22,7 +22,7 @@ func (r *raw) New() renderableNode {
 }
 
 func (_ *raw) Condition(invoker renderableNode, node ast.Node) bool {
-	return isRuleName(node, "raw")
+	return ast.IsRuleName(node, "raw")
 }
 
 func (r *raw) Render() string {

@@ -22,18 +22,18 @@ func (cc *compCall) New() renderableNode {
 }
 
 func (_ *compCall) Condition(invoker renderableNode, node ast.Node) bool {
-	return isRuleNameOneOf(node, []string{"block-comp-call", "inline-comp-call"})
+	return ast.IsRuleNameOneOf(node, []string{"block-comp-call", "inline-comp-call"})
 }
 
 func (cc *compCall) Render() string {
 	inlineCompCall := false
-	if isRuleName(cc.Node(), "inline-comp-call") {
+	if ast.IsRuleName(cc.Node(), "inline-comp-call") {
 		inlineCompCall = true
 	}
 
-	compCallName := findNodeByRuleName(cc.Node().Children(), "comp-call-name")
-	globalCompDefAnc := findNode(getAncestors(cc.Node()), func(anc ast.Node) bool {
-		return isRuleName(anc, "global-comp-def")
+	compCallName := ast.FindNodeByRuleName(cc.Node().Children(), "comp-call-name")
+	globalCompDefAnc := ast.FindNode(ast.GetAncestors(cc.Node()), func(anc ast.Node) bool {
+		return ast.IsRuleName(anc, "global-comp-def")
 	})
 
 	localCompDefSrc := cc.renderer.root
@@ -43,7 +43,7 @@ func (cc *compCall) Render() string {
 
 	localCompDef := cc.renderer.findLocalCompDef(localCompDefSrc, string(compCallName.Raw()))
 	if localCompDef != nil {
-		localCompDefContent := findNodeByRuleName(localCompDef.Children(), "local-comp-def-content")
+		localCompDefContent := ast.FindNodeByRuleName(localCompDef.Children(), "local-comp-def-content")
 		if localCompDefContent == nil {
 			return ""
 		}
@@ -55,7 +55,7 @@ func (cc *compCall) Render() string {
 
 	globalCompDef := cc.renderer.findGlobalCompDef(string(compCallName.Raw()))
 	if globalCompDef != nil {
-		globalCompDefContent := findNodeByRuleName(globalCompDef.Children(), "global-comp-def-content")
+		globalCompDefContent := ast.FindNodeByRuleName(globalCompDef.Children(), "global-comp-def-content")
 		if globalCompDefContent == nil {
 			return ""
 		}
@@ -78,7 +78,7 @@ func (cc *compCall) renderInlineCompCall(compName string, compDefContent ast.Nod
 	if childCount == 0 {
 		return ""
 	}
-	p := findNodeByRuleName(compDefContent.Children(), "p")
-	pContent := findNodeByRuleName(p.Children(), "p-content")
+	p := ast.FindNodeByRuleName(compDefContent.Children(), "p")
+	pContent := ast.FindNodeByRuleName(p.Children(), "p-content")
 	return cc.renderer.renderChildren(cc, pContent.Children())
 }
