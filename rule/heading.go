@@ -2,6 +2,34 @@ package rule
 
 import "github.com/umono-cms/compono/selector"
 
+func headingSelectors(prefix string) []selector.Selector {
+	se, _ := selector.NewStartEnd(prefix+` (\t| )*`, `\n|\z`)
+	return []selector.Selector{
+		selector.NewFilter(se, func(source []byte, index [][2]int) [][2]int {
+			if len(index) == 0 {
+				return [][2]int{}
+			}
+
+			filtered := [][2]int{}
+
+		outer:
+			for _, ind := range index {
+				start := ind[0]
+
+				for i := start - 1; i >= 0 && source[i] != '\n'; i-- {
+					if source[i] != ' ' && source[i] != '\t' {
+						continue outer
+					}
+				}
+
+				filtered = append(filtered, ind)
+			}
+
+			return filtered
+		}),
+	}
+}
+
 type h1 struct{}
 
 func newH1() Rule {
@@ -13,10 +41,7 @@ func (_ *h1) Name() string {
 }
 
 func (_ *h1) Selectors() []selector.Selector {
-	seSelector, _ := selector.NewStartEnd(`(?m)[ \t]*# `, `\n|\z`)
-	return []selector.Selector{
-		seSelector,
-	}
+	return headingSelectors("#")
 }
 
 func (_ *h1) Rules() []Rule {
@@ -37,7 +62,7 @@ func (_ *h1Content) Name() string {
 
 func (_ *h1Content) Selectors() []selector.Selector {
 	return []selector.Selector{
-		selector.NewStartEndInner(`(?m)[ \t]*# `, `\n|\z`),
+		selector.NewStartEndInner(`#\s+`, `\n|\z`),
 	}
 }
 
@@ -64,10 +89,7 @@ func (_ *h2) Name() string {
 }
 
 func (_ *h2) Selectors() []selector.Selector {
-	seSelector, _ := selector.NewStartEnd(`(?m)[ \t]*## `, `\n|\z`)
-	return []selector.Selector{
-		seSelector,
-	}
+	return headingSelectors("##")
 }
 
 func (_ *h2) Rules() []Rule {
@@ -88,7 +110,7 @@ func (_ *h2Content) Name() string {
 
 func (_ *h2Content) Selectors() []selector.Selector {
 	return []selector.Selector{
-		selector.NewStartEndInner(`(?m)[ \t]*## `, `\n|\z`),
+		selector.NewStartEndInner(`##\s+`, `\n|\z`),
 	}
 }
 
@@ -115,8 +137,7 @@ func (_ *h3) Name() string {
 }
 
 func (_ *h3) Selectors() []selector.Selector {
-	se, _ := selector.NewStartEnd(`(?m)[ \t]*### `, `\n|\z`)
-	return []selector.Selector{se}
+	return headingSelectors("###")
 }
 
 func (_ *h3) Rules() []Rule {
@@ -137,7 +158,7 @@ func (_ *h3Content) Name() string {
 
 func (_ *h3Content) Selectors() []selector.Selector {
 	return []selector.Selector{
-		selector.NewStartEndInner(`(?m)[ \t]*### `, `\n|\z`),
+		selector.NewStartEndInner(`###\s+`, `\n|\z`),
 	}
 }
 
@@ -164,8 +185,7 @@ func (_ *h4) Name() string {
 }
 
 func (_ *h4) Selectors() []selector.Selector {
-	se, _ := selector.NewStartEnd(`(?m)[ \t]*#### `, `\n|\z`)
-	return []selector.Selector{se}
+	return headingSelectors("####")
 }
 
 func (_ *h4) Rules() []Rule {
@@ -186,7 +206,7 @@ func (_ *h4Content) Name() string {
 
 func (_ *h4Content) Selectors() []selector.Selector {
 	return []selector.Selector{
-		selector.NewStartEndInner(`(?m)[ \t]*#### `, `\n|\z`),
+		selector.NewStartEndInner(`####\s+`, `\n|\z`),
 	}
 }
 
@@ -213,8 +233,7 @@ func (_ *h5) Name() string {
 }
 
 func (_ *h5) Selectors() []selector.Selector {
-	se, _ := selector.NewStartEnd(`(?m)[ \t]*##### `, `\n|\z`)
-	return []selector.Selector{se}
+	return headingSelectors("#####")
 }
 
 func (_ *h5) Rules() []Rule {
@@ -235,7 +254,7 @@ func (_ *h5Content) Name() string {
 
 func (_ *h5Content) Selectors() []selector.Selector {
 	return []selector.Selector{
-		selector.NewStartEndInner(`(?m)[ \t]*##### `, `\n|\z`),
+		selector.NewStartEndInner(`#####\s+`, `\n|\z`),
 	}
 }
 
@@ -262,8 +281,7 @@ func (_ *h6) Name() string {
 }
 
 func (_ *h6) Selectors() []selector.Selector {
-	se, _ := selector.NewStartEnd(`(?m)[ \t]*###### `, `\n|\z`)
-	return []selector.Selector{se}
+	return headingSelectors("######")
 }
 
 func (_ *h6) Rules() []Rule {
@@ -284,7 +302,7 @@ func (_ *h6Content) Name() string {
 
 func (_ *h6Content) Selectors() []selector.Selector {
 	return []selector.Selector{
-		selector.NewStartEndInner(`(?m)[ \t]*###### `, `\n|\z`),
+		selector.NewStartEndInner(`######\s+`, `\n|\z`),
 	}
 }
 
