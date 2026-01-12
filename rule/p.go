@@ -101,6 +101,7 @@ func (_ *pContent) Rules() []Rule {
 		newInlineCode(),
 		newInlineCompCall(),
 		newParamRef(),
+		newSoftBreak(),
 		newPlain(),
 	}
 }
