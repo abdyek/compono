@@ -116,9 +116,9 @@ func (_ *pContent) Selectors() []selector.Selector {
 func (_ *pContent) Rules() []Rule {
 	return []Rule{
 		newLink(),
+		newInlineCode(),
 		newStrong(),
 		newEm(),
-		newInlineCode(),
 		newInlineCompCall(),
 		newParamRef(),
 		newSoftBreak(),

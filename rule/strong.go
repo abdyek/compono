@@ -43,7 +43,6 @@ func (sc *strongContent) Selectors() []selector.Selector {
 
 func (_ *strongContent) Rules() []Rule {
 	return []Rule{
-		newInlineCode(),
 		newInlineCompCall(),
 		newParamRef(),
 		newPlain(),
