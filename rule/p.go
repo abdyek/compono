@@ -38,18 +38,38 @@ func (p *p) Selectors() []selector.Selector {
 
 					if sepIdx == -1 {
 						if current < len(content) {
-							segment := content[current:]
-							if !p.isEmpty(segment) {
-								res = append(res, [2]int{start + current, start + len(content)})
+							segStart := current
+							segEnd := len(content)
+
+							for segStart < segEnd && content[segStart] == '\n' {
+								segStart++
+							}
+
+							for segEnd > segStart && content[segEnd-1] == '\n' {
+								segEnd--
+							}
+
+							if segStart < segEnd && !p.isEmpty(content[segStart:segEnd]) {
+								res = append(res, [2]int{start + segStart, start + segEnd})
 							}
 						}
 						break
 					}
 
 					if current < sepIdx {
-						segment := content[current:sepIdx]
-						if !p.isEmpty(segment) {
-							res = append(res, [2]int{start + current, start + sepIdx})
+						segStart := current
+						segEnd := sepIdx
+
+						for segStart < segEnd && content[segStart] == '\n' {
+							segStart++
+						}
+
+						for segEnd > segStart && content[segEnd-1] == '\n' {
+							segEnd--
+						}
+
+						if segStart < segEnd && !p.isEmpty(content[segStart:segEnd]) {
+							res = append(res, [2]int{start + segStart, start + segEnd})
 						}
 					}
 
@@ -101,6 +121,7 @@ func (_ *pContent) Rules() []Rule {
 		newInlineCode(),
 		newInlineCompCall(),
 		newParamRef(),
+		newSoftBreak(),
 		newPlain(),
 	}
 }
