@@ -47,11 +47,6 @@ func (ew *errorWrapper) detectInfiniteCompCall(node ast.Node, callStack []string
 			return
 		}
 
-		// TODO: This is an ugly hack for built-in components. Improve it later.
-		if util.InSliceString(compCallName, []string{"LINK"}) {
-			return
-		}
-
 		if ew.isInCallStack(compCallName, callStack) {
 			ew.wrapWithErr(node, "Infinite component call", "The call to component **"+compCallName+"** creates an infinite loop and was skipped.", block)
 			return
@@ -59,6 +54,9 @@ func (ew *errorWrapper) detectInfiniteCompCall(node ast.Node, callStack []string
 
 		compDef := ew.findCompDef(node, compCallName)
 		if compDef == nil {
+			if ew.isBuiltInComp(compCallName) {
+				return
+			}
 			ew.wrapWithErr(node, "Unknown component", "The component **"+compCallName+"** is not defined or not registered.", block)
 			return
 		}
@@ -162,6 +160,9 @@ func (ew *errorWrapper) wrapInvalidCompCall(root ast.Node) {
 	for _, icc := range inlineCompCalls {
 		compCallName := ew.getCompCallName(icc)
 		compDef := ew.findCompDef(icc, compCallName)
+		if compDef == nil {
+			continue
+		}
 		compDefContent := ew.getCompDefContent(compDef)
 		childrenCount := len(compDefContent.Children())
 		if childrenCount == 0 {
@@ -202,6 +203,13 @@ func (ew *errorWrapper) getCompCallName(node ast.Node) string {
 		return strings.TrimSpace(string(compCallNameNode.Raw()))
 	}
 	return ""
+}
+
+func (ew *errorWrapper) isBuiltInComp(compCallName string) bool {
+	if util.InSliceString(compCallName, []string{"LINK"}) {
+		return true
+	}
+	return false
 }
 
 func (ew *errorWrapper) isInCallStack(name string, callStack []string) bool {

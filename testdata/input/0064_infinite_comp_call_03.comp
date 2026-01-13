@@ -1,0 +1,5 @@
+{{ LINK }}
+
+~ LINK
+I override LINK built-in component and try make it infinite call
+{{ LINK }}

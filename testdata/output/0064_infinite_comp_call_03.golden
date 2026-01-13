@@ -1,0 +1,1 @@
+<p>I override LINK built-in component and try make it infinite call</p><compono-error-block><div slot="title">Infinite component call</div><div slot="description">The call to component <strong>LINK</strong> creates an infinite loop and was skipped.</div></compono-error-block>
