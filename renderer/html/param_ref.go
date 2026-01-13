@@ -1,6 +1,7 @@
 package html
 
 import (
+	"html"
 	"strings"
 
 	"github.com/umono-cms/compono/ast"
@@ -79,7 +80,7 @@ func (p *paramRefInLocalCompDef) Render() string {
 			if argValue == nil {
 				return ""
 			}
-			return strings.TrimSpace(string(argValue.Raw()))
+			return html.EscapeString(strings.TrimSpace(string(argValue.Raw())))
 		}
 	}
 
@@ -91,7 +92,7 @@ func (p *paramRefInLocalCompDef) Render() string {
 		return ""
 	}
 
-	return strings.TrimSpace(string(compParamDefaValue.Raw()))
+	return html.EscapeString(strings.TrimSpace(string(compParamDefaValue.Raw())))
 }
 
 type paramRefInGlobalCompDef struct {
@@ -159,7 +160,7 @@ func (p *paramRefInGlobalCompDef) Render() string {
 			argValue := ast.FindNodeByRuleName(ast.FindNode(ast.FindNodeByRuleName(compCallArg.Children(), "comp-call-arg-type").Children(), func(node ast.Node) bool {
 				return ast.IsRuleNameOneOf(node, []string{"comp-call-string-arg", "comp-call-number-arg", "comp-call-bool-arg"})
 			}).Children(), "comp-call-arg-value")
-			return strings.TrimSpace(string(argValue.Raw()))
+			return html.EscapeString(strings.TrimSpace(string(argValue.Raw())))
 		}
 	}
 
@@ -167,5 +168,5 @@ func (p *paramRefInGlobalCompDef) Render() string {
 		return ast.IsRuleNameOneOf(node, []string{"comp-string-param", "comp-call-param", "comp-bool-param"})
 	}).Children(), "comp-param-defa-value")
 
-	return strings.TrimSpace(string(compParamDefaValue.Raw()))
+	return html.EscapeString(strings.TrimSpace(string(compParamDefaValue.Raw())))
 }
