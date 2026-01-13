@@ -167,10 +167,32 @@ func (ew *errorWrapper) wrapInvalidCompCall(root ast.Node) {
 		if childrenCount == 0 {
 			continue
 		}
-		p := ast.FindNodeByRuleName(compDefContent.Children(), "p")
-		if childrenCount > 1 || p == nil {
+
+		wrap := false
+		if childrenCount > 1 {
+			wrap = true
+		}
+
+		var p ast.Node
+		if !wrap {
+			p = ast.FindNodeByRuleName(compDefContent.Children(), "p")
+			if p == nil {
+				wrap = true
+			}
+		}
+
+		if !wrap {
+			pc := ast.FindNodeByRuleName(p.Children(), "p-content")
+			sb := ast.FindNodeByRuleName(pc.Children(), "soft-break")
+			if sb != nil {
+				wrap = true
+			}
+		}
+
+		if wrap {
 			ew.wrapWithErr(icc, "Invalid component usage", "The component **"+compCallName+"** is a block component and cannot be used inline.", false)
 		}
+
 	}
 }
 
