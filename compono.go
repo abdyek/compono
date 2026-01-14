@@ -96,7 +96,46 @@ func (c *compono) Convert(source []byte, writer io.Writer) error {
 }
 
 func (c *compono) ConvertGlobalComponent(name string, source []byte, writer io.Writer) error {
-	// TODO: complete it
+	if len(source) == 0 {
+		return nil
+	}
+
+	node := ast.DefaultEmptyNode()
+	node.SetRule(rule.NewGlobalCompDef())
+
+	globalCompDef := c.parser.Parse(source, node)
+
+	root := c.parser.Parse([]byte(`{{ `+name+` }}`), ast.DefaultRootNode())
+
+	gcName := ast.DefaultEmptyNode()
+	gcName.SetRule(rule.NewGlobalCompName())
+	gcName.SetParent(root)
+	gcName.SetRaw([]byte(name))
+
+	globalCompDef.SetChildren(append([]ast.Node{gcName}, globalCompDef.Children()...))
+
+	gw := ast.DefaultEmptyNode()
+	gw.SetRule(rule.NewGlobalCompDefWrapper())
+	gw.SetParent(root)
+	gw.SetChildren(append([]ast.Node{globalCompDef}, c.cloneGlobalComponents()...))
+
+	for _, child := range gw.Children() {
+		child.SetParent(gw)
+	}
+
+	root.SetChildren(append(root.Children(), gw))
+
+	err := c.validator.Validate(root)
+	if err != nil {
+		return NewComponoError(ErrInvalidAST, err.Error())
+	}
+
+	c.errorWrapper.Wrap(root)
+
+	err = c.renderer.Render(writer, root)
+	if err != nil {
+		return NewComponoError(ErrRender, err.Error())
+	}
 	return nil
 }
 
@@ -200,6 +239,42 @@ func (c *compono) getGlobalCompDefByName(name string) ast.Node {
 		}
 	}
 	return nil
+}
+
+func (c *compono) cloneGlobalComponents() []ast.Node {
+	children := c.globalWrapper.Children()
+	if len(children) == 0 {
+		return nil
+	}
+
+	cloned := make([]ast.Node, len(children))
+	for i, child := range children {
+		cloned[i] = c.cloneNode(child)
+	}
+	return cloned
+}
+
+func (c *compono) cloneNode(node ast.Node) ast.Node {
+	if node == nil {
+		return nil
+	}
+
+	clone := ast.DefaultEmptyNode()
+	clone.SetRule(node.Rule())
+	clone.SetRaw(node.Raw())
+
+	children := node.Children()
+	if len(children) > 0 {
+		clonedChildren := make([]ast.Node, len(children))
+		for i, child := range children {
+			clonedChild := c.cloneNode(child)
+			clonedChild.SetParent(clone)
+			clonedChildren[i] = clonedChild
+		}
+		clone.SetChildren(clonedChildren)
+	}
+
+	return clone
 }
 
 type ComponoError struct {
