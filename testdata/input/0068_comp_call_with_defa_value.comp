@@ -1,0 +1,6 @@
+{{ COMP }}
+
+~ COMP str = "str" number = 123 bool = true
+{{ str }}
+{{ number }}
+{{ bool }}
