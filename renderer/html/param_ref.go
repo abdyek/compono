@@ -85,7 +85,7 @@ func (p *paramRefInLocalCompDef) Render() string {
 	}
 
 	compParamDefaValue := ast.FindNodeByRuleName(ast.FindNode(ast.FindNodeByRuleName(compParam.Children(), "comp-param-type").Children(), func(node ast.Node) bool {
-		return ast.IsRuleNameOneOf(node, []string{"comp-string-param", "comp-call-param", "comp-bool-param"})
+		return ast.IsRuleNameOneOf(node, []string{"comp-string-param", "comp-number-param", "comp-bool-param"})
 	}).Children(), "comp-param-defa-value")
 
 	if compParamDefaValue == nil {
