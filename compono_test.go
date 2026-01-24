@@ -99,6 +99,15 @@ func (s *componoTestSuite) TestGoldenForConvertGlobalComponent() {
 	}
 }
 
+func (s *componoTestSuite) TestUnregisterGlobalComponent() {
+  compono := New().(*compono)
+  err := compono.RegisterGlobalComponent("SAY_HELLO", []byte("# Hello"))
+  require.Nil(s.T(), err)
+  err = compono.UnregisterGlobalComponent("SAY_HELLO")
+  require.Nil(s.T(),err)
+  assert.Equal(s.T(), 0, len(compono.globalWrapper.Children()))
+}
+
 func TestComponoTestSuite(t *testing.T) {
 	suite.Run(t, new(componoTestSuite))
 }

@@ -170,18 +170,13 @@ func (c *compono) UnregisterGlobalComponent(name string) error {
 		return NewComponoError(ErrGlobalNotExist, fmt.Sprintf("cannot unregister global component %q: does not exist", name))
 	}
 
-	globalComps := []ast.Node{}
-	for _, gcd := range c.globalWrapper.Children() {
-		if gcd.Rule().Name() != "global-comp-def" {
-			continue
-		}
-		for _, child := range gcd.Children() {
-			if !(child.Rule().Name() == "global-comp-name" && name == string(child.Raw())) {
-				globalComps = append(globalComps, gcd)
-				continue
-			}
-		}
-	}
+  globalComps := ast.FilterNodes(c.globalWrapper.Children(), func(gc ast.Node) bool {
+    globalCompName := ast.FindNodeByRuleName(gc.Children(), "global-comp-name")
+    if string(globalCompName.Raw()) == name {
+      return false
+    }
+    return true
+  })
 
 	c.globalWrapper.SetChildren(globalComps)
 	return nil
