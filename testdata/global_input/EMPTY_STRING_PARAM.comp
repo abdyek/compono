@@ -1,2 +1,2 @@
 str = ""
-*It must not panic* {{ str }}
+**It must not panic** {{ str }}

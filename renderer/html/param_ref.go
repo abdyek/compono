@@ -168,5 +168,9 @@ func (p *paramRefInGlobalCompDef) Render() string {
 		return ast.IsRuleNameOneOf(node, []string{"comp-string-param", "comp-call-param", "comp-bool-param"})
 	}).Children(), "comp-param-defa-value")
 
+	if compParamDefaValue == nil {
+		return ""
+	}
+
 	return html.EscapeString(strings.TrimSpace(string(compParamDefaValue.Raw())))
 }
