@@ -41,7 +41,7 @@ func (_ *localCompDef) Name() string {
 }
 
 func (_ *localCompDef) Selectors() []selector.Selector {
-	seli, _ := selector.NewStartEndLeftInner(`\n~\s+[A-Z0-9]+(?:_[A-Z0-9]+)*`, `\n~\s+[A-Z0-9]+(?:_[A-Z0-9]+)*|\z`)
+	seli, _ := selector.NewStartEndLeftInner(`(?:\n|\A)~\s+[A-Z0-9]+(?:_[A-Z0-9]+)*`, `\n~\s+[A-Z0-9]+(?:_[A-Z0-9]+)*|\z`)
 	return []selector.Selector{
 		seli,
 	}
@@ -66,7 +66,7 @@ func (_ *localCompDefHead) Name() string {
 }
 
 func (_ *localCompDefHead) Selectors() []selector.Selector {
-	se, _ := selector.NewStartEnd(`\n~\s+`, `\s*\n`)
+	se, _ := selector.NewStartEnd(`(?:\n|\A)~\s+`, `\s*\n`)
 	return []selector.Selector{
 		se,
 	}
@@ -92,7 +92,7 @@ func (_ *localCompName) Name() string {
 
 func (_ *localCompName) Selectors() []selector.Selector {
 	return []selector.Selector{
-		selector.NewStartEndInner(`\n~\s+`, ` +|\n|\z`),
+		selector.NewStartEndInner(`(?:\n|\A)~\s+`, ` +|\n|\z`),
 	}
 }
 
