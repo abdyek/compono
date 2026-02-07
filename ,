@@ -1,0 +1,4 @@
+name = "Yunus Emre"
+{{ LOCAL_COMP }}
+~ LOCAL_COMP
+Hello *{{ name }}*!

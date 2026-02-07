@@ -32,7 +32,6 @@ func (ew *errorWrapper) wrapInfiniteCompCall(root ast.Node) {
 }
 
 func (ew *errorWrapper) detectInfiniteCompCall(node ast.Node, callStack []string) {
-
 	ruleName := node.Rule().Name()
 
 	if ruleName == "block-comp-call" || ruleName == "inline-comp-call" {
@@ -97,20 +96,43 @@ func (ew *errorWrapper) wrapInvalidParamRef(root ast.Node) {
 			title := "Unknown parameter"
 			msg := "The parameter **" + parRefNa + "** is not defined for this component."
 
-			if compParams == nil {
-				ew.wrapWithErr(pr, title, msg, false)
-				continue
+			found := false
+			if compParams != nil {
+				compParam := ast.FindNode(compParams.Children(), func(cp ast.Node) bool {
+					compParamName := ast.FindNodeByRuleName(cp.Children(), "comp-param-name")
+					if strings.TrimSpace(string(compParamName.Raw())) == parRefNa {
+						return true
+					}
+					return false
+				})
+				if compParam != nil {
+					found = true
+				}
 			}
 
-			compParam := ast.FindNode(compParams.Children(), func(cp ast.Node) bool {
-				compParamName := ast.FindNodeByRuleName(cp.Children(), "comp-param-name")
-				if strings.TrimSpace(string(compParamName.Raw())) == parRefNa {
-					return true
+			if !found {
+				globalCompDef := ast.FindNodeByRuleName(ast.GetAncestors(pr), "global-comp-def")
+				if globalCompDef != nil {
+					globalCompDefHead := ast.FindNodeByRuleName(globalCompDef.Children(), "global-comp-def-head")
+					if globalCompDefHead != nil {
+						globalCompParams := ast.FindNodeByRuleName(globalCompDefHead.Children(), "comp-params")
+						if globalCompParams != nil {
+							globalCompParam := ast.FindNode(globalCompParams.Children(), func(cp ast.Node) bool {
+								compParamName := ast.FindNodeByRuleName(cp.Children(), "comp-param-name")
+								if strings.TrimSpace(string(compParamName.Raw())) == parRefNa {
+									return true
+								}
+								return false
+							})
+							if globalCompParam != nil {
+								found = true
+							}
+						}
+					}
 				}
-				return false
-			})
+			}
 
-			if compParam == nil {
+			if !found {
 				ew.wrapWithErr(pr, title, msg, false)
 				continue
 			}
@@ -222,7 +244,6 @@ func (ew *errorWrapper) isInCallStack(name string, callStack []string) bool {
 }
 
 func (ew *errorWrapper) findCompDef(compCallNode ast.Node, name string) ast.Node {
-
 	globalCompDefAnc := ast.FindNode(ast.GetAncestors(compCallNode), func(anc ast.Node) bool {
 		return ast.IsRuleName(anc, "global-comp-def")
 	})
