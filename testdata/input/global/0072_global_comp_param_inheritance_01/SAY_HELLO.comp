@@ -1,0 +1,4 @@
+name = ""
+{{ LOCAL_COMP }}
+~ LOCAL_COMP name = "Compono" 
+Hello *{{ name }}*!
