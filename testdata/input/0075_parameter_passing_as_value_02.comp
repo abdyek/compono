@@ -1,0 +1,4 @@
+{{ GREETER value = "Foo Bar" }}
+
+~ GREETER value = ""
+{{ SAY_HELLO name = $value }}

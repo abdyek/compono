@@ -1,0 +1,15 @@
+{{ USER name = "Foo Bar" age = 30 is-admin = true }}
+
+~ USER name = "" age = 0 is-admin = false
+{{ NAME value = $name }}
+{{ AGE value = $age }}
+{{ ADMIN value = $is-admin }}
+
+~ NAME value = ""
+# {{ value }}
+
+~ AGE value = 0
+## {{ value }}
+
+~ ADMIN value = false
+### {{ value }}

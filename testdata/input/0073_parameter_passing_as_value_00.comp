@@ -1,0 +1,11 @@
+{{ USER_PROFILE name = "Yunus Emre" email="example@example.com" }}
+
+~ USER_PROFILE name = "" email = ""
+{{ SAY_HELLO name = $name }}
+{{ EMAIL_WRAPPER email = $email }}
+
+~ SAY_HELLO name = ""
+Hello *{{ name }}*
+
+~ EMAIL_WRAPPER email = ""
+**{{ email }}**
