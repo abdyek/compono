@@ -1,0 +1,6 @@
+{{ SAY_HELLO name = "Yunus Emre" }}
+{{ GLOBAL }}
+
+~ SAY_HELLO name = ""
+Hello *{{ name }}*!
+No Hello *$name*!
