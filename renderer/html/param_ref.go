@@ -77,13 +77,7 @@ func (p *paramRefInLocalCompDef) Render() string {
 				return false
 			})
 			if compCallArg != nil {
-				argValue := ast.FindNodeByRuleName(ast.FindNode(ast.FindNodeByRuleName(compCallArg.Children(), "comp-call-arg-type").Children(), func(node ast.Node) bool {
-					return ast.IsRuleNameOneOf(node, []string{"comp-call-string-arg", "comp-call-number-arg", "comp-call-bool-arg"})
-				}).Children(), "comp-call-arg-value")
-				if argValue == nil {
-					return ""
-				}
-				return html.EscapeString(strings.TrimSpace(string(argValue.Raw())))
+				return resolveCompCallArgValue(compCallArg, getAncestorsByInvoker(p), compCall)
 			}
 		}
 
@@ -141,13 +135,7 @@ func (p *paramRefInLocalCompDef) Render() string {
 			return false
 		})
 		if compCallArg != nil {
-			argValue := ast.FindNodeByRuleName(ast.FindNode(ast.FindNodeByRuleName(compCallArg.Children(), "comp-call-arg-type").Children(), func(node ast.Node) bool {
-				return ast.IsRuleNameOneOf(node, []string{"comp-call-string-arg", "comp-call-number-arg", "comp-call-bool-arg"})
-			}).Children(), "comp-call-arg-value")
-			if argValue == nil {
-				return ""
-			}
-			return html.EscapeString(strings.TrimSpace(string(argValue.Raw())))
+			return resolveCompCallArgValue(compCallArg, getAncestorsByInvoker(p), anc)
 		}
 	}
 
@@ -223,10 +211,7 @@ func (p *paramRefInGlobalCompDef) Render() string {
 			return false
 		})
 		if compCallArg != nil {
-			argValue := ast.FindNodeByRuleName(ast.FindNode(ast.FindNodeByRuleName(compCallArg.Children(), "comp-call-arg-type").Children(), func(node ast.Node) bool {
-				return ast.IsRuleNameOneOf(node, []string{"comp-call-string-arg", "comp-call-number-arg", "comp-call-bool-arg"})
-			}).Children(), "comp-call-arg-value")
-			return html.EscapeString(strings.TrimSpace(string(argValue.Raw())))
+			return resolveCompCallArgValue(compCallArg, getAncestorsByInvoker(p), compCall)
 		}
 	}
 
@@ -239,4 +224,56 @@ func (p *paramRefInGlobalCompDef) Render() string {
 	}
 
 	return html.EscapeString(strings.TrimSpace(string(compParamDefaValue.Raw())))
+}
+
+func resolveCompCallArgValue(compCallArg ast.Node, invokerAncestors []ast.Node, currentCompCall ast.Node) string {
+	compCallArgType := ast.FindNodeByRuleName(compCallArg.Children(), "comp-call-arg-type")
+	argTypeNode := ast.FindNode(compCallArgType.Children(), func(node ast.Node) bool {
+		return ast.IsRuleNameOneOf(node, []string{"comp-call-string-arg", "comp-call-number-arg", "comp-call-bool-arg", "comp-call-param-arg"})
+	})
+	if argTypeNode == nil {
+		return ""
+	}
+
+	argValue := ast.FindNodeByRuleName(argTypeNode.Children(), "comp-call-arg-value")
+	if argValue == nil {
+		return ""
+	}
+
+	if ast.IsRuleName(argTypeNode, "comp-call-param-arg") {
+		referencedParamName := strings.TrimSpace(string(argValue.Raw()))
+		var remainingAncestors []ast.Node
+		for i, anc := range invokerAncestors {
+			if anc == currentCompCall {
+				remainingAncestors = invokerAncestors[i+1:]
+				break
+			}
+		}
+		return resolveParamFromAncestors(referencedParamName, remainingAncestors)
+	}
+
+	return html.EscapeString(strings.TrimSpace(string(argValue.Raw())))
+}
+
+func resolveParamFromAncestors(paramName string, invokerAncestors []ast.Node) string {
+	for _, anc := range invokerAncestors {
+		if !ast.IsRuleNameOneOf(anc, []string{"block-comp-call", "inline-comp-call"}) {
+			continue
+		}
+
+		compCallArgs := ast.FindNodeByRuleName(anc.Children(), "comp-call-args")
+		if compCallArgs == nil {
+			continue
+		}
+
+		compCallArg := ast.FindNode(compCallArgs.Children(), func(cca ast.Node) bool {
+			argName := ast.FindNodeByRuleName(cca.Children(), "comp-call-arg-name")
+			return strings.TrimSpace(string(argName.Raw())) == paramName
+		})
+
+		if compCallArg != nil {
+			return resolveCompCallArgValue(compCallArg, invokerAncestors, anc)
+		}
+	}
+	return ""
 }

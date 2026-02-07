@@ -510,7 +510,7 @@ func (_ *compCallArgs) Name() string {
 }
 
 func (_ *compCallArgs) Selectors() []selector.Selector {
-	p, _ := selector.NewPattern(`([a-z][a-z0-9-]*)[\s\n\r]*=[\s\n\r]*(".*?"|\d+(?:\.\d+)?|true|false)`)
+	p, _ := selector.NewPattern(`([a-z][a-z0-9-]*)[\s\n\r]*=[\s\n\r]*(".*?"|\d+(?:\.\d+)?|true|false|\$[a-z][a-z0-9-]*)`)
 	return []selector.Selector{
 		selector.NewFilter(p, func(source []byte, index [][2]int) [][2]int {
 			if len(index) == 0 {
@@ -552,7 +552,7 @@ func (_ *compCallArg) Name() string {
 }
 
 func (_ *compCallArg) Selectors() []selector.Selector {
-	p, _ := selector.NewPattern(`([a-z][a-z0-9-]*)[\s\n\r]*=[\s\n\r]*(".*?"|\d+(?:\.\d+)?|true|false)`)
+	p, _ := selector.NewPattern(`([a-z][a-z0-9-]*)[\s\n\r]*=[\s\n\r]*(".*?"|\d+(?:\.\d+)?|true|false|\$[a-z][a-z0-9-]*)`)
 	return []selector.Selector{
 		p,
 	}
@@ -599,7 +599,7 @@ func (_ *compCallArgType) Name() string {
 }
 
 func (_ *compCallArgType) Selectors() []selector.Selector {
-	p, _ := selector.NewPattern(`[\s\n\r]*(".*?"|\d+(?:\.\d+)?|true|false)`)
+	p, _ := selector.NewPattern(`[\s\n\r]*(".*?"|\d+(?:\.\d+)?|true|false|\$[a-z][a-z0-9-]*)`)
 	return []selector.Selector{
 		p,
 	}
@@ -610,6 +610,7 @@ func (_ *compCallArgType) Rules() []Rule {
 		newCompCallStringArg(),
 		newCompCallNumberArg(),
 		newCompCallBoolArg(),
+		newCompCallParamArg(),
 	}
 }
 
@@ -684,7 +685,29 @@ func (_ *compCallBoolArg) Rules() []Rule {
 	}
 }
 
-// Component call argument value
+// Component call's param argument
+type compCallParamArg struct{}
+
+func newCompCallParamArg() Rule {
+	return &compCallParamArg{}
+}
+
+func (_ *compCallParamArg) Name() string {
+	return "comp-call-param-arg"
+}
+
+func (_ *compCallParamArg) Selectors() []selector.Selector {
+	return []selector.Selector{
+		selector.NewStartEndInner(`[\s\n\r]*\$`, `\z`),
+	}
+}
+
+func (_ *compCallParamArg) Rules() []Rule {
+	return []Rule{
+		newCompCallArgValue(),
+	}
+}
+
 type compCallArgValue struct{}
 
 func newCompCallArgValue() Rule {
