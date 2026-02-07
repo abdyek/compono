@@ -45,14 +45,75 @@ func (_ *paramRefInLocalCompDef) Condition(invoker renderableNode, node ast.Node
 }
 
 func (p *paramRefInLocalCompDef) Render() string {
-
 	paramRefName := p.paramRefName()
 
 	localCompDef := ast.FindNodeByRuleName(ast.GetAncestors(p.Node()), "local-comp-def")
 	localCompDefHead := ast.FindNodeByRuleName(localCompDef.Children(), "local-comp-def-head")
 	compParams := ast.FindNodeByRuleName(localCompDefHead.Children(), "comp-params")
 
-	compParam := ast.FindNode(compParams.Children(), func(cp ast.Node) bool {
+	var compParam ast.Node
+	if compParams != nil {
+		compParam = ast.FindNode(compParams.Children(), func(cp ast.Node) bool {
+			compParamName := ast.FindNodeByRuleName(cp.Children(), "comp-param-name")
+			if strings.TrimSpace(string(compParamName.Raw())) == paramRefName {
+				return true
+			}
+			return false
+		})
+	}
+
+	if compParam != nil {
+		compCall := ast.FindNode(getAncestorsByInvoker(p), func(node ast.Node) bool {
+			return ast.IsRuleNameOneOf(node, []string{"block-comp-call", "inline-comp-call"})
+		})
+
+		compCallArgs := ast.FindNodeByRuleName(compCall.Children(), "comp-call-args")
+		if compCallArgs != nil {
+			compCallArg := ast.FindNode(compCallArgs.Children(), func(cca ast.Node) bool {
+				argName := ast.FindNodeByRuleName(cca.Children(), "comp-call-arg-name")
+				if strings.TrimSpace(string(argName.Raw())) == paramRefName {
+					return true
+				}
+				return false
+			})
+			if compCallArg != nil {
+				argValue := ast.FindNodeByRuleName(ast.FindNode(ast.FindNodeByRuleName(compCallArg.Children(), "comp-call-arg-type").Children(), func(node ast.Node) bool {
+					return ast.IsRuleNameOneOf(node, []string{"comp-call-string-arg", "comp-call-number-arg", "comp-call-bool-arg"})
+				}).Children(), "comp-call-arg-value")
+				if argValue == nil {
+					return ""
+				}
+				return html.EscapeString(strings.TrimSpace(string(argValue.Raw())))
+			}
+		}
+
+		compParamDefaValue := ast.FindNodeByRuleName(ast.FindNode(ast.FindNodeByRuleName(compParam.Children(), "comp-param-type").Children(), func(node ast.Node) bool {
+			return ast.IsRuleNameOneOf(node, []string{"comp-string-param", "comp-number-param", "comp-bool-param"})
+		}).Children(), "comp-param-defa-value")
+
+		if compParamDefaValue == nil {
+			return ""
+		}
+
+		return html.EscapeString(strings.TrimSpace(string(compParamDefaValue.Raw())))
+	}
+
+	globalCompDef := ast.FindNodeByRuleName(ast.GetAncestors(p.Node()), "global-comp-def")
+	if globalCompDef == nil {
+		return ""
+	}
+
+	globalCompDefHead := ast.FindNodeByRuleName(globalCompDef.Children(), "global-comp-def-head")
+	if globalCompDefHead == nil {
+		return ""
+	}
+
+	globalCompParams := ast.FindNodeByRuleName(globalCompDefHead.Children(), "comp-params")
+	if globalCompParams == nil {
+		return ""
+	}
+
+	globalCompParam := ast.FindNode(globalCompParams.Children(), func(cp ast.Node) bool {
 		compParamName := ast.FindNodeByRuleName(cp.Children(), "comp-param-name")
 		if strings.TrimSpace(string(compParamName.Raw())) == paramRefName {
 			return true
@@ -60,12 +121,18 @@ func (p *paramRefInLocalCompDef) Render() string {
 		return false
 	})
 
-	compCall := ast.FindNode(getAncestorsByInvoker(p), func(node ast.Node) bool {
-		return ast.IsRuleNameOneOf(node, []string{"block-comp-call", "inline-comp-call"})
-	})
+	if globalCompParam == nil {
+		return ""
+	}
 
-	compCallArgs := ast.FindNodeByRuleName(compCall.Children(), "comp-call-args")
-	if compCallArgs != nil {
+	for _, anc := range getAncestorsByInvoker(p) {
+		if !ast.IsRuleNameOneOf(anc, []string{"block-comp-call", "inline-comp-call"}) {
+			continue
+		}
+		compCallArgs := ast.FindNodeByRuleName(anc.Children(), "comp-call-args")
+		if compCallArgs == nil {
+			continue
+		}
 		compCallArg := ast.FindNode(compCallArgs.Children(), func(cca ast.Node) bool {
 			argName := ast.FindNodeByRuleName(cca.Children(), "comp-call-arg-name")
 			if strings.TrimSpace(string(argName.Raw())) == paramRefName {
@@ -84,7 +151,7 @@ func (p *paramRefInLocalCompDef) Render() string {
 		}
 	}
 
-	compParamDefaValue := ast.FindNodeByRuleName(ast.FindNode(ast.FindNodeByRuleName(compParam.Children(), "comp-param-type").Children(), func(node ast.Node) bool {
+	compParamDefaValue := ast.FindNodeByRuleName(ast.FindNode(ast.FindNodeByRuleName(globalCompParam.Children(), "comp-param-type").Children(), func(node ast.Node) bool {
 		return ast.IsRuleNameOneOf(node, []string{"comp-string-param", "comp-number-param", "comp-bool-param"})
 	}).Children(), "comp-param-defa-value")
 
@@ -127,7 +194,6 @@ func (_ *paramRefInGlobalCompDef) Condition(invoker renderableNode, node ast.Nod
 }
 
 func (p *paramRefInGlobalCompDef) Render() string {
-
 	paramRefName := p.paramRefName()
 
 	globalCompDef := ast.FindNodeByRuleName(ast.GetAncestors(p.Node()), "global-comp-def")
