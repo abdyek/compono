@@ -109,3 +109,81 @@ func FilterNodesInTree(node Node, filter func(Node) bool) []Node {
 	}
 	return filtered
 }
+
+func GetCompParamsFromCompDef(compDef Node) []Node {
+	head := GetCompDefHeadFromCompDef(compDef)
+	return GetCompParamsFromCompHead(head)
+}
+
+func GetCompDefHeadFromCompDef(compDef Node) Node {
+	if compDef == nil {
+		return nil
+	}
+	return FindNode(compDef.Children(), func(node Node) bool {
+		return IsRuleNameOneOf(node, []string{"local-comp-def-head", "global-comp-def-head"})
+	})
+}
+
+func GetCompParamsFromCompHead(head Node) []Node {
+	if head == nil {
+		return []Node{}
+	}
+	compParamsNode := FindNodeByRuleName(head.Children(), "comp-params")
+	if compParamsNode == nil {
+		return []Node{}
+	}
+	return compParamsNode.Children()
+}
+
+func GetCompCallArgsFromCompCall(compCall Node) []Node {
+	compCallArgsNode := FindNodeByRuleName(compCall.Children(), "comp-call-args")
+	if compCallArgsNode == nil {
+		return []Node{}
+	}
+	return compCallArgsNode.Children()
+}
+
+func GetCompCallArgByParamName(compCallArgs []Node, paramName string) Node {
+	return FindNode(compCallArgs, func(cca Node) bool {
+		return GetArgNameFromCompCallArg(cca) == paramName
+	})
+}
+
+func GetTypeFromCompParam(compParam Node) string {
+	compParamType := FindNodeByRuleName(compParam.Children(), "comp-param-type")
+	if compParamType == nil {
+		return ""
+	}
+	compXParam := compParamType.Children()[0]
+	return strings.TrimSuffix(strings.TrimPrefix(compXParam.Rule().Name(), "comp-"), "-param")
+}
+
+func GetTypeFromCompCallArg(compCallArg Node) string {
+	compCallArgType := FindNodeByRuleName(compCallArg.Children(), "comp-call-arg-type")
+	compCallXArg := compCallArgType.Children()[0]
+	return strings.TrimSuffix(strings.TrimPrefix(compCallXArg.Rule().Name(), "comp-call-"), "-arg")
+}
+
+func GetParamNameFromCompParam(compParam Node) string {
+	compParamName := FindNodeByRuleName(compParam.Children(), "comp-param-name")
+	return strings.TrimSpace(string(compParamName.Raw()))
+}
+
+func GetArgNameFromCompCallArg(compCallArg Node) string {
+	compCallArgName := FindNodeByRuleName(compCallArg.Children(), "comp-call-arg-name")
+	return strings.TrimSpace(string(compCallArgName.Raw()))
+}
+
+func GetArgValueFromCompCallArg(compCallArg Node) string {
+	compCallArgType := FindNodeByRuleName(compCallArg.Children(), "comp-call-arg-type")
+	compCallXArg := compCallArgType.Children()[0]
+	value := compCallXArg.Children()[0]
+	return strings.TrimSpace(string(value.Raw()))
+}
+
+func GetParamDefValFromCompParam(compParam Node) string {
+	compParamType := FindNodeByRuleName(compParam.Children(), "comp-param-type")
+	compXParam := compParamType.Children()[0]
+	compParamDefaValue := compXParam.Children()[0]
+	return strings.TrimSpace(string(compParamDefaValue.Raw()))
+}

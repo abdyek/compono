@@ -1,0 +1,6 @@
+{{ COMP comp = COMP }}
+{{ COMP }}
+
+~ COMP comp = NO_MATTER
+# No render here
+{{ $comp }}
