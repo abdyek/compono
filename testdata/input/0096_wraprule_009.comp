@@ -1,0 +1,16 @@
+{{ A }}
+
+~ A
+I am A
+calling self
+{{ A }}
+calling B
+{{ B }}
+
+~ B
+I am B
+{{ C }}
+
+~ C
+I am C
+{{ A }}

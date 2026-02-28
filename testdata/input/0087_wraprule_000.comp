@@ -1,0 +1,5 @@
+{{ COMP }}
+
+~ COMP
+call self
+{{ COMP }}

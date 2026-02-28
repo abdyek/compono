@@ -1,0 +1,5 @@
+I am A
+calling B
+{{ B }}
+calling self
+{{ A }}

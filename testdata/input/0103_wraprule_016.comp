@@ -1,0 +1,5 @@
+{{ COMP comp = COMP }}
+{{ COMP }}
+
+~ COMP comp = NO_MATTER
+{{ $comp }}

@@ -1,0 +1,3 @@
+Use inline {{ COMP }}
+~ COMP
+{{ COMP }}

@@ -1,0 +1,5 @@
+# inline {{ COMP comp = COMP }}
+# inline {{ COMP }}
+
+~ COMP comp = NO_MATTER
+{{ $comp }}
