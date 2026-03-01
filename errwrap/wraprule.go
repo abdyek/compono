@@ -275,33 +275,13 @@ func unknownCompCallMsg(_ *wrapContext, node ast.Node) string {
 }
 
 func unknownCompParamCallMsg(ctx *wrapContext, compCall ast.Node) string {
-	var unknowns []string
-
 	compCallName := getCompCallNameStr(compCall)
 	compDef := findCompDef(ctx.root, compCall, compCallName)
 	if compDef == nil {
 		return "The component **" + compCallName + "** is not defined or not registered."
 	}
 
-	resolvedCompArgs := resolveCompArgValues(ctx, compCall)
-	paramInfos := getCompDefParamInfos(compDef)
-
-	for _, info := range paramInfos {
-		if info.typ != "comp" {
-			continue
-		}
-
-		value := resolvedCompArgs[info.name]
-		if value == "" || strings.HasPrefix(value, "$") || isBuiltInComp(value) {
-			continue
-		}
-
-		if findCompDef(ctx.root, compCall, value) == nil {
-			if !util.InSliceString(value, unknowns) {
-				unknowns = append(unknowns, value)
-			}
-		}
-	}
+	unknowns := getUnknownResolvedCompArgs(ctx, compCall, compDef)
 
 	if len(unknowns) == 0 {
 		return "The component **" + compCallName + "** is not defined or not registered."
@@ -501,32 +481,46 @@ func hasUnknownResolvedCompArg() func(*wrapContext, ast.Node) bool {
 		if compDef == nil {
 			return false
 		}
-
-		hasCompParam := false
-		resolved := resolveCompArgValues(ctx, compCall)
-
-		for _, info := range getCompDefParamInfos(compDef) {
-			if info.typ != "comp" {
-				continue
-			}
-			hasCompParam = true
-
-			value := resolved[info.name]
-			if value == "" || strings.HasPrefix(value, "$") || isBuiltInComp(value) {
-				continue
-			}
-
-			if findCompDef(ctx.root, compCall, value) == nil {
-				return true
-			}
-		}
-
-		if !hasCompParam {
-			return false
-		}
-
-		return false
+		return len(getUnknownResolvedCompArgs(ctx, compCall, compDef)) > 0
 	}
+}
+
+func getUnknownResolvedCompArgs(ctx *wrapContext, compCall ast.Node, compDef ast.Node) []string {
+	if compDef == nil {
+		return nil
+	}
+
+	resolvedCompArgs := resolveCompArgValues(ctx, compCall)
+	if len(resolvedCompArgs) == 0 {
+		return nil
+	}
+
+	explicitCompArgs := getExplicitCompArgMap(compCall)
+	var unknowns []string
+
+	for _, info := range getCompDefParamInfos(compDef) {
+		if info.typ != "comp" {
+			continue
+		}
+
+		value := resolvedCompArgs[info.name]
+		if value == "" || strings.HasPrefix(value, "$") || isBuiltInComp(value) {
+			continue
+		}
+
+		lookupScope := compCall
+		if _, ok := explicitCompArgs[info.name]; !ok && ast.IsRuleName(compDef, "global-comp-def") {
+			if globalCompContent := getCompDefContent(compDef); globalCompContent != nil {
+				lookupScope = globalCompContent
+			}
+		}
+
+		if findCompDef(ctx.root, lookupScope, value) == nil && !util.InSliceString(value, unknowns) {
+			unknowns = append(unknowns, value)
+		}
+	}
+
+	return unknowns
 }
 
 func callsBlockComponent() func(*wrapContext, ast.Node) bool {
