@@ -1,0 +1,1 @@
+{{ MESSAGE_WRAPPER message-component = MESSAGE message = "message test" }}

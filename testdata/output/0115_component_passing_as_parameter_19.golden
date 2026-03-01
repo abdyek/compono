@@ -1,0 +1,1 @@
+<compono-error-block><div slot="title">Not component parameter</div><div slot="description">The parameter <strong>param</strong> is not component parameter</div></compono-error-block>

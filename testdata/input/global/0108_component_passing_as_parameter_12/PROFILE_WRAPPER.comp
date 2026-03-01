@@ -1,0 +1,2 @@
+profile-component = PROFILE_TYPE_1 name = "Jane Doe" email="example@example.com"
+{{ $profile-component name = $name email = $email }}

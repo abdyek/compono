@@ -1,0 +1,4 @@
+comp = EMPTY
+{{ HEADER }}
+{{ $comp }}
+{{ FOOTER }}

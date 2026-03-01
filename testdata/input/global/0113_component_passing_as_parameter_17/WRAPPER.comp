@@ -1,0 +1,2 @@
+comp = BLOCK
+Here p {{ $comp }}
