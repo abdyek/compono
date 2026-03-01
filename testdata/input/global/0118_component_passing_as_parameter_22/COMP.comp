@@ -1,0 +1,5 @@
+comp = DEFAULT_LOCAL_COMP
+{{ $comp }}
+
+~ DEFAULT_LOCAL_COMP
+I am a local component in the global component

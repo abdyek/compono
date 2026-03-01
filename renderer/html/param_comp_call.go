@@ -11,6 +11,11 @@ type paramCompCall struct {
 	renderer *renderer
 }
 
+type resolvedCompTarget struct {
+	name  string
+	scope ast.Node
+}
+
 func newParamCompCall(rend *renderer) renderableNode {
 	return &paramCompCall{
 		renderer: rend,
@@ -29,21 +34,25 @@ func (pcc *paramCompCall) Render() string {
 	inlineCall := ast.IsRuleName(pcc.Node(), "inline-param-comp-call")
 
 	paramName := pcc.getParamName()
-	compName := pcc.resolveCompName(paramName)
-	if compName == "" {
+	target := pcc.resolveCompTarget(paramName)
+	if target.name == "" {
 		return ""
 	}
 
-	globalCompDefAnc := ast.FindNode(ast.GetAncestors(pcc.Node()), func(anc ast.Node) bool {
-		return ast.IsRuleName(anc, "global-comp-def")
-	})
-
-	localCompDefSrc := pcc.renderer.root
-	if globalCompDefAnc != nil {
-		localCompDefSrc = globalCompDefAnc
+	localCompDefSrc := target.scope
+	if localCompDefSrc == nil {
+		localCompDefSrc = localCompSourceFromNode(pcc.Node(), pcc.renderer.root)
 	}
 
-	localCompDef := pcc.renderer.findLocalCompDef(localCompDefSrc, compName)
+	localCompDef := pcc.renderer.findLocalCompDef(localCompDefSrc, target.name)
+	if localCompDef == nil {
+		currentGlobalCompDef := ast.FindNode(ast.GetAncestors(pcc.Node()), func(anc ast.Node) bool {
+			return ast.IsRuleName(anc, "global-comp-def")
+		})
+		if currentGlobalCompDef != nil && currentGlobalCompDef != localCompDefSrc {
+			localCompDef = pcc.renderer.findLocalCompDef(currentGlobalCompDef, target.name)
+		}
+	}
 	if localCompDef != nil {
 		localCompDefContent := ast.FindNodeByRuleName(localCompDef.Children(), "local-comp-def-content")
 		if localCompDefContent == nil {
@@ -55,7 +64,7 @@ func (pcc *paramCompCall) Render() string {
 		return pcc.renderer.renderChildren(pcc, localCompDefContent.Children())
 	}
 
-	globalCompDef := pcc.renderer.findGlobalCompDef(compName)
+	globalCompDef := pcc.renderer.findGlobalCompDef(target.name)
 	if globalCompDef != nil {
 		globalCompDefContent := ast.FindNodeByRuleName(globalCompDef.Children(), "global-comp-def-content")
 		if globalCompDefContent == nil {
@@ -78,7 +87,7 @@ func (pcc *paramCompCall) getParamName() string {
 	return strings.TrimSpace(string(nameNode.Raw()))
 }
 
-func (pcc *paramCompCall) resolveCompName(paramName string) string {
+func (pcc *paramCompCall) resolveCompTarget(paramName string) resolvedCompTarget {
 	invokerAncestors := getAncestorsByInvoker(pcc)
 
 	for _, anc := range invokerAncestors {
@@ -93,7 +102,7 @@ func (pcc *paramCompCall) resolveCompName(paramName string) string {
 				return argName != nil && strings.TrimSpace(string(argName.Raw())) == paramName
 			})
 			if compCallArg != nil {
-				return resolveCompCallArgValueRaw(compCallArg, invokerAncestors, anc, pcc.renderer)
+				return resolveCompCallArgValueTarget(compCallArg, invokerAncestors, anc, pcc.renderer)
 			}
 		}
 
@@ -101,26 +110,29 @@ func (pcc *paramCompCall) resolveCompName(paramName string) string {
 		if compDef != nil {
 			val := getCompParamDefault(compDef, paramName)
 			if val != "" {
-				return val
+				return resolvedCompTarget{
+					name:  val,
+					scope: localCompSourceFromNode(compDef, pcc.renderer.root),
+				}
 			}
 		}
 	}
 
-	return ""
+	return resolvedCompTarget{}
 }
 
-func resolveCompCallArgValueRaw(compCallArg ast.Node, invokerAncestors []ast.Node, currentCompCall ast.Node, r *renderer) string {
+func resolveCompCallArgValueTarget(compCallArg ast.Node, invokerAncestors []ast.Node, currentCompCall ast.Node, r *renderer) resolvedCompTarget {
 	compCallArgType := ast.FindNodeByRuleName(compCallArg.Children(), "comp-call-arg-type")
 	argTypeNode := ast.FindNode(compCallArgType.Children(), func(node ast.Node) bool {
 		return ast.IsRuleNameOneOf(node, []string{"comp-call-string-arg", "comp-call-number-arg", "comp-call-bool-arg", "comp-call-param-arg", "comp-call-comp-arg"})
 	})
 	if argTypeNode == nil {
-		return ""
+		return resolvedCompTarget{}
 	}
 
 	argValue := ast.FindNodeByRuleName(argTypeNode.Children(), "comp-call-arg-value")
 	if argValue == nil {
-		return ""
+		return resolvedCompTarget{}
 	}
 
 	if ast.IsRuleName(argTypeNode, "comp-call-param-arg") {
@@ -132,13 +144,16 @@ func resolveCompCallArgValueRaw(compCallArg ast.Node, invokerAncestors []ast.Nod
 				break
 			}
 		}
-		return resolveParamFromAncestorsRaw(referencedParamName, remainingAncestors, r)
+		return resolveParamFromAncestorsTarget(referencedParamName, remainingAncestors, r)
 	}
 
-	return strings.TrimSpace(string(argValue.Raw()))
+	return resolvedCompTarget{
+		name:  strings.TrimSpace(string(argValue.Raw())),
+		scope: localCompSourceFromNode(currentCompCall, r.root),
+	}
 }
 
-func resolveParamFromAncestorsRaw(paramName string, invokerAncestors []ast.Node, r *renderer) string {
+func resolveParamFromAncestorsTarget(paramName string, invokerAncestors []ast.Node, r *renderer) resolvedCompTarget {
 	for _, anc := range invokerAncestors {
 		if !ast.IsRuleNameOneOf(anc, []string{"block-comp-call", "inline-comp-call", "block-param-comp-call", "inline-param-comp-call"}) {
 			continue
@@ -152,7 +167,7 @@ func resolveParamFromAncestorsRaw(paramName string, invokerAncestors []ast.Node,
 			})
 
 			if compCallArg != nil {
-				return resolveCompCallArgValueRaw(compCallArg, invokerAncestors, anc, r)
+				return resolveCompCallArgValueTarget(compCallArg, invokerAncestors, anc, r)
 			}
 		}
 
@@ -161,12 +176,15 @@ func resolveParamFromAncestorsRaw(paramName string, invokerAncestors []ast.Node,
 			if compDef != nil {
 				val := getCompParamDefault(compDef, paramName)
 				if val != "" {
-					return val
+					return resolvedCompTarget{
+						name:  val,
+						scope: localCompSourceFromNode(compDef, r.root),
+					}
 				}
 			}
 		}
 	}
-	return ""
+	return resolvedCompTarget{}
 }
 
 func getCompParamDefault(compDef ast.Node, paramName string) string {
@@ -220,4 +238,23 @@ func (pcc *paramCompCall) renderInlineParamCompCall(compDefContent ast.Node) str
 	p := ast.FindNodeByRuleName(compDefContent.Children(), "p")
 	pContent := ast.FindNodeByRuleName(p.Children(), "p-content")
 	return pcc.renderer.renderChildren(pcc, pContent.Children())
+}
+
+func localCompSourceFromNode(node ast.Node, root ast.Node) ast.Node {
+	if node == nil {
+		return root
+	}
+
+	if ast.IsRuleName(node, "global-comp-def") {
+		return node
+	}
+
+	globalCompDefAnc := ast.FindNode(ast.GetAncestors(node), func(anc ast.Node) bool {
+		return ast.IsRuleName(anc, "global-comp-def")
+	})
+	if globalCompDefAnc != nil {
+		return globalCompDefAnc
+	}
+
+	return root
 }

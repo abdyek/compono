@@ -1,0 +1,4 @@
+content = NO_MATTER
+{{ HEADER }}
+{{ $content }}
+{{ FOOTER }}

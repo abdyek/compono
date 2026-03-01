@@ -1,0 +1,2 @@
+{{ PROFILE_WRAPPER }}
+{{ PROFILE_WRAPPER profile-component = PROFILE_TYPE_3 name = "John Doe" }}

@@ -1,0 +1,4 @@
+{{ DEFAULT_TEMPLATE comp = HOME }}
+
+~ HOME
+I am home page
