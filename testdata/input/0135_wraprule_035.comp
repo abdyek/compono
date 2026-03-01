@@ -1,0 +1,4 @@
+{{ HELLO name = "Yunus Emre" age = 31 }}
+
+~ HELLO name = "John"
+# Hello {{ name }}

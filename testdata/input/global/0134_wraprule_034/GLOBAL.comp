@@ -1,0 +1,7 @@
+{{ COMP_WRAPPER inline-comp = WORLD }}
+
+~ COMP_WRAPPER inline-comp = NO_MATTER
+### Hello *{{ $inline-comp }}*
+
+~ WORLD
+World
