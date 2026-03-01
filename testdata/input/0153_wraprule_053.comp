@@ -1,0 +1,7 @@
+{{ COMP_WRAPPER inline-comp = INLINE_COMP }}
+
+~ COMP_WRAPPER inline-comp = NO_MATTER
+# {{ $inline-comp }}
+
+~ INLINE_COMP
+Hello

@@ -1,0 +1,1 @@
+<compono-error-block><div slot="title">Wrong argument type</div><div slot="description">The parameters <strong>name</strong>, <strong>age</strong>, <strong>active</strong>, <strong>template</strong> have the wrong type.</div></compono-error-block>

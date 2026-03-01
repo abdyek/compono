@@ -1,0 +1,1 @@
+<compono-error-block><div slot="title">Unknown parameter</div><div slot="description">The parameters <strong>age</strong>, <strong>married</strong> are not defined for this component.</div></compono-error-block>

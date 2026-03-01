@@ -1,0 +1,13 @@
+I am A
+{{ B }}
+
+~ B
+I am B
+{{ C }}
+
+~ C
+I am C
+{{ D }}
+
+~ D
+I am D

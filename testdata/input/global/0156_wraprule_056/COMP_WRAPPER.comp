@@ -1,0 +1,5 @@
+inline-comp = INLINE
+# {{ $inline-comp }}
+
+~ INLINE
+Hello

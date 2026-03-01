@@ -1,0 +1,7 @@
+{{ HELLO comp = COMP }}
+
+~ HELLO
+# Hello
+
+~ COMP
+comp

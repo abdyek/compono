@@ -1,0 +1,1 @@
+{{ LINK text="click" url="https://umono.io" new-tab = true slots = COMP }}

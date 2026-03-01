@@ -1,0 +1,6 @@
+inline-comp = BLOCK
+No render
+# {{ $inline-comp }}
+
+~ BLOCK
+# Hello
