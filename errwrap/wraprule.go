@@ -35,7 +35,7 @@ func wrapRules() []wrapRule {
 		unknownCompParamCall(),
 		blockCompInsideInline(),
 		blockParamCompInsideInline(),
-		undefinedCompCallArg(),
+		undefinedParam(),
 		wrongArgType(),
 		paramRefInRootContent(),
 		paramCompCallInRootContent(),
@@ -146,16 +146,15 @@ func blockParamCompInsideInline() wrapRule {
 	}
 }
 
-// TODO: Complete it, message func creates wrong info
-func undefinedCompCallArg() wrapRule {
+func undefinedParam() wrapRule {
 	return wrapRule{
 		conditions: []func(*wrapContext, ast.Node) bool{
 			isRuleNameOneOf("block-comp-call", "inline-comp-call"),
 			isKnownComponent(),
 			hasUndefinedArgs(),
 		},
-		title:   staticTitle("Undefined parameter"),
-		message: undefinedArgMsgFn,
+		title:   staticTitle("Unknown parameter"),
+		message: undefinedParamMsg,
 		block:   blockFromRuleName,
 	}
 }
@@ -297,16 +296,17 @@ func blockParamCompInsideInlineMsg(ctx *wrapContext, node ast.Node) string {
 	return "The component **" + name + "** is a block component and cannot be used inline."
 }
 
-func undefinedArgMsgFn(_ *wrapContext, node ast.Node) string {
-	name := getCompCallNameStr(node)
-	argNames := make([]string, 0)
-	for _, arg := range ast.GetCompCallArgsFromCompCall(node) {
-		if !ast.IsRuleName(arg, "comp-call-arg") {
-			continue
-		}
-		argNames = append(argNames, ast.GetArgNameFromCompCallArg(arg))
+func undefinedParamMsg(ctx *wrapContext, node ast.Node) string {
+	undefinedArgNames := getUndefinedArgNames(ctx, node)
+	if len(undefinedArgNames) == 0 {
+		return "One or more parameters are not defined for this component."
 	}
-	return "The parameter(s) **" + strings.Join(argNames, "**, **") + "** are not defined in component **" + name + "**. Only declared parameters can be passed."
+
+	if len(undefinedArgNames) == 1 {
+		return "The parameter **" + undefinedArgNames[0] + "** is not defined for this component."
+	}
+
+	return "The parameters **" + strings.Join(undefinedArgNames, "**, **") + "** are not defined for this component."
 }
 
 func wrongArgTypeMsgFn(_ *wrapContext, node ast.Node) string {
@@ -608,32 +608,41 @@ func isNotCompParamCompCall() func(*wrapContext, ast.Node) bool {
 
 func hasUndefinedArgs() func(*wrapContext, ast.Node) bool {
 	return func(ctx *wrapContext, compCall ast.Node) bool {
-		compCallName := getCompCallNameStr(compCall)
-		if compCallName == "" {
-			return false
-		}
-
-		compDef := findCompDef(ctx.root, compCall, compCallName)
-		if compDef == nil {
-			return false
-		}
-
-		definedParams := getCompDefParamNames(compDef)
-		if isBuiltInComp(compCallName) {
-			definedParams = getBuiltInCompParams(compCallName)
-		}
-
-		for _, arg := range ast.GetCompCallArgsFromCompCall(compCall) {
-			if !ast.IsRuleName(arg, "comp-call-arg") {
-				continue
-			}
-			if !util.InSliceString(ast.GetArgNameFromCompCallArg(arg), definedParams) {
-				return true
-			}
-		}
-
-		return false
+		return len(getUndefinedArgNames(ctx, compCall)) > 0
 	}
+}
+
+func getUndefinedArgNames(ctx *wrapContext, compCall ast.Node) []string {
+	compCallName := getCompCallNameStr(compCall)
+	if compCallName == "" {
+		return []string{}
+	}
+
+	compDef := findCompDef(ctx.root, compCall, compCallName)
+	if compDef == nil {
+		return []string{}
+	}
+
+	definedParams := getCompDefParamNames(compDef)
+	if isBuiltInComp(compCallName) {
+		definedParams = getBuiltInCompParams(compCallName)
+	}
+
+	undefined := make([]string, 0)
+	for _, arg := range ast.GetCompCallArgsFromCompCall(compCall) {
+		if !ast.IsRuleName(arg, "comp-call-arg") {
+			continue
+		}
+
+		argName := ast.GetArgNameFromCompCallArg(arg)
+		if util.InSliceString(argName, definedParams) {
+			continue
+		}
+
+		undefined = append(undefined, argName)
+	}
+
+	return undefined
 }
 
 func hasWrongTypeArgs() func(*wrapContext, ast.Node) bool {
