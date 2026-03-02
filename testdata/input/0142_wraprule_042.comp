@@ -1,0 +1,1 @@
+{{ GLOBAL_PROFILE name = false age = "thirty" active = 0 template = "NOT_A_COMP" }}

@@ -1,0 +1,4 @@
+{{ INLINE_COMP }}
+
+~ INLINE_COMP
+Hello {{ BLOCK_COMP }}

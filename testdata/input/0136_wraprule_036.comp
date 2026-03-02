@@ -1,0 +1,4 @@
+{{ HELLO name = "Yunus Emre" age = 31 married = false }}
+
+~ HELLO name = "John"
+# Hello {{ name }}

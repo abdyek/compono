@@ -1,0 +1,9 @@
+{{ COMP_WRAPPER inline-comp = BLOCK }}
+
+~ COMP_WRAPPER inline-comp = NO_MATTER
+# Hello {{ $inline-comp }}
+
+~ BLOCK
+I am a
+block
+component

@@ -1,0 +1,3 @@
+inline-comp = NO_MATTER
+No render
+# {{ $inline-comp }}

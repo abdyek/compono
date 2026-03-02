@@ -1,0 +1,7 @@
+{{ PROFILE name = 999 age = "twenty" active = 1 template = "NOT_A_COMP" }}
+
+~ PROFILE name = "John" age = 18 active = true template = TEMPLATE
+# Hi {{ name }}
+
+~ TEMPLATE
+Template

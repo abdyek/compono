@@ -1,0 +1,8 @@
+{{ COMP_WRAPPER inline-comp = BLOCK }}
+
+~ COMP_WRAPPER inline-comp = NO_MATTER
+No render
+# {{ $inline-comp }}
+
+~ BLOCK
+# Hello

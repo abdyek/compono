@@ -1,0 +1,13 @@
+{{ NODE_A next-node = NODE_B }}
+
+~ NODE_A next-node = NO_MATTER
+I am A
+{{ $next-node next-node = NODE_C }}
+
+~ NODE_B next-node = NO_MATTER
+I am B
+{{ $next-node next-node = NODE_A }}
+
+~ NODE_C next-node = NO_MATTER
+I am C
+{{ $next-node next-node = NODE_B }}

@@ -1,0 +1,7 @@
+{{ INLINE_COMP }}
+
+~ BLOCK_COMP
+# block comp
+
+~ INLINE_COMP
+Hello {{ BLOCK_COMP }}

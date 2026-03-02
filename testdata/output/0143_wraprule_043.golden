@@ -1,0 +1,1 @@
+<compono-error-block><div slot="title">Wrong argument type</div><div slot="description">The parameters <strong>text</strong>, <strong>url</strong>, <strong>new-tab</strong> have the wrong type.</div></compono-error-block>

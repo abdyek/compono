@@ -1,0 +1,6 @@
+{{ COMP_WRAPPER inline-comp = BLOCK }}
+
+~ BLOCK
+I am a
+block
+component
