@@ -2,7 +2,7 @@
 
 ~ WRAPPER comp = NO_MATTER param = ""
 no render
-{{ $comp comp-param = param }}
+{{ comp comp-param = param }}
 
 ~ COMP
 comp

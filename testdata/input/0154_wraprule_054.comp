@@ -2,7 +2,7 @@
 
 ~ COMP_WRAPPER inline-comp = BLOCK
 No render
-# {{ $inline-comp }}
+# {{ inline-comp }}
 
 ~ BLOCK
 # Hello

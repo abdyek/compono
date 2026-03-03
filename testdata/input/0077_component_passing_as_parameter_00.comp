@@ -3,7 +3,7 @@
 
 ~ DEFAULT_TEMPLATE comp = EMPTY
 {{ HEADER }}
-{{ $comp }}
+{{ comp }}
 {{ FOOTER }}
 
 ~ HOME

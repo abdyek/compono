@@ -15,7 +15,6 @@ func (_ *p) Name() string {
 func (p *p) Selectors() []selector.Selector {
 	return []selector.Selector{
 		selector.NewFilter(selector.NewAll(), func(source []byte, index [][2]int) [][2]int {
-
 			if len(index) == 0 {
 				return [][2]int{}
 			}
@@ -120,7 +119,6 @@ func (_ *pContent) Rules() []Rule {
 		newStrong(),
 		newEm(),
 		newInlineCompCall(),
-		newInlineParamCompCall(),
 		newParamRef(),
 		newSoftBreak(),
 		newPlain(),

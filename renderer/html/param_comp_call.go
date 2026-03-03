@@ -91,7 +91,7 @@ func (pcc *paramCompCall) resolveCompTarget(paramName string) resolvedCompTarget
 	invokerAncestors := getAncestorsByInvoker(pcc)
 
 	for _, anc := range invokerAncestors {
-		if !ast.IsRuleNameOneOf(anc, []string{"block-comp-call", "inline-comp-call", "block-param-comp-call", "inline-param-comp-call"}) {
+		if !isCompCallLikeNode(anc) {
 			continue
 		}
 
@@ -158,7 +158,7 @@ func resolveCompCallArgValueTarget(compCallArg ast.Node, invokerAncestors []ast.
 
 func resolveParamFromAncestorsTarget(paramName string, invokerAncestors []ast.Node, r *renderer) resolvedCompTarget {
 	for _, anc := range invokerAncestors {
-		if !ast.IsRuleNameOneOf(anc, []string{"block-comp-call", "inline-comp-call", "block-param-comp-call", "inline-param-comp-call"}) {
+		if !isCompCallLikeNode(anc) {
 			continue
 		}
 
@@ -231,6 +231,10 @@ func getCompParamDefault(compDef ast.Node, paramName string) string {
 	}
 
 	return strings.TrimSpace(string(defaValue.Raw()))
+}
+
+func isCompCallLikeNode(node ast.Node) bool {
+	return ast.IsRuleNameOneOf(node, []string{"block-comp-call", "inline-comp-call", "param-ref"})
 }
 
 func (pcc *paramCompCall) renderInlineParamCompCall(compDefContent ast.Node) string {

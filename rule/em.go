@@ -44,7 +44,6 @@ func (_ *emContent) Selectors() []selector.Selector {
 func (_ *emContent) Rules() []Rule {
 	return []Rule{
 		newInlineCompCall(),
-		newInlineParamCompCall(),
 		newParamRef(),
 		newPlain(),
 	}

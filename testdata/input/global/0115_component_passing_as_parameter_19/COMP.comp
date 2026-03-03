@@ -1,2 +1,2 @@
 param = "I am a string parameter"
-{{ $param }}
+{{ param }}

@@ -2,7 +2,7 @@
 
 ~ HELLO_WRAPPER comp = NO_MATTER
 no render
-{{ $comp name = true }}
+{{ comp name = true }}
 
 ~ HELLO name = "Jonh"
 Hello {{ name }}!

@@ -10,4 +10,4 @@
 {{ BOTTOM comp = comp }}
 
 ~ BOTTOM comp
-{{ $comp }}
+{{ comp }}

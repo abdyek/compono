@@ -1,2 +1,2 @@
 comp = COMP
-{{ $comp }}
+{{ comp }}
