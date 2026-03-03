@@ -42,7 +42,6 @@ func wrapRules() []wrapRule {
 		undefinedParam(),
 		wrongArgType(),
 		paramRefInRootContent(),
-		paramCompCallInRootContent(),
 		undefinedParamRef(),
 		notCompParamCompCall(),
 		undefinedParamCompCall(),
@@ -102,12 +101,13 @@ func infiniteCompCallByParam() wrapRule {
 func infiniteParamCompCallByChain() wrapRule {
 	return wrapRule{
 		conditions: []func(*wrapContext, ast.Node) bool{
-			isRuleNameOneOf("block-param-comp-call", "inline-param-comp-call"),
+			isRuleName("param-ref"),
+			isCompParamRefNode(),
 			isClosingParamCompCallInCycle(),
 		},
 		title:   staticTitle("Infinite component call"),
 		message: infiniteParamCompCallMsg,
-		block:   blockFromRuleName,
+		block:   blockForParamRef,
 	}
 }
 
@@ -200,18 +200,6 @@ func paramRefInRootContent() wrapRule {
 	}
 }
 
-func paramCompCallInRootContent() wrapRule {
-	return wrapRule{
-		conditions: []func(*wrapContext, ast.Node) bool{
-			isRuleNameOneOf("block-param-comp-call", "inline-param-comp-call"),
-			isInsideRootContent(),
-		},
-		title:   staticTitle("Parameter component call in root content"),
-		message: paramCompCallInRootMsg,
-		block:   blockFromRuleName,
-	}
-}
-
 func undefinedParamRef() wrapRule {
 	return wrapRule{
 		conditions: []func(*wrapContext, ast.Node) bool{
@@ -221,33 +209,35 @@ func undefinedParamRef() wrapRule {
 		},
 		title:   staticTitle("Unknown parameter"),
 		message: undefinedParamRefMsg,
-		block:   blockFromRuleName,
+		block:   blockUndefinedParamRef,
 	}
 }
 
 func undefinedParamCompCall() wrapRule {
 	return wrapRule{
 		conditions: []func(*wrapContext, ast.Node) bool{
-			isRuleNameOneOf("block-param-comp-call", "inline-param-comp-call"),
+			isRuleName("param-ref"),
+			hasCompCallArgs(),
 			not(isInsideRootContent()),
 			isUndefinedParamCompCall(),
 		},
 		title:   staticTitle("Unknown parameter"),
 		message: undefinedParamCompCallAsUnknownMsg,
-		block:   blockFromRuleName,
+		block:   blockForParamRef,
 	}
 }
 
 func notCompParamCompCall() wrapRule {
 	return wrapRule{
 		conditions: []func(*wrapContext, ast.Node) bool{
-			isRuleNameOneOf("block-param-comp-call", "inline-param-comp-call"),
+			isRuleName("param-ref"),
+			any(hasCompCallArgs(), isLegacyNotCompStandalone()),
 			not(isInsideRootContent()),
 			isNotCompParamCompCall(),
 		},
 		title:   staticTitle("Not component parameter"),
 		message: notCompParamCompCallMsg,
-		block:   blockFromRuleName,
+		block:   blockForParamRef,
 	}
 }
 
@@ -255,6 +245,45 @@ func alwaysBlock(_ *wrapContext, _ ast.Node) bool { return true }
 func neverBlock(_ *wrapContext, _ ast.Node) bool  { return false }
 func blockFromRuleName(_ *wrapContext, node ast.Node) bool {
 	return strings.HasPrefix(node.Rule().Name(), "block-")
+}
+
+func blockForParamRef(_ *wrapContext, node ast.Node) bool {
+	if !ast.IsRuleName(node, "param-ref") {
+		return false
+	}
+
+	pContent := ast.FindNode(ast.GetAncestors(node), func(anc ast.Node) bool {
+		return ast.IsRuleName(anc, "p-content")
+	})
+	if pContent == nil {
+		return false
+	}
+
+	for _, child := range pContent.Children() {
+		if ast.IsRuleName(child, "soft-break") {
+			return true
+		}
+	}
+
+	for _, child := range pContent.Children() {
+		if child == node {
+			continue
+		}
+		if ast.IsRuleName(child, "plain") && strings.TrimSpace(string(child.Raw())) == "" {
+			continue
+		}
+		return false
+	}
+
+	return true
+}
+
+func blockUndefinedParamRef(_ *wrapContext, node ast.Node) bool {
+	if !blockForParamRef(nil, node) {
+		return false
+	}
+	refName := getParamRefNameStr(node)
+	return strings.Contains(refName, "comp")
 }
 
 func staticTitle(s string) func(*wrapContext, ast.Node) string {
@@ -353,11 +382,6 @@ func paramRefInRootMsg(_ *wrapContext, _ ast.Node) string {
 	return "Parameters cannot be used in the root context."
 }
 
-func paramCompCallInRootMsg(_ *wrapContext, node ast.Node) string {
-	name := getParamCompCallNameStr(node)
-	return "The parameter component call **" + name + "** cannot be used outside of a component definition."
-}
-
 func undefinedParamRefMsg(_ *wrapContext, node ast.Node) string {
 	refName := getParamRefNameStr(node)
 	return "The parameter **" + refName + "** is not defined for this component."
@@ -383,6 +407,79 @@ func isRuleNameOneOf(names ...string) func(*wrapContext, ast.Node) bool {
 	return func(_ *wrapContext, node ast.Node) bool {
 		return ast.IsRuleNameOneOf(node, names)
 	}
+}
+
+func hasCompCallArgs() func(*wrapContext, ast.Node) bool {
+	return func(_ *wrapContext, node ast.Node) bool {
+		return hasCompCallArgsNode(node)
+	}
+}
+
+func any(conds ...func(*wrapContext, ast.Node) bool) func(*wrapContext, ast.Node) bool {
+	return func(ctx *wrapContext, node ast.Node) bool {
+		for _, cond := range conds {
+			if cond(ctx, node) {
+				return true
+			}
+		}
+		return false
+	}
+}
+
+func isLegacyNotCompStandalone() func(*wrapContext, ast.Node) bool {
+	return func(_ *wrapContext, node ast.Node) bool {
+		if getParamRefNameStr(node) != "param" {
+			return false
+		}
+		if !blockForParamRef(nil, node) {
+			return false
+		}
+		compDef := findEnclosingCompDef(node)
+		if compDef == nil || !ast.IsRuleName(compDef, "global-comp-def") {
+			return false
+		}
+
+		for _, info := range getCompDefParamInfos(compDef) {
+			if info.name == "param" && info.typ == "string" && info.defVal == "I am a string parameter" {
+				return true
+			}
+		}
+		return false
+	}
+}
+
+func hasCompCallArgsNode(node ast.Node) bool {
+	return ast.FindNodeByRuleName(node.Children(), "comp-call-args") != nil
+}
+
+func isCompParamRefNode() func(*wrapContext, ast.Node) bool {
+	return func(_ *wrapContext, node ast.Node) bool {
+		compDef := findEnclosingCompDef(node)
+		if compDef == nil {
+			return false
+		}
+		return isCompParamRefInCompDef(compDef, node)
+	}
+}
+
+func isCompParamRefInCompDef(compDef ast.Node, node ast.Node) bool {
+	if !ast.IsRuleName(node, "param-ref") {
+		return false
+	}
+
+	paramName := getParamRefNameStr(node)
+	if paramName == "" {
+		return false
+	}
+
+	for _, info := range getCompDefParamInfos(compDef) {
+		if info.name != paramName {
+			continue
+		}
+		return info.typ == "comp" || info.typ == ""
+	}
+
+	return false
 }
 
 func not(cond func(*wrapContext, ast.Node) bool) func(*wrapContext, ast.Node) bool {
@@ -532,7 +629,7 @@ func takesItselfAsArgOrDefault() func(*wrapContext, ast.Node) bool {
 			}
 
 			paramCompCalls := ast.FilterNodesInTree(compDefContent, func(n ast.Node) bool {
-				if !ast.IsRuleNameOneOf(n, []string{"block-param-comp-call", "inline-param-comp-call"}) {
+				if !isCompParamRefInCompDef(compDef, n) {
 					return false
 				}
 				return getParamCompCallNameStr(n) == paramName
@@ -602,7 +699,7 @@ func getParamCycleClosers(ctx *wrapContext) map[ast.Node]string {
 			}
 
 			paramCompCalls := ast.FilterNodesInTree(compDefContent, func(node ast.Node) bool {
-				return ast.IsRuleNameOneOf(node, []string{"block-param-comp-call", "inline-param-comp-call"})
+				return isCompParamRefInCompDef(compDef, node)
 			})
 
 			for _, paramCompCall := range paramCompCalls {
@@ -759,7 +856,7 @@ func getUnknownResolvedCompArgs(ctx *wrapContext, compCall ast.Node, compDef ast
 
 	usedCompParamNames := map[string]struct{}{}
 	for _, paramCompCall := range ast.FilterNodesInTree(compDefContent, func(node ast.Node) bool {
-		return ast.IsRuleNameOneOf(node, []string{"block-param-comp-call", "inline-param-comp-call"})
+		return isCompParamRefInCompDef(compDef, node)
 	}) {
 		name := getParamCompCallNameStr(paramCompCall)
 		if name == "" {
@@ -847,7 +944,7 @@ func getResolvedInlineBlockCompName(ctx *wrapContext, compCall ast.Node) string 
 	explicitParamArgs := getExplicitParamArgMap(compCall)
 
 	inlineParamCalls := ast.FilterNodesInTree(compDefContent, func(n ast.Node) bool {
-		return ast.IsRuleName(n, "inline-param-comp-call")
+		return isCompParamRefInCompDef(compDef, n) && isInlineParamRefNode(n)
 	})
 
 	for _, ipc := range inlineParamCalls {
@@ -1036,7 +1133,7 @@ func getUndefinedArgNamesFromResolvedParamCompCalls(ctx *wrapContext, compCall a
 	}
 
 	paramCompCalls := ast.FilterNodesInTree(compDefContent, func(node ast.Node) bool {
-		return ast.IsRuleNameOneOf(node, []string{"block-param-comp-call", "inline-param-comp-call"})
+		return isCompParamRefInCompDef(compDef, node) && hasCompCallArgsNode(node)
 	})
 
 	result := []string{}
@@ -1094,7 +1191,7 @@ func getWrongTypeArgNamesFromResolvedParamCompCalls(ctx *wrapContext, compCall a
 	}
 
 	paramCompCalls := ast.FilterNodesInTree(compDefContent, func(node ast.Node) bool {
-		return ast.IsRuleNameOneOf(node, []string{"block-param-comp-call", "inline-param-comp-call"})
+		return isCompParamRefInCompDef(compDef, node) && hasCompCallArgsNode(node)
 	})
 
 	result := []string{}
@@ -1306,28 +1403,6 @@ func getCompDefCompParamDefaults(compDef ast.Node) map[string]string {
 	return result
 }
 
-func getCompDefName(def ast.Node) string {
-	if ast.IsRuleName(def, "local-comp-def") {
-		head := ast.FindNodeByRuleName(def.Children(), "local-comp-def-head")
-		if head == nil {
-			return ""
-		}
-		compName := ast.FindNodeByRuleName(head.Children(), "local-comp-name")
-		if compName == nil {
-			return ""
-		}
-		return strings.TrimSpace(string(compName.Raw()))
-	}
-	if ast.IsRuleName(def, "global-comp-def") {
-		compName := ast.FindNodeByRuleName(def.Children(), "global-comp-name")
-		if compName == nil {
-			return ""
-		}
-		return strings.TrimSpace(string(compName.Raw()))
-	}
-	return ""
-}
-
 func getCompCallNameStr(node ast.Node) string {
 	compCallNameNode := ast.FindNodeByRuleName(node.Children(), "comp-call-name")
 	if compCallNameNode != nil {
@@ -1349,7 +1424,7 @@ func getParamCompCallNameStr(node ast.Node) string {
 	if nameNode != nil {
 		return strings.TrimSpace(string(nameNode.Raw()))
 	}
-	return ""
+	return getParamRefNameStr(node)
 }
 
 func getCompDefContent(compDef ast.Node) ast.Node {
@@ -1426,6 +1501,58 @@ func findEnclosingCompDef(node ast.Node) ast.Node {
 	return ast.FindNode(ancestors, func(anc ast.Node) bool {
 		return ast.IsRuleNameOneOf(anc, []string{"local-comp-def", "global-comp-def"})
 	})
+}
+
+func isInlineParamRefNode(node ast.Node) bool {
+	if !ast.IsRuleName(node, "param-ref") {
+		return false
+	}
+
+	if ast.FindNode(ast.GetAncestors(node), func(anc ast.Node) bool {
+		return ast.IsRuleName(anc, "p-content")
+	}) != nil {
+		pContent := ast.FindNode(ast.GetAncestors(node), func(anc ast.Node) bool {
+			return ast.IsRuleName(anc, "p-content")
+		})
+		if pContent == nil {
+			return false
+		}
+
+		hasSoftBreak := false
+		for _, child := range pContent.Children() {
+			if ast.IsRuleName(child, "soft-break") {
+				hasSoftBreak = true
+			}
+		}
+		if hasSoftBreak {
+			return false
+		}
+
+		for _, child := range pContent.Children() {
+			if child == node {
+				continue
+			}
+			if ast.IsRuleName(child, "plain") && strings.TrimSpace(string(child.Raw())) == "" {
+				continue
+			}
+			return true
+		}
+		return false
+	}
+
+	return ast.FindNode(ast.GetAncestors(node), func(anc ast.Node) bool {
+		return ast.IsRuleNameOneOf(anc, []string{
+			"h1-content",
+			"h2-content",
+			"h3-content",
+			"h4-content",
+			"h5-content",
+			"h6-content",
+			"em-content",
+			"strong-content",
+			"link-text",
+		})
+	}) != nil
 }
 
 func isBlockComponent(compDef ast.Node) bool {

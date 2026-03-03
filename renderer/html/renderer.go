@@ -16,7 +16,6 @@ type renderer struct {
 }
 
 func NewRenderer(log logger.Logger) *renderer {
-
 	r := &renderer{
 		logger: log,
 	}
@@ -26,7 +25,6 @@ func NewRenderer(log logger.Logger) *renderer {
 		newRoot(r),
 		newRootContent(r),
 		newCompCall(r),
-		newParamCompCall(r),
 		newNonVoidElement(r),
 		newNonVoidElementContent(r),
 		newParamRefInLocalCompDef(r),
@@ -57,7 +55,6 @@ func NewRenderer(log logger.Logger) *renderer {
 }
 
 func (r *renderer) Render(writer io.Writer, root ast.Node) error {
-
 	r.root = root
 
 	_, err := writer.Write([]byte(r.render(root)))

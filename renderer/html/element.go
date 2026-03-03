@@ -83,5 +83,79 @@ func (nvec *nonVoidElementContent) Render() string {
 	}
 
 	tag := name[:idx]
+
+	if tag == "p" {
+		rendered := nvec.renderer.renderChildren(nvec, nvec.Node().Children())
+		if ast.FindNodeByRuleName(nvec.Node().Children(), "soft-break") != nil &&
+			strings.Contains(rendered, "<compono-error-block>") {
+			return splitParagraphByBreakWithBlockErr(rendered)
+		}
+
+		if standaloneCompParamRefInParagraph(nvec.Node()) != nil {
+			return rendered
+		}
+		if ast.FindNodeByRuleName(nvec.Node().Children(), "block-error") != nil {
+			return renderParagraphWithBlockErrors(nvec)
+		}
+		return "<p>" + rendered + "</p>"
+	}
+
 	return "<" + tag + ">" + nvec.renderer.renderChildren(nvec, nvec.Node().Children()) + "</" + tag + ">"
+}
+
+func renderParagraphWithBlockErrors(nvec *nonVoidElementContent) string {
+	children := nvec.Node().Children()
+	if len(children) == 0 {
+		return ""
+	}
+
+	result := ""
+	chunk := []ast.Node{}
+	hasBlockErr := ast.FindNodeByRuleName(children, "block-error") != nil
+
+	flushChunk := func() {
+		if len(chunk) == 0 {
+			return
+		}
+		content := nvec.renderer.renderChildren(nvec, chunk)
+		if content != "" {
+			result += "<p>" + content + "</p>"
+		}
+		chunk = []ast.Node{}
+	}
+
+	for _, child := range children {
+		if ast.IsRuleName(child, "block-error") {
+			flushChunk()
+			result += nvec.renderer.renderChildren(nvec, []ast.Node{child})
+			continue
+		}
+
+		if hasBlockErr && ast.IsRuleName(child, "soft-break") {
+			flushChunk()
+			continue
+		}
+
+		chunk = append(chunk, child)
+	}
+
+	flushChunk()
+	return result
+}
+
+func splitParagraphByBreakWithBlockErr(rendered string) string {
+	parts := strings.Split(rendered, "<br>")
+	result := ""
+	for _, part := range parts {
+		part = strings.TrimSpace(part)
+		if part == "" {
+			continue
+		}
+		if strings.HasPrefix(part, "<compono-error-block>") {
+			result += part
+			continue
+		}
+		result += "<p>" + part + "</p>"
+	}
+	return result
 }
