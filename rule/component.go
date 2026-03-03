@@ -2,6 +2,7 @@ package rule
 
 import (
 	"regexp"
+	"strings"
 
 	"github.com/umono-cms/compono/selector"
 )
@@ -162,7 +163,7 @@ func (_ *compParamName) Name() string {
 }
 
 func (_ *compParamName) Selectors() []selector.Selector {
-	seli, _ := selector.NewStartEndLeftInner(`([a-z][a-z0-9-]*)\s*`, `=`)
+	seli, _ := selector.NewStartEndLeftInner(`^\s*([a-z][a-z0-9-]*)\s*`, `=`)
 	return []selector.Selector{
 		seli,
 		selector.NewAll(),
@@ -537,7 +538,7 @@ func (_ *compCallArgs) Name() string {
 }
 
 func (_ *compCallArgs) Selectors() []selector.Selector {
-	p, _ := selector.NewPattern(`([a-z][a-z0-9-]*)[\s\n\r]*=[\s\n\r]*(".*?"|\d+(?:\.\d+)?|true|false|\$[a-z][a-z0-9-]*|[A-Z0-9]+(?:_[A-Z0-9]+)*)`)
+	p, _ := selector.NewPattern(`([a-z][a-z0-9-]*)[\s\n\r]*=[\s\n\r]*(".*?"|\d+(?:\.\d+)?|true|false|[a-z][a-z0-9-]*|[A-Z0-9]+(?:_[A-Z0-9]+)*)`)
 	return []selector.Selector{
 		selector.NewFilter(p, func(source []byte, index [][2]int) [][2]int {
 			if len(index) == 0 {
@@ -579,7 +580,7 @@ func (_ *compCallArg) Name() string {
 }
 
 func (_ *compCallArg) Selectors() []selector.Selector {
-	p, _ := selector.NewPattern(`([a-z][a-z0-9-]*)[\s\n\r]*=[\s\n\r]*(".*?"|\d+(?:\.\d+)?|true|false|\$[a-z][a-z0-9-]*|[A-Z0-9]+(?:_[A-Z0-9]+)*)`)
+	p, _ := selector.NewPattern(`([a-z][a-z0-9-]*)[\s\n\r]*=[\s\n\r]*(".*?"|\d+(?:\.\d+)?|true|false|[a-z][a-z0-9-]*|[A-Z0-9]+(?:_[A-Z0-9]+)*)`)
 	return []selector.Selector{
 		p,
 	}
@@ -604,7 +605,7 @@ func (_ *compCallArgName) Name() string {
 }
 
 func (_ *compCallArgName) Selectors() []selector.Selector {
-	seli, _ := selector.NewStartEndLeftInner(`([a-z][a-z0-9-]*)\s*`, `=`)
+	seli, _ := selector.NewStartEndLeftInner(`^\s*([a-z][a-z0-9-]*)\s*`, `=`)
 	return []selector.Selector{
 		seli,
 	}
@@ -626,9 +627,9 @@ func (_ *compCallArgType) Name() string {
 }
 
 func (_ *compCallArgType) Selectors() []selector.Selector {
-	p, _ := selector.NewPattern(`[\s\n\r]*(".*?"|\d+(?:\.\d+)?|true|false|\$[a-z][a-z0-9-]*|[A-Z0-9]+(?:_[A-Z0-9]+)*)`)
+	sei := selector.NewStartEndInner(`=[\s\n\r]*`, `\z`)
 	return []selector.Selector{
-		p,
+		sei,
 	}
 }
 
@@ -725,8 +726,24 @@ func (_ *compCallParamArg) Name() string {
 }
 
 func (_ *compCallParamArg) Selectors() []selector.Selector {
+	p, _ := selector.NewPattern(`^\s*[a-z][a-z0-9-]*\s*$`)
 	return []selector.Selector{
-		selector.NewStartEndInner(`[\s\n\r]*\$`, `\z`),
+		selector.NewFilter(p, func(source []byte, index [][2]int) [][2]int {
+			if len(index) == 0 {
+				return [][2]int{}
+			}
+
+			filtered := make([][2]int, 0, len(index))
+			for _, ind := range index {
+				v := strings.TrimSpace(string(source[ind[0]:ind[1]]))
+				if v == "true" || v == "false" {
+					continue
+				}
+				filtered = append(filtered, ind)
+			}
+
+			return filtered
+		}),
 	}
 }
 

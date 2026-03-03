@@ -3,4 +3,4 @@
 
 ~ SAY_HELLO name = ""
 Hello *{{ name }}*!
-No Hello *$name*!
+No Hello *name*!

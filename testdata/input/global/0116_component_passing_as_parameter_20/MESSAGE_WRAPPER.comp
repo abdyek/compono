@@ -1,2 +1,2 @@
 message-component = MC message = ""
-Your message: {{ $message-component message = $message}}
+Your message: {{ $message-component message = message}}

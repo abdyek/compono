@@ -4,10 +4,10 @@
 # Hello!!
 
 ~ TOP comp = NO_MATTER
-{{ MIDDLE comp = $comp }}
+{{ MIDDLE comp = comp }}
 
 ~ MIDDLE comp = NO_MATTER
-{{ BOTTOM comp = $comp }}
+{{ BOTTOM comp = comp }}
 
 ~ BOTTOM comp
 {{ $comp }}

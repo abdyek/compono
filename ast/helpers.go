@@ -160,6 +160,9 @@ func GetTypeFromCompParam(compParam Node) string {
 
 func GetTypeFromCompCallArg(compCallArg Node) string {
 	compCallArgType := FindNodeByRuleName(compCallArg.Children(), "comp-call-arg-type")
+	if compCallArgType == nil || len(compCallArgType.Children()) == 0 {
+		return ""
+	}
 	compCallXArg := compCallArgType.Children()[0]
 	return strings.TrimSuffix(strings.TrimPrefix(compCallXArg.Rule().Name(), "comp-call-"), "-arg")
 }
@@ -176,9 +179,16 @@ func GetArgNameFromCompCallArg(compCallArg Node) string {
 
 func GetArgValueFromCompCallArg(compCallArg Node) string {
 	compCallArgType := FindNodeByRuleName(compCallArg.Children(), "comp-call-arg-type")
+	if compCallArgType == nil || len(compCallArgType.Children()) == 0 {
+		return ""
+	}
 	compCallXArg := compCallArgType.Children()[0]
+	if len(compCallXArg.Children()) == 0 {
+		return ""
+	}
 	value := compCallXArg.Children()[0]
-	return strings.TrimSpace(string(value.Raw()))
+	rawValue := strings.TrimSpace(string(value.Raw()))
+	return rawValue
 }
 
 func GetParamDefValFromCompParam(compParam Node) string {

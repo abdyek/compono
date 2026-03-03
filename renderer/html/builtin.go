@@ -64,9 +64,17 @@ func getArgValue(compCall ast.Node, name string) (string, bool) {
 	if compCallArg == nil {
 		return "", false
 	}
-	argValue := ast.FindNodeByRuleName(ast.FindNode(ast.FindNodeByRuleName(compCallArg.Children(), "comp-call-arg-type").Children(), func(node ast.Node) bool {
+	compCallArgType := ast.FindNodeByRuleName(compCallArg.Children(), "comp-call-arg-type")
+	if compCallArgType == nil {
+		return "", false
+	}
+	typedArg := ast.FindNode(compCallArgType.Children(), func(node ast.Node) bool {
 		return ast.IsRuleNameOneOf(node, []string{"comp-call-string-arg", "comp-call-number-arg", "comp-call-bool-arg"})
-	}).Children(), "comp-call-arg-value")
+	})
+	if typedArg == nil {
+		return "", false
+	}
+	argValue := ast.FindNodeByRuleName(typedArg.Children(), "comp-call-arg-value")
 	if argValue == nil {
 		return "", false
 	}

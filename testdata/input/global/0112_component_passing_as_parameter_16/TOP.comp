@@ -1,2 +1,2 @@
 comp = NO_MATTER
-{{ MIDDLE comp = $comp }}
+{{ MIDDLE comp = comp }}
