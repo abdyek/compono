@@ -1,2 +1,2 @@
 comp = NO_MATTER
-{{ $comp }}
+{{ comp }}

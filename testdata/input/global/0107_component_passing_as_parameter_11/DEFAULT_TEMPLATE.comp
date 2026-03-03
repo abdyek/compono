@@ -1,4 +1,4 @@
 comp = EMPTY
 {{ HEADER }}
-{{ $comp }}
+{{ comp }}
 {{ FOOTER }}

@@ -2,4 +2,4 @@
 
 ~ COMP
 rendered
-{{ $comp }}
+{{ comp }}

@@ -1,4 +1,4 @@
 {{ COMP_WRAPPER inline-comp = BLOCK }}
 
 ~ COMP_WRAPPER inline-comp = NO_MATTER
-# Hello {{ $inline-comp }}
+# Hello {{ inline-comp }}

@@ -1,5 +1,5 @@
 inline-comp = INLINE
-# {{ $inline-comp }}
+# {{ inline-comp }}
 
 ~ INLINE
 Hello

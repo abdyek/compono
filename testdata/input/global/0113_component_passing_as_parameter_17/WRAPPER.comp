@@ -1,2 +1,2 @@
 comp = BLOCK
-Here p {{ $comp }}
+Here p {{ comp }}

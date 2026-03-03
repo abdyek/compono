@@ -1,2 +1,2 @@
 comp = LOCAL_COMP
-{{ $comp }}
+{{ comp }}
