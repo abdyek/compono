@@ -123,6 +123,9 @@ func (pcc *paramCompCall) resolveCompTarget(paramName string) resolvedCompTarget
 
 func resolveCompCallArgValueTarget(compCallArg ast.Node, invokerAncestors []ast.Node, currentCompCall ast.Node, r *renderer) resolvedCompTarget {
 	compCallArgType := ast.FindNodeByRuleName(compCallArg.Children(), "comp-call-arg-type")
+	if compCallArgType == nil {
+		return resolvedCompTarget{}
+	}
 	argTypeNode := ast.FindNode(compCallArgType.Children(), func(node ast.Node) bool {
 		return ast.IsRuleNameOneOf(node, []string{"comp-call-string-arg", "comp-call-number-arg", "comp-call-bool-arg", "comp-call-param-arg", "comp-call-comp-arg"})
 	})
