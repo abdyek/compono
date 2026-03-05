@@ -1,6 +1,6 @@
 # Compono
 
-Compono is a component-based domain-specific language that can compile HTML. It extends Markdown syntax with reusable components, making it ideal for content-heavy applications.
+Compono is a **platform-agnostic**, component-based domain-specific language (DSL) that extends Markdown syntax with reusable components.
 
 Originally developed for [Umono CMS](https://github.com/umono-cms/umono), Compono can be used in any Go project that needs a flexible templating solution.
 
@@ -164,14 +164,113 @@ Output:
 <a href="https://example.com" target="_blank" rel="noopener noreferrer">Visit us</a>
 ```
 
+## Parameters
+
+Components can accept parameters. Each parameter must have a **default value** defined in the component definition.
+
+If a parameter value is not provided during the call, the **default value is used**.
+
+```
+{{ SAY_HELLO name="Jane" }}
+
+~ SAY_HELLO name="John"
+# Hello, {{ name }}!
+```
+
+### Supported Types
+
+Supported parameter types:
+
+- **String** → `name="John"`
+- **Number** → `age=25`
+- **Bool** → `active=true`
+- **Component** → another component can be passed as a parameter
+
+---
+
+### Passing Parameters to Other Components
+
+A parameter can be passed directly to another component call.
+
+```
+{{ USER age=31 }}
+
+~ USER age=18
+{{ ANOTHER_COMP another-number-param=age }}
+
+~ ANOTHER_COMP another-number-param=0
+Number: *{{ another-number-param }}*
+```
+
+Here:
+
+- `USER` receives `age`
+- it forwards that value to `ANOTHER_COMP`
+
+---
+
+### Passing Components as Parameters
+
+Components themselves can also be passed as parameters.
+
+```
+{{ USER name="Yunus Emre" age=31 age-wrapper=AGE_WRAPPER_2 }}
+
+~ USER name="John" age=25 age-wrapper=AGE_WRAPPER_1
+# Welcome **{{ name }}**!
+{{ age-wrapper age=age }}
+
+~ AGE_WRAPPER_1 age=0
+Your age: *{{ age }}*
+
+~ AGE_WRAPPER_2 age=0
+*{{ age }}*
+```
+
+Here:
+
+- `age-wrapper` receives a **component**
+- that component is executed inside `USER`
+
+---
+
+### Global Parameter Visibility in Local Components
+
+When a **global component** defines parameters, those parameters are **visible to local components inside it**.
+
+```
+c.RegisterGlobalComponent("PROFILE_PAGE", []byte(`
+name="Guest"
+
+{{ PROFILE_CARD }}
+
+~ PROFILE_CARD
+## {{ name }}
+Welcome to the profile page.
+`))
+```
+
+Usage:
+
+```
+{{ PROFILE_PAGE name="Yunus" }}
+```
+
+Output:
+
+```
+<h2>Yunus</h2>
+<p>Welcome to the profile page.</p>
+```
+
+The local component `PROFILE_CARD` can directly access the global parameter `name`.
+
+---
+
 ## Error Handling
 
-Compono provides clear error messages rendered as custom HTML elements:
-
-- **Unknown component**: When calling a component that doesn't exist
-- **Invalid component usage**: When using a block component inline
-- **Unknown parameter**: When referencing an undefined parameter
-- **Infinite loop detection**: When components call each other recursively
+Compono provides error feedback by rendering placeholders where errors occur.
+Fatal errors during conversion stop the process and no output is produced.
 
 ## API Reference
 
