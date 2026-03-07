@@ -102,6 +102,30 @@ func FindGlobalCompDef(root Node, name string) Node {
 	})
 }
 
+func FindBuiltinCompDef(root Node, name string) Node {
+	builtinCompDefWrapper := FindNodeByRuleName(root.Children(), "builtin-comp-wrapper")
+	if builtinCompDefWrapper == nil {
+		return nil
+	}
+
+	return FindNode(builtinCompDefWrapper.Children(), func(child Node) bool {
+		if !IsRuleName(child, "builtin-comp") {
+			return false
+		}
+
+		builtinCompName := FindNodeByRuleName(child.Children(), "builtin-comp-name")
+		if builtinCompName == nil {
+			return false
+		}
+
+		if strings.TrimSpace(string(builtinCompName.Raw())) != strings.TrimSpace(name) {
+			return false
+		}
+
+		return true
+	})
+}
+
 func FilterNodesInTree(node Node, filter func(Node) bool) []Node {
 	filtered := FilterNodes(node.Children(), filter)
 	for _, child := range node.Children() {
@@ -111,6 +135,14 @@ func FilterNodesInTree(node Node, filter func(Node) bool) []Node {
 }
 
 func GetCompParamsFromCompDef(compDef Node) []Node {
+	if compDef != nil && IsRuleName(compDef, "builtin-comp") {
+		compParamsNode := FindNodeByRuleName(compDef.Children(), "comp-params")
+		if compParamsNode == nil {
+			return []Node{}
+		}
+		return compParamsNode.Children()
+	}
+
 	head := GetCompDefHeadFromCompDef(compDef)
 	return GetCompParamsFromCompHead(head)
 }
