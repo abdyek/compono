@@ -545,7 +545,7 @@ func compCallHasCycle(ctx *wrapContext, compCall ast.Node) bool {
 	}
 
 	startName := getCompCallNameStr(compCall)
-	if startName == "" || isBuiltInComp(startName) {
+	if startName == "" {
 		ctx.compCallCycleCache[compCall] = false
 		return false
 	}
@@ -558,7 +558,7 @@ func compCallHasCycle(ctx *wrapContext, compCall ast.Node) bool {
 	var dfs func(callNode ast.Node, path []string) bool
 	dfs = func(callNode ast.Node, path []string) bool {
 		callName := getCompCallNameStr(callNode)
-		if callName == "" || isBuiltInComp(callName) {
+		if callName == "" {
 			return false
 		}
 
@@ -579,7 +579,7 @@ func compCallHasCycle(ctx *wrapContext, compCall ast.Node) bool {
 		nextPath := append(append([]string{}, path...), callName)
 		for _, child := range children {
 			childName := getCompCallNameStr(child)
-			if childName == "" || isBuiltInComp(childName) {
+			if childName == "" {
 				continue
 			}
 
@@ -713,7 +713,7 @@ func getParamCycleClosers(ctx *wrapContext) map[ast.Node]string {
 					continue
 				}
 
-				if !isBuiltInComp(targetCompName) && findCompDef(ctx.root, paramCompCall, targetCompName) == nil {
+				if findCompDef(ctx.root, paramCompCall, targetCompName) == nil {
 					continue
 				}
 
@@ -820,9 +820,6 @@ func makeResolvedCallSignature(compName string, resolved map[string]string) stri
 func isUnknownComponent() func(*wrapContext, ast.Node) bool {
 	return func(ctx *wrapContext, node ast.Node) bool {
 		compCallName := getCompCallNameStr(node)
-		if isBuiltInComp(compCallName) {
-			return false
-		}
 		return findCompDef(ctx.root, node, compCallName) == nil
 	}
 }
@@ -882,7 +879,7 @@ func getUnknownResolvedCompArgs(ctx *wrapContext, compCall ast.Node, compDef ast
 		}
 
 		value := resolvedCompArgs[info.name]
-		if value == "" || strings.HasPrefix(value, "$") || isBuiltInComp(value) {
+		if value == "" || strings.HasPrefix(value, "$") {
 			continue
 		}
 
@@ -1033,16 +1030,11 @@ func getUndefinedArgNames(ctx *wrapContext, compCall ast.Node) []string {
 		return []string{}
 	}
 
-	var definedParams []string
-	if isBuiltInComp(compCallName) {
-		definedParams = getBuiltInCompParams(compCallName)
-	} else {
-		compDef := findCompDef(ctx.root, compCall, compCallName)
-		if compDef == nil {
-			return []string{}
-		}
-		definedParams = getCompDefParamNames(compDef)
+	compDef := findCompDef(ctx.root, compCall, compCallName)
+	if compDef == nil {
+		return []string{}
 	}
+	definedParams := getCompDefParamNames(compDef)
 
 	undefined := make([]string, 0)
 	for _, arg := range ast.GetCompCallArgsFromCompCall(compCall) {
@@ -1075,16 +1067,11 @@ func getWrongTypeArgNames(ctx *wrapContext, compCall ast.Node) []string {
 		return []string{}
 	}
 
-	var paramTypeMap map[string]string
-	if isBuiltInComp(compCallName) {
-		paramTypeMap = getBuiltInCompParamTypes(compCallName)
-	} else {
-		compDef := findCompDef(ctx.root, compCall, compCallName)
-		if compDef == nil {
-			return []string{}
-		}
-		paramTypeMap = getCompDefParamTypeMap(compDef)
+	compDef := findCompDef(ctx.root, compCall, compCallName)
+	if compDef == nil {
+		return []string{}
 	}
+	paramTypeMap := getCompDefParamTypeMap(compDef)
 
 	wrongTypeArgNames := make([]string, 0)
 	for _, arg := range ast.GetCompCallArgsFromCompCall(compCall) {
@@ -1139,18 +1126,11 @@ func getUndefinedArgNamesFromResolvedParamCompCalls(ctx *wrapContext, compCall a
 	result := []string{}
 	for _, paramCompCall := range paramCompCalls {
 		targetCompName, targetCompDef := resolveParamCompCallTarget(ctx, compCall, paramCompCall, resolvedCompArgs)
-		if targetCompName == "" {
+		if targetCompName == "" || targetCompDef == nil {
 			continue
 		}
 
-		var targetParamNames []string
-		if targetCompDef != nil {
-			targetParamNames = getCompDefParamNames(targetCompDef)
-		} else if isBuiltInComp(targetCompName) {
-			targetParamNames = getBuiltInCompParams(targetCompName)
-		} else {
-			continue
-		}
+		targetParamNames := getCompDefParamNames(targetCompDef)
 
 		for _, arg := range ast.GetCompCallArgsFromCompCall(paramCompCall) {
 			if !ast.IsRuleName(arg, "comp-call-arg") {
@@ -1197,18 +1177,11 @@ func getWrongTypeArgNamesFromResolvedParamCompCalls(ctx *wrapContext, compCall a
 	result := []string{}
 	for _, paramCompCall := range paramCompCalls {
 		targetCompName, targetCompDef := resolveParamCompCallTarget(ctx, compCall, paramCompCall, resolvedCompArgs)
-		if targetCompName == "" {
+		if targetCompName == "" || targetCompDef == nil {
 			continue
 		}
 
-		var targetParamTypeMap map[string]string
-		if targetCompDef != nil {
-			targetParamTypeMap = getCompDefParamTypeMap(targetCompDef)
-		} else if isBuiltInComp(targetCompName) {
-			targetParamTypeMap = getBuiltInCompParamTypes(targetCompName)
-		} else {
-			continue
-		}
+		targetParamTypeMap := getCompDefParamTypeMap(targetCompDef)
 
 		for _, arg := range ast.GetCompCallArgsFromCompCall(paramCompCall) {
 			if !ast.IsRuleName(arg, "comp-call-arg") {
@@ -1247,10 +1220,6 @@ func resolveParamCompCallTarget(
 	targetCompName, ok := resolvedCompArgs[paramName]
 	if !ok || targetCompName == "" || strings.HasPrefix(targetCompName, "$") {
 		return "", nil
-	}
-
-	if isBuiltInComp(targetCompName) {
-		return targetCompName, nil
 	}
 
 	targetCompDef := findCompDef(ctx.root, compCall, targetCompName)
@@ -1599,29 +1568,10 @@ func findCompDef(root ast.Node, compCallNode ast.Node, name string) ast.Node {
 		return globalCompDef
 	}
 
-	return nil
-}
-
-func isBuiltInComp(name string) bool {
-	return util.InSliceString(name, []string{"LINK"})
-}
-
-func getBuiltInCompParams(name string) []string {
-	switch name {
-	case "LINK":
-		return []string{"url", "text", "new-tab"}
+	builtinCompDef := ast.FindBuiltinCompDef(root, name)
+	if builtinCompDef != nil {
+		return builtinCompDef
 	}
-	return nil
-}
 
-func getBuiltInCompParamTypes(name string) map[string]string {
-	switch name {
-	case "LINK":
-		return map[string]string{
-			"url":     "string",
-			"text":    "string",
-			"new-tab": "bool",
-		}
-	}
 	return nil
 }

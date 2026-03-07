@@ -7,7 +7,6 @@ import (
 	"github.com/umono-cms/compono/ast"
 )
 
-// NOTE: builtinComponent can be improved. Now, It is enough.
 type builtinComponent interface {
 	New() builtinComponent
 	Name() string
@@ -56,10 +55,7 @@ func getArgValue(compCall ast.Node, name string) (string, bool) {
 	}
 	compCallArg := ast.FindNode(compCallArgs.Children(), func(node ast.Node) bool {
 		argName := ast.FindNodeByRuleName(node.Children(), "comp-call-arg-name")
-		if strings.TrimSpace(string(argName.Raw())) == name {
-			return true
-		}
-		return false
+		return strings.TrimSpace(string(argName.Raw())) == name
 	})
 	if compCallArg == nil {
 		return "", false

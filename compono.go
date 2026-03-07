@@ -5,6 +5,7 @@ import (
 	"io"
 
 	"github.com/umono-cms/compono/ast"
+	"github.com/umono-cms/compono/builtin"
 	"github.com/umono-cms/compono/errwrap"
 	"github.com/umono-cms/compono/logger"
 	"github.com/umono-cms/compono/parser"
@@ -52,23 +53,32 @@ func New() Compono {
 	gw := ast.DefaultEmptyNode()
 	gw.SetRule(rule.NewGlobalCompDefWrapper())
 
-	return &compono{
-		parser:        p,
-		renderer:      r,
-		validator:     v,
-		errorWrapper:  ew,
-		logger:        log,
-		globalWrapper: gw,
+	bw := ast.DefaultEmptyNode()
+	bw.SetRule(rule.NewDynamic("builtin-comp-wrapper"))
+
+	c := &compono{
+		parser:         p,
+		renderer:       r,
+		validator:      v,
+		errorWrapper:   ew,
+		logger:         log,
+		globalWrapper:  gw,
+		builtinWrapper: bw,
 	}
+
+	c.fillBuiltins()
+
+	return c
 }
 
 type compono struct {
-	parser        parser.Parser
-	renderer      renderer.Renderer
-	validator     validator.Validator
-	errorWrapper  errwrap.ErrorWrapper
-	logger        logger.Logger
-	globalWrapper ast.Node
+	parser         parser.Parser
+	renderer       renderer.Renderer
+	validator      validator.Validator
+	errorWrapper   errwrap.ErrorWrapper
+	logger         logger.Logger
+	globalWrapper  ast.Node
+	builtinWrapper ast.Node
 }
 
 func (c *compono) Convert(source []byte, writer io.Writer) error {
@@ -80,6 +90,9 @@ func (c *compono) Convert(source []byte, writer io.Writer) error {
 
 	c.globalWrapper.SetParent(root)
 	root.SetChildren(append(root.Children(), c.globalWrapper))
+
+	c.builtinWrapper.SetParent(root)
+	root.SetChildren(append(root.Children(), c.builtinWrapper))
 
 	err := c.validator.Validate(root)
 	if err != nil {
@@ -140,7 +153,6 @@ func (c *compono) ConvertGlobalComponent(name string, source []byte, writer io.W
 }
 
 func (c *compono) RegisterGlobalComponent(name string, source []byte) error {
-
 	if !util.IsScreamingSnakeCase(name) {
 		return NewComponoError(ErrInvalidGlobalName, fmt.Sprintf("invalid global component name %q: must be SCREAMING_SNAKE_CASE (digits allowed)", name))
 	}
@@ -170,13 +182,13 @@ func (c *compono) UnregisterGlobalComponent(name string) error {
 		return NewComponoError(ErrGlobalNotExist, fmt.Sprintf("cannot unregister global component %q: does not exist", name))
 	}
 
-  globalComps := ast.FilterNodes(c.globalWrapper.Children(), func(gc ast.Node) bool {
-    globalCompName := ast.FindNodeByRuleName(gc.Children(), "global-comp-name")
-    if string(globalCompName.Raw()) == name {
-      return false
-    }
-    return true
-  })
+	globalComps := ast.FilterNodes(c.globalWrapper.Children(), func(gc ast.Node) bool {
+		globalCompName := ast.FindNodeByRuleName(gc.Children(), "global-comp-name")
+		if string(globalCompName.Raw()) == name {
+			return false
+		}
+		return true
+	})
 
 	c.globalWrapper.SetChildren(globalComps)
 	return nil
@@ -270,6 +282,10 @@ func (c *compono) cloneNode(node ast.Node) ast.Node {
 	}
 
 	return clone
+}
+
+func (c *compono) fillBuiltins() {
+	c.builtinWrapper.SetChildren(builtin.BuildASTNodes(c.builtinWrapper))
 }
 
 type ComponoError struct {

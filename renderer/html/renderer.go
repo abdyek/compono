@@ -147,9 +147,17 @@ func (r *renderer) findGlobalCompDef(name string) ast.Node {
 }
 
 func (r *renderer) findBuiltinComp(name string) builtinComponent {
+	if r.findBuiltinCompDef(name) == nil {
+		return nil
+	}
+
 	bc, ok := r.builtinCompMap[strings.TrimSpace(name)]
 	if !ok {
 		return nil
 	}
 	return bc.New()
+}
+
+func (r *renderer) findBuiltinCompDef(name string) ast.Node {
+	return ast.FindBuiltinCompDef(r.root, name)
 }

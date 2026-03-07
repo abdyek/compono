@@ -617,7 +617,7 @@ func shouldTreatParamRefAsCompCall(compParam ast.Node, rn renderableNode, r *ren
 		return true
 	}
 
-	if r.findBuiltinComp(target.name) != nil {
+	if r.findBuiltinCompDef(target.name) != nil {
 		return true
 	}
 	if r.findLocalCompDef(target.scope, target.name) != nil {
