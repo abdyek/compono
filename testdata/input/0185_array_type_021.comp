@@ -1,0 +1,8 @@
+{{ WRAPPER comp = [BLOCK] }}
+
+~ WRAPPER comp = [NO_MATTER]
+No Rendered
+# {{ comp[0] }}
+
+~ BLOCK
+# block

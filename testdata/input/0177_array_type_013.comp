@@ -1,0 +1,26 @@
+{{ WRAPPER arr = ["string", 123, true, SAY_HELLO, [7,8,9]] }}
+
+~ WRAPPER arr = []
+{{ COMP param = arr[0] }}
+{{ COMP_2 param = arr[1] }}
+{{ COMP_3 param = arr[2] }}
+{{ COMP_4 param = arr[3] }}
+{{ COMP_5 param = arr[4] }}
+
+~ COMP param = ""
+**{{ param }}**
+
+~ COMP_2 param = 0
+**{{ param }}**
+
+~ COMP_3 param = false
+**{{ param }}**
+
+~ COMP_4 param = NO_MATTER
+**{{ param }}**
+
+~ COMP_5 param = []
+{{ param[0] }} -- {{ param[1] }} -- {{ param[2] }}
+
+~ SAY_HELLO
+Hello

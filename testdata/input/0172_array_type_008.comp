@@ -1,0 +1,3 @@
+{{ COMP }}
+~ COMP items = [true, true, true, true]
+{{ items[0] }} -- {{ items[1] }}

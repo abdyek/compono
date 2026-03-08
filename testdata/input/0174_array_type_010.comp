@@ -1,0 +1,3 @@
+{{ COMP }}
+~ COMP items = [["apple", "pear"]]
+{{ items[0][1] }} `+` {{ items[0][2] }}

@@ -1,0 +1,14 @@
+{{ COMP }}
+~ COMP items = [A, B, C]
+{{ items[0] }}
+{{ items[1]}}
+{{ items[2]}}
+
+~ A
+# a
+
+~ B
+## b
+
+~ C
+### c

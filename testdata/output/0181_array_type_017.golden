@@ -1,0 +1,1 @@
+<p>Rendered<br><compono-error-inline><span slot="title">Invalid parameter usage</span><span slot="description">The parameter <strong>items</strong> is an array and cannot be rendered directly.</span></compono-error-inline></p>

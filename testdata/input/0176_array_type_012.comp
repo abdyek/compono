@@ -1,0 +1,8 @@
+{{ WRAPPER array = ["Hi", 123, false, COMP, [4,"5",6]] }}
+
+~ WRAPPER array = []
+{{ array[3] arr = array[4] }}
+{{ array[0] }} -- {{ array[1] }} -- {{ array[2] }}
+
+~ COMP arr = []
+{{ arr[0] }} -- {{ arr[1] }} -- {{ arr[2] }}

@@ -1,0 +1,9 @@
+{{ COMP }}
+
+~ COMP names = ["John", "Jane", "Yunus Emre"]
+{{ HELLO name = names[0] }}
+{{ HELLO name = names[1] }}
+{{ HELLO name = names[2] }}
+
+~ HELLO name = ""
+# Hello {{ name }}

@@ -1,0 +1,3 @@
+{{ COMP items = ["A", "B", "C"] }}
+~ COMP items = []
+{{ items[0] }} - {{ items[1] }} - {{ items[2] }}

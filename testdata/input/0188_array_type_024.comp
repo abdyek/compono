@@ -1,0 +1,9 @@
+{{ WRAPPER array = [false] }}
+
+~ WRAPPER array = []
+Rendered
+{{ COMP number = array[0] }}
+
+~ COMP number = 0
+No Rendered
+{{ number }}

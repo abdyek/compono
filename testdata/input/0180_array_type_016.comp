@@ -1,0 +1,11 @@
+{{ WRAPPER comps = [INLINE, BLOCK,] }}
+
+~ INLINE
+inline
+
+~ BLOCK
+# block
+
+~ WRAPPER comps = []
+# {{ comps[0] }}
+{{ comps[1] }}
