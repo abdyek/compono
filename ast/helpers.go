@@ -1,16 +1,14 @@
 package ast
 
 import (
+	"strconv"
 	"strings"
 
 	"github.com/umono-cms/compono/util"
 )
 
 func IsRuleName(node Node, name string) bool {
-	if node.Rule().Name() != name {
-		return false
-	}
-	return true
+	return node.Rule().Name() == name
 }
 
 func IsRuleNameOneOf(node Node, names []string) bool {
@@ -225,7 +223,116 @@ func GetArgValueFromCompCallArg(compCallArg Node) string {
 
 func GetParamDefValFromCompParam(compParam Node) string {
 	compParamType := FindNodeByRuleName(compParam.Children(), "comp-param-type")
+	if compParamType == nil || len(compParamType.Children()) == 0 {
+		return ""
+	}
 	compXParam := compParamType.Children()[0]
-	compParamDefaValue := compXParam.Children()[0]
-	return strings.TrimSpace(string(compParamDefaValue.Raw()))
+	compParamDefaValue := FindNodeByRuleName(compXParam.Children(), "comp-param-defa-value")
+	if compParamDefaValue != nil {
+		return strings.TrimSpace(string(compParamDefaValue.Raw()))
+	}
+	return strings.TrimSpace(string(compXParam.Raw()))
+}
+
+func GetParamRefName(node Node) string {
+	paramRefName := FindNodeByRuleName(node.Children(), "param-ref-name")
+	if paramRefName == nil {
+		return ""
+	}
+	return strings.TrimSpace(string(paramRefName.Raw()))
+}
+
+func GetParamRefIndexes(node Node) []int {
+	indexesNode := FindNodeByRuleName(node.Children(), "param-ref-indexes")
+	if indexesNode == nil {
+		return []int{}
+	}
+
+	result := []int{}
+	for _, child := range indexesNode.Children() {
+		raw := strings.Trim(string(child.Raw()), "[]")
+		index, err := strconv.Atoi(raw)
+		if err != nil {
+			continue
+		}
+		result = append(result, index)
+	}
+
+	return result
+}
+
+func GetIndexesFromRaw(raw string) []int {
+	result := []int{}
+	start := strings.Index(raw, "[")
+	for start != -1 {
+		end := strings.Index(raw[start:], "]")
+		if end == -1 {
+			break
+		}
+		index, err := strconv.Atoi(raw[start+1 : start+end])
+		if err == nil {
+			result = append(result, index)
+		}
+		nextStart := strings.Index(raw[start+end+1:], "[")
+		if nextStart == -1 {
+			break
+		}
+		start = start + end + 1 + nextStart
+	}
+	return result
+}
+
+func GetNameFromIndexedRaw(raw string) string {
+	start := strings.Index(raw, "[")
+	if start == -1 {
+		return strings.TrimSpace(raw)
+	}
+	return strings.TrimSpace(raw[:start])
+}
+
+func FindCompDef(root Node, compCallNode Node, name string) Node {
+	globalCompDefAnc := FindNode(GetAncestors(compCallNode), func(anc Node) bool {
+		return IsRuleName(anc, "global-comp-def")
+	})
+
+	localCompDefSrc := root
+	if globalCompDefAnc != nil {
+		localCompDefSrc = globalCompDefAnc
+	}
+
+	localCompDef := FindLocalCompDef(localCompDefSrc, name)
+	if localCompDef != nil {
+		return localCompDef
+	}
+
+	globalCompDef := FindGlobalCompDef(root, name)
+	if globalCompDef != nil {
+		return globalCompDef
+	}
+
+	builtinCompDef := FindBuiltinCompDef(root, name)
+	if builtinCompDef != nil {
+		return builtinCompDef
+	}
+
+	return nil
+}
+
+func GetLocalCompSourceFromNode(node Node, root Node) Node {
+	if node == nil {
+		return root
+	}
+
+	if IsRuleName(node, "global-comp-def") {
+		return node
+	}
+
+	globalCompDefAnc := FindNode(GetAncestors(node), func(anc Node) bool {
+		return IsRuleName(anc, "global-comp-def")
+	})
+	if globalCompDefAnc != nil {
+		return globalCompDefAnc
+	}
+
+	return root
 }

@@ -114,7 +114,7 @@ func (_ *compParams) Name() string {
 
 func (_ *compParams) Selectors() []selector.Selector {
 	se, _ := selector.NewStartEnd(`.`, `.`)
-	p, _ := selector.NewPattern(`([a-z][a-z0-9-]*)(?:[\s\n\r]*=[\s\n\r]*(".*?"|\d+(?:\.\d+)?|true|false|[A-Z0-9]+(?:_[A-Z0-9]+)*))?`)
+	p := selector.NewComponentAssignments(false)
 	return []selector.Selector{
 		selector.NewBounds(se, p),
 	}
@@ -138,7 +138,7 @@ func (_ *compParam) Name() string {
 }
 
 func (_ *compParam) Selectors() []selector.Selector {
-	p, _ := selector.NewPattern(`([a-z][a-z0-9-]*)(?:[\s\n\r]*=[\s\n\r]*(".*?"|\d+(?:\.\d+)?|true|false|[A-Z0-9]+(?:_[A-Z0-9]+)*))?`)
+	p := selector.NewComponentAssignments(false)
 	return []selector.Selector{
 		p,
 	}
@@ -164,9 +164,10 @@ func (_ *compParamName) Name() string {
 
 func (_ *compParamName) Selectors() []selector.Selector {
 	seli, _ := selector.NewStartEndLeftInner(`^\s*([a-z][a-z0-9-]*)\s*`, `=`)
+	p, _ := selector.NewPattern(`^\s*[a-z][a-z0-9-]*\s*$`)
 	return []selector.Selector{
 		seli,
-		selector.NewAll(),
+		p,
 	}
 }
 
@@ -186,14 +187,13 @@ func (_ *compParamType) Name() string {
 }
 
 func (_ *compParamType) Selectors() []selector.Selector {
-	p, _ := selector.NewPattern(`[\s\n\r]*(".*?"|\d+(?:\.\d+)?|true|false|[A-Z0-9]+(?:_[A-Z0-9]+)*)`)
-	return []selector.Selector{
-		p,
-	}
+	sei := selector.NewStartEndInner(`=[\s\n\r]*`, `\z`)
+	return []selector.Selector{sei}
 }
 
 func (_ *compParamType) Rules() []Rule {
 	return []Rule{
+		newCompArrayParam(),
 		newCompStringParam(),
 		newCompNumberParam(),
 		newCompBoolParam(),
@@ -236,7 +236,7 @@ func (_ *compNumberParam) Name() string {
 }
 
 func (_ *compNumberParam) Selectors() []selector.Selector {
-	p, _ := selector.NewPattern(`\d+(?:\.\d+)?`)
+	p, _ := selector.NewPattern(`^\d+(?:\.\d+)?$`)
 	return []selector.Selector{
 		p,
 	}
@@ -260,7 +260,7 @@ func (_ *compBoolParam) Name() string {
 }
 
 func (_ *compBoolParam) Selectors() []selector.Selector {
-	p, _ := selector.NewPattern(`true|false`)
+	p, _ := selector.NewPattern(`^(true|false)$`)
 	return []selector.Selector{
 		p,
 	}
@@ -284,7 +284,7 @@ func (_ *compCompParam) Name() string {
 }
 
 func (_ *compCompParam) Selectors() []selector.Selector {
-	p, _ := selector.NewPattern(`[A-Z0-9]+(?:_[A-Z0-9]+)*`)
+	p, _ := selector.NewPattern(`^[A-Z0-9]+(?:_[A-Z0-9]+)*$`)
 	return []selector.Selector{
 		p,
 	}
@@ -293,6 +293,99 @@ func (_ *compCompParam) Selectors() []selector.Selector {
 func (_ *compCompParam) Rules() []Rule {
 	return []Rule{
 		newCompParamDefaValue(),
+	}
+}
+
+// Component's array parameter
+type compArrayParam struct{}
+
+func newCompArrayParam() Rule {
+	return &compArrayParam{}
+}
+
+func (_ *compArrayParam) Name() string {
+	return "comp-array-param"
+}
+
+func (_ *compArrayParam) Selectors() []selector.Selector {
+	return []selector.Selector{
+		selector.NewArrayLiteral(),
+	}
+}
+
+func (_ *compArrayParam) Rules() []Rule {
+	return []Rule{
+		newCompArrayParamValues(),
+	}
+}
+
+type compArrayParamValues struct{}
+
+func newCompArrayParamValues() Rule {
+	return &compArrayParamValues{}
+}
+
+func (_ *compArrayParamValues) Name() string {
+	return "comp-array-param-values"
+}
+
+func (_ *compArrayParamValues) Selectors() []selector.Selector {
+	return []selector.Selector{
+		selector.NewArrayInner(),
+	}
+}
+
+func (_ *compArrayParamValues) Rules() []Rule {
+	return []Rule{
+		newCompArrayParamValue(),
+	}
+}
+
+type compArrayParamValue struct{}
+
+func newCompArrayParamValue() Rule {
+	return &compArrayParamValue{}
+}
+
+func (_ *compArrayParamValue) Name() string {
+	return "comp-array-param-value"
+}
+
+func (_ *compArrayParamValue) Selectors() []selector.Selector {
+	return []selector.Selector{
+		selector.NewArrayItems(false),
+	}
+}
+
+func (_ *compArrayParamValue) Rules() []Rule {
+	return []Rule{
+		newCompArrayParamValueType(),
+	}
+}
+
+type compArrayParamValueType struct{}
+
+func newCompArrayParamValueType() Rule {
+	return &compArrayParamValueType{}
+}
+
+func (_ *compArrayParamValueType) Name() string {
+	return "comp-array-param-value-type"
+}
+
+func (_ *compArrayParamValueType) Selectors() []selector.Selector {
+	return []selector.Selector{
+		selector.NewAll(),
+	}
+}
+
+func (_ *compArrayParamValueType) Rules() []Rule {
+	return []Rule{
+		newCompArrayParam(),
+		newCompStringParam(),
+		newCompNumberParam(),
+		newCompBoolParam(),
+		newCompCompParam(),
 	}
 }
 
@@ -370,6 +463,7 @@ func (_ *paramRef) Selectors() []selector.Selector {
 func (_ *paramRef) Rules() []Rule {
 	return []Rule{
 		newParamRefName(),
+		newParamRefIndexes(),
 		newCompCallArgs(),
 	}
 }
@@ -386,13 +480,56 @@ func (_ *paramRefName) Name() string {
 }
 
 func (_ *paramRefName) Selectors() []selector.Selector {
-	sei := selector.NewStartEndInner(`\{\{\s*`, `\s+|\s*\}\}`)
+	sei := selector.NewStartEndInner(`\{\{\s*`, `\[|\s+|\s*\}\}`)
 	return []selector.Selector{
 		sei,
 	}
 }
 
 func (_ *paramRefName) Rules() []Rule {
+	return []Rule{}
+}
+
+type paramRefIndexes struct{}
+
+func newParamRefIndexes() Rule {
+	return &paramRefIndexes{}
+}
+
+func (_ *paramRefIndexes) Name() string {
+	return "param-ref-indexes"
+}
+
+func (_ *paramRefIndexes) Selectors() []selector.Selector {
+	return []selector.Selector{
+		selector.NewParamRefIndexes(),
+	}
+}
+
+func (_ *paramRefIndexes) Rules() []Rule {
+	return []Rule{
+		newParamRefIndex(),
+	}
+}
+
+type paramRefIndex struct{}
+
+func newParamRefIndex() Rule {
+	return &paramRefIndex{}
+}
+
+func (_ *paramRefIndex) Name() string {
+	return "param-ref-index"
+}
+
+func (_ *paramRefIndex) Selectors() []selector.Selector {
+	p, _ := selector.NewPattern(`\[\d+\]`)
+	return []selector.Selector{
+		p,
+	}
+}
+
+func (_ *paramRefIndex) Rules() []Rule {
 	return []Rule{}
 }
 
@@ -538,7 +675,7 @@ func (_ *compCallArgs) Name() string {
 }
 
 func (_ *compCallArgs) Selectors() []selector.Selector {
-	p, _ := selector.NewPattern(`([a-z][a-z0-9-]*)[\s\n\r]*=[\s\n\r]*(".*?"|\d+(?:\.\d+)?|true|false|[a-z][a-z0-9-]*|[A-Z0-9]+(?:_[A-Z0-9]+)*)`)
+	p := selector.NewComponentAssignments(true)
 	return []selector.Selector{
 		selector.NewFilter(p, func(source []byte, index [][2]int) [][2]int {
 			if len(index) == 0 {
@@ -580,7 +717,7 @@ func (_ *compCallArg) Name() string {
 }
 
 func (_ *compCallArg) Selectors() []selector.Selector {
-	p, _ := selector.NewPattern(`([a-z][a-z0-9-]*)[\s\n\r]*=[\s\n\r]*(".*?"|\d+(?:\.\d+)?|true|false|[a-z][a-z0-9-]*|[A-Z0-9]+(?:_[A-Z0-9]+)*)`)
+	p := selector.NewComponentAssignments(true)
 	return []selector.Selector{
 		p,
 	}
@@ -635,6 +772,7 @@ func (_ *compCallArgType) Selectors() []selector.Selector {
 
 func (_ *compCallArgType) Rules() []Rule {
 	return []Rule{
+		newCompCallArrayArg(),
 		newCompCallStringArg(),
 		newCompCallNumberArg(),
 		newCompCallBoolArg(),
@@ -678,7 +816,7 @@ func (_ *compCallNumberArg) Name() string {
 }
 
 func (_ *compCallNumberArg) Selectors() []selector.Selector {
-	p, _ := selector.NewPattern(`\d+(?:\.\d+)?`)
+	p, _ := selector.NewPattern(`^\d+(?:\.\d+)?$`)
 	return []selector.Selector{
 		p,
 	}
@@ -702,7 +840,7 @@ func (_ *compCallBoolArg) Name() string {
 }
 
 func (_ *compCallBoolArg) Selectors() []selector.Selector {
-	p, _ := selector.NewPattern(`true|false`)
+	p, _ := selector.NewPattern(`^(true|false)$`)
 	return []selector.Selector{
 		p,
 	}
@@ -726,7 +864,7 @@ func (_ *compCallParamArg) Name() string {
 }
 
 func (_ *compCallParamArg) Selectors() []selector.Selector {
-	p, _ := selector.NewPattern(`^\s*[a-z][a-z0-9-]*\s*$`)
+	p, _ := selector.NewPattern(`^\s*[a-z][a-z0-9-]*(?:\[\d+\])*\s*$`)
 	return []selector.Selector{
 		selector.NewFilter(p, func(source []byte, index [][2]int) [][2]int {
 			if len(index) == 0 {
@@ -750,6 +888,99 @@ func (_ *compCallParamArg) Selectors() []selector.Selector {
 func (_ *compCallParamArg) Rules() []Rule {
 	return []Rule{
 		newCompCallArgValue(),
+	}
+}
+
+type compCallArrayArg struct{}
+
+func newCompCallArrayArg() Rule {
+	return &compCallArrayArg{}
+}
+
+func (_ *compCallArrayArg) Name() string {
+	return "comp-call-array-arg"
+}
+
+func (_ *compCallArrayArg) Selectors() []selector.Selector {
+	return []selector.Selector{
+		selector.NewArrayLiteral(),
+	}
+}
+
+func (_ *compCallArrayArg) Rules() []Rule {
+	return []Rule{
+		newCompCallArrayArgValues(),
+	}
+}
+
+type compCallArrayArgValues struct{}
+
+func newCompCallArrayArgValues() Rule {
+	return &compCallArrayArgValues{}
+}
+
+func (_ *compCallArrayArgValues) Name() string {
+	return "comp-call-array-arg-values"
+}
+
+func (_ *compCallArrayArgValues) Selectors() []selector.Selector {
+	return []selector.Selector{
+		selector.NewArrayInner(),
+	}
+}
+
+func (_ *compCallArrayArgValues) Rules() []Rule {
+	return []Rule{
+		newCompCallArrayArgValue(),
+	}
+}
+
+type compCallArrayArgValue struct{}
+
+func newCompCallArrayArgValue() Rule {
+	return &compCallArrayArgValue{}
+}
+
+func (_ *compCallArrayArgValue) Name() string {
+	return "comp-call-array-arg-value"
+}
+
+func (_ *compCallArrayArgValue) Selectors() []selector.Selector {
+	return []selector.Selector{
+		selector.NewArrayItems(true),
+	}
+}
+
+func (_ *compCallArrayArgValue) Rules() []Rule {
+	return []Rule{
+		newCompCallArrayArgValueType(),
+	}
+}
+
+type compCallArrayArgValueType struct{}
+
+func newCompCallArrayArgValueType() Rule {
+	return &compCallArrayArgValueType{}
+}
+
+func (_ *compCallArrayArgValueType) Name() string {
+	return "comp-call-array-arg-value-type"
+}
+
+func (_ *compCallArrayArgValueType) Selectors() []selector.Selector {
+	return []selector.Selector{
+		selector.NewAll(),
+	}
+}
+
+func (_ *compCallArrayArgValueType) Rules() []Rule {
+	return []Rule{
+		newCompCallArrayArg(),
+		newCompCallStringArg(),
+		newCompCallNumberArg(),
+		newCompCallBoolArg(),
+		newCompCallParamArg(),
+		newCompCallCompArg(),
 	}
 }
 
@@ -785,7 +1016,7 @@ func (_ *compCallCompArg) Name() string {
 }
 
 func (_ *compCallCompArg) Selectors() []selector.Selector {
-	p, _ := selector.NewPattern(`[A-Z0-9]+(?:_[A-Z0-9]+)*`)
+	p, _ := selector.NewPattern(`^[A-Z0-9]+(?:_[A-Z0-9]+)*$`)
 	return []selector.Selector{
 		p,
 	}
@@ -872,7 +1103,7 @@ func (_ *globalCompDefHead) Name() string {
 }
 
 func (_ *globalCompDefHead) Selectors() []selector.Selector {
-	p, _ := selector.NewStartEnd(`^([a-z][a-z0-9-]*)[ \t\r\n]*=[ \t\r\n]*(".*?"|\d+(?:\.\d+)?|true|false|[A-Z0-9]+(?:_[A-Z0-9]+)*)`, `\n|\z`)
+	p, _ := selector.NewStartEnd(`^([a-z][a-z0-9-]*)[ \t\r\n]*=[ \t\r\n]*(".*?"|\d+(?:\.\d+)?|true|false|\[|[A-Z0-9]+(?:_[A-Z0-9]+)*)`, `\n|\z`)
 	return []selector.Selector{
 		p,
 	}

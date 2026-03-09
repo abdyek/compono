@@ -30,8 +30,12 @@ func (p *pattern) Select(source []byte, without ...[2]int) [][2]int {
 	}
 
 	results := [][2]int{}
-	for _, i := range p.regex.FindAllStringIndex(string(source), -1) {
-		results = append(results, [2]int{i[0], i[1]})
+	noSelected := filterNoSelected(without, len(source))
+	for _, ns := range noSelected {
+		piece := string(source[ns[0]:ns[1]])
+		for _, i := range p.regex.FindAllStringIndex(piece, -1) {
+			results = append(results, [2]int{ns[0] + i[0], ns[0] + i[1]})
+		}
 	}
 	return results
 }

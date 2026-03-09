@@ -1,7 +1,7 @@
 {{ WRAPPER array = [false] }}
 
 ~ WRAPPER array = []
-Rendered
+No Rendered
 {{ COMP number = array[0] }}
 
 ~ COMP number = 0

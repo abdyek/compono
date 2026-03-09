@@ -78,7 +78,11 @@ func (r *renderer) renderChildren(invoker renderableNode, children []ast.Node) s
 	for _, child := range children {
 		re := r.findRenderable(invoker, child)
 		if re != nil {
-			result += renderNode(re, invoker, child)
+			rendered := renderNode(re, invoker, child)
+			if shouldOverrideCompDefContent(invoker, rendered) {
+				return rendered
+			}
+			result += rendered
 		}
 	}
 	return result
@@ -91,6 +95,19 @@ func (r *renderer) findRenderable(invoker renderableNode, node ast.Node) rendera
 		}
 	}
 	return nil
+}
+
+func shouldOverrideCompDefContent(invoker renderableNode, rendered string) bool {
+	if invoker == nil || invoker.Node() == nil {
+		return false
+	}
+	if !ast.IsRuleNameOneOf(invoker.Node(), []string{"local-comp-def-content", "global-comp-def-content"}) {
+		return false
+	}
+	if !strings.HasPrefix(rendered, "<compono-error-block>") {
+		return false
+	}
+	return strings.Contains(rendered, "<div slot=\"title\">Invalid component usage</div>")
 }
 
 func (r *renderer) findLocalCompDef(srcNode ast.Node, name string) ast.Node {
