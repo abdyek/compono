@@ -19,6 +19,7 @@ type wrapContext struct {
 	compCallChains     [][]ast.Node
 	compCallCycleCache map[ast.Node]bool
 	paramCycleClosers  map[ast.Node]string
+	callReplacements   map[ast.Node]ast.Node
 }
 
 type wrapRule struct {
@@ -941,23 +942,21 @@ func getResolvedInlineBlockCompName(ctx *wrapContext, compCall ast.Node) string 
 	explicitParamArgs := getExplicitParamArgMap(compCall)
 
 	inlineParamCalls := ast.FilterNodesInTree(compDefContent, func(n ast.Node) bool {
-		return isCompParamRefInCompDef(compDef, n) && isInlineParamRefNode(n)
+		return ast.IsRuleName(n, "param-ref") && isInlineParamRefNode(n)
 	})
 
 	for _, ipc := range inlineParamCalls {
-		ipcName := getParamCompCallNameStr(ipc)
+		ipcName := getParamRefNameStr(ipc)
 		if ipcName == "" {
 			continue
 		}
 
-		resolvedCompName, ok := resolved[ipcName]
-		if !ok || resolvedCompName == "" {
+		resolvedValue, ok := resolveInlineParamRefValue(ctx, compCall, ipc, resolved)
+		if !ok || resolvedValue.Type != "comp" || resolvedValue.Raw == "" {
 			continue
 		}
 
-		if strings.HasPrefix(resolvedCompName, "$") {
-			continue
-		}
+		resolvedCompName := resolvedValue.Raw
 
 		lookupScope := compCall
 		_, hasExplicitCompArg := explicitCompArgs[ipcName]
@@ -993,6 +992,44 @@ func getResolvedInlineBlockCompName(ctx *wrapContext, compCall ast.Node) string 
 	}
 
 	return ""
+}
+
+func resolveInlineParamRefValue(
+	ctx *wrapContext,
+	compCall ast.Node,
+	paramRef ast.Node,
+	resolved map[string]string,
+) (ast.ResolvedValue, bool) {
+	paramName := getParamRefNameStr(paramRef)
+	if paramName == "" {
+		return ast.ResolvedValue{}, false
+	}
+
+	indexes := ast.GetParamRefIndexes(paramRef)
+	if len(indexes) > 0 {
+		if explicitArg := ast.GetCompCallArgByParamName(ast.GetCompCallArgsFromCompCall(compCall), paramName); explicitArg != nil {
+			return ast.ApplyIndexes(
+				ast.ResolveCompCallArgValue(ctx.root, explicitArg, ast.GetAncestors(compCall), compCall),
+				indexes,
+			), true
+		}
+
+		return ast.ApplyIndexes(
+			ast.ResolveParamDefaultFromCompCall(ctx.root, compCall, paramName),
+			indexes,
+		), true
+	}
+
+	resolvedCompName, ok := resolved[paramName]
+	if !ok || resolvedCompName == "" || strings.HasPrefix(resolvedCompName, "$") {
+		return ast.ResolvedValue{}, false
+	}
+
+	return ast.ResolvedValue{
+		Type:  "comp",
+		Raw:   resolvedCompName,
+		Scope: ast.GetLocalCompSourceFromNode(compCall, ctx.root),
+	}, true
 }
 
 func isNotCompParamCompCall() func(*wrapContext, ast.Node) bool {

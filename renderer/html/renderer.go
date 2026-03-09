@@ -78,11 +78,7 @@ func (r *renderer) renderChildren(invoker renderableNode, children []ast.Node) s
 	for _, child := range children {
 		re := r.findRenderable(invoker, child)
 		if re != nil {
-			rendered := renderNode(re, invoker, child)
-			if shouldOverrideCompDefContent(invoker, rendered) {
-				return rendered
-			}
-			result += rendered
+			result += renderNode(re, invoker, child)
 		}
 	}
 	return result
@@ -97,70 +93,12 @@ func (r *renderer) findRenderable(invoker renderableNode, node ast.Node) rendera
 	return nil
 }
 
-func shouldOverrideCompDefContent(invoker renderableNode, rendered string) bool {
-	if invoker == nil || invoker.Node() == nil {
-		return false
-	}
-	if !ast.IsRuleNameOneOf(invoker.Node(), []string{"local-comp-def-content", "global-comp-def-content"}) {
-		return false
-	}
-	if !strings.HasPrefix(rendered, "<compono-error-block>") {
-		return false
-	}
-	return strings.Contains(rendered, "<div slot=\"title\">Invalid component usage</div>")
-}
-
 func (r *renderer) findLocalCompDef(srcNode ast.Node, name string) ast.Node {
-	localCompDefWrapper := ast.FindNodeByRuleName(srcNode.Children(), "local-comp-def-wrapper")
-	if localCompDefWrapper == nil {
-		return nil
-	}
-
-	return ast.FindNode(localCompDefWrapper.Children(), func(child ast.Node) bool {
-		if !ast.IsRuleName(child, "local-comp-def") {
-			return false
-		}
-
-		localCompDefHead := ast.FindNodeByRuleName(child.Children(), "local-comp-def-head")
-		if localCompDefHead == nil {
-			return false
-		}
-
-		localCompName := ast.FindNodeByRuleName(localCompDefHead.Children(), "local-comp-name")
-		if localCompName == nil {
-			return false
-		}
-
-		if strings.TrimSpace(string(localCompName.Raw())) != strings.TrimSpace(name) {
-			return false
-		}
-
-		return true
-	})
+	return ast.FindLocalCompDef(srcNode, name)
 }
 
 func (r *renderer) findGlobalCompDef(name string) ast.Node {
-	globalCompDefWrapper := ast.FindNodeByRuleName(r.root.Children(), "global-comp-def-wrapper")
-	if globalCompDefWrapper == nil {
-		return nil
-	}
-
-	return ast.FindNode(globalCompDefWrapper.Children(), func(child ast.Node) bool {
-		if !ast.IsRuleName(child, "global-comp-def") {
-			return false
-		}
-
-		globalCompName := ast.FindNodeByRuleName(child.Children(), "global-comp-name")
-		if globalCompName == nil {
-			return false
-		}
-
-		if strings.TrimSpace(string(globalCompName.Raw())) != strings.TrimSpace(name) {
-			return false
-		}
-
-		return true
-	})
+	return ast.FindGlobalCompDef(r.root, name)
 }
 
 func (r *renderer) findBuiltinComp(name string) builtinComponent {
