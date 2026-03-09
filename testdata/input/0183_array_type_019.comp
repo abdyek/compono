@@ -1,0 +1,5 @@
+{{ COMP arr = [] }}
+
+~ COMP arr = []
+No Rendered
+{{ arr[0] }}

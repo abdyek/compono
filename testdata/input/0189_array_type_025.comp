@@ -1,0 +1,4 @@
+{{ COMP }}
+~ COMP array = []
+No Rendered
+{{ array[0] }}

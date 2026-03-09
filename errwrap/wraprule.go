@@ -997,6 +997,10 @@ func getResolvedInlineBlockCompName(ctx *wrapContext, compCall ast.Node) string 
 
 func isNotCompParamCompCall() func(*wrapContext, ast.Node) bool {
 	return func(_ *wrapContext, node ast.Node) bool {
+		if len(ast.GetParamRefIndexes(node)) > 0 {
+			return false
+		}
+
 		paramName := getParamCompCallNameStr(node)
 		if paramName == "" {
 			return false
@@ -1094,8 +1098,60 @@ func getWrongTypeArgNames(ctx *wrapContext, compCall ast.Node) []string {
 	}
 
 	wrongTypeArgNames = appendUniqueStrings(wrongTypeArgNames, getWrongTypeArgNamesFromResolvedParamCompCalls(ctx, compCall)...)
+	wrongTypeArgNames = appendUniqueStrings(wrongTypeArgNames, getWrongTypeArgNamesFromNestedCompCalls(ctx, compCall)...)
 
 	return wrongTypeArgNames
+}
+
+func getWrongTypeArgNamesFromNestedCompCalls(ctx *wrapContext, compCall ast.Node) []string {
+	compCallName := getCompCallNameStr(compCall)
+	if compCallName == "" {
+		return nil
+	}
+
+	compDef := findCompDef(ctx.root, compCall, compCallName)
+	if compDef == nil {
+		return nil
+	}
+
+	compDefContent := getCompDefContent(compDef)
+	if compDefContent == nil {
+		return nil
+	}
+
+	nestedCompCalls := ast.FilterNodesInTree(compDefContent, func(node ast.Node) bool {
+		return ast.IsRuleNameOneOf(node, []string{"block-comp-call", "inline-comp-call"})
+	})
+
+	result := []string{}
+	for _, nestedCompCall := range nestedCompCalls {
+		targetCompDef := findCompDef(ctx.root, nestedCompCall, getCompCallNameStr(nestedCompCall))
+		if targetCompDef == nil {
+			continue
+		}
+
+		targetParamTypeMap := getCompDefParamTypeMap(targetCompDef)
+		for _, arg := range ast.GetCompCallArgsFromCompCall(nestedCompCall) {
+			if !ast.IsRuleName(arg, "comp-call-arg") {
+				continue
+			}
+
+			argName := ast.GetArgNameFromCompCallArg(arg)
+			expectedType, ok := targetParamTypeMap[argName]
+			if !ok {
+				continue
+			}
+
+			actualType := getResolvedArgTypeForNestedParamCompCall(ctx, compCall, arg)
+			if actualType == "" || actualType == expectedType {
+				continue
+			}
+
+			result = appendUniqueStrings(result, argName)
+		}
+	}
+
+	return result
 }
 
 func getUndefinedArgNamesFromResolvedParamCompCalls(ctx *wrapContext, compCall ast.Node) []string {
@@ -1194,8 +1250,8 @@ func getWrongTypeArgNamesFromResolvedParamCompCalls(ctx *wrapContext, compCall a
 				continue
 			}
 
-			actualType := ast.GetTypeFromCompCallArg(arg)
-			if actualType == "" || actualType == "param" || actualType == expectedType {
+			actualType := getResolvedArgTypeForNestedParamCompCall(ctx, compCall, arg)
+			if actualType == "" || actualType == expectedType {
 				continue
 			}
 
@@ -1204,6 +1260,33 @@ func getWrongTypeArgNamesFromResolvedParamCompCalls(ctx *wrapContext, compCall a
 	}
 
 	return result
+}
+
+func getResolvedArgTypeForNestedParamCompCall(ctx *wrapContext, compCall ast.Node, arg ast.Node) string {
+	actualType := ast.GetTypeFromCompCallArg(arg)
+	if actualType != "param" {
+		return actualType
+	}
+
+	raw := ast.GetArgValueFromCompCallArg(arg)
+	paramName := ast.GetNameFromIndexedRaw(raw)
+	indexes := ast.GetIndexesFromRaw(raw)
+	if paramName == "" {
+		return ""
+	}
+
+	explicitArg := ast.GetCompCallArgByParamName(ast.GetCompCallArgsFromCompCall(compCall), paramName)
+	if explicitArg != nil {
+		return ast.ApplyIndexes(
+			ast.ResolveCompCallArgValue(ctx.root, explicitArg, ast.GetAncestors(compCall), compCall),
+			indexes,
+		).Type
+	}
+
+	return ast.ApplyIndexes(
+		ast.ResolveParamDefaultFromCompCall(ctx.root, compCall, paramName),
+		indexes,
+	).Type
 }
 
 func resolveParamCompCallTarget(

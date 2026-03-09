@@ -16,13 +16,10 @@ func DefaultErrorWrapper() ErrorWrapper {
 }
 
 type errorWrapper struct {
-	root      ast.Node
 	wrapRules []wrapRule
 }
 
 func (ew *errorWrapper) Wrap(root ast.Node) {
-	ew.root = root
-
 	ctx := &wrapContext{
 		root:           root,
 		compCallChains: ew.getCompCallChains(root),

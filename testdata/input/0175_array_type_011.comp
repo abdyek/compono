@@ -1,0 +1,7 @@
+{{ COMP }}
+~ COMP mix = ["string", 456, true, HELLO, ["Yunus Emre"]]
+{{ mix[3] name = mix[4][0] }}
+{{ mix[1] }} -- {{ mix[2] }}
+
+~ HELLO name = "John"
+# Hello **{{ name }}**!!

@@ -1,0 +1,5 @@
+{{ COMP }}
+
+~ COMP items = []
+Rendered
+{{ items }}

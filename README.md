@@ -95,11 +95,6 @@ Components can accept parameters with default values:
 *{{ role }}*
 ```
 
-Parameter types supported:
-- Strings: `name="John"`
-- Numbers: `age=25`
-- Booleans: `active=true`
-
 #### Block vs Inline Components
 
 Components containing multiple paragraphs or block elements are **block components**:
@@ -181,10 +176,11 @@ If a parameter value is not provided during the call, the **default value is use
 
 Supported parameter types:
 
-- **String** → `name="John"`
-- **Number** → `age=25`
-- **Bool** → `active=true`
-- **Component** → another component can be passed as a parameter
+- **String** → `name = "John"`
+- **Number** → `age = 25`
+- **Bool** → `active = true`
+- **Component** → `comp = COMP`
+- **Array** → `items = ["Jane", 22, true, COMP]`
 
 ---
 
@@ -264,6 +260,40 @@ Output:
 ```
 
 The local component `PROFILE_CARD` can directly access the global parameter `name`.
+
+---
+
+### Array Parameters
+```
+{{ WRAPPER names = ["John", "Jane"] }}
+
+~ WRAPPER names = []
+{{ SAY_HELLO name = names[0] }}
+{{ SAY_HELLO name = names[1] }}
+
+~ SAY_HELLO name = ""
+# Hello **{{ name }}**!
+```
+
+Arrays do not have to be homogeneous.
+```
+~ COMP mix = ["Jane", 22, true, SAY_HELLO]
+We can reach an element via index.
+{{ mix[2] }}
+// true
+```
+
+Arrays can be nested.
+```
+{{ TABLE data = [
+  [1,2],
+  [3,4],
+]}}
+
+~ TABLE data = []
+{{ data[0][0] }} - {{ data[0][1] }}
+{{ data[1][0] }} - {{ data[1][1] }}
+```
 
 ---
 

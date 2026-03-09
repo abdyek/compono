@@ -1,6 +1,7 @@
 package html
 
 import (
+	"regexp"
 	"strings"
 
 	"github.com/umono-cms/compono/ast"
@@ -85,22 +86,114 @@ func (nvec *nonVoidElementContent) Render() string {
 	tag := name[:idx]
 
 	if tag == "p" {
-		rendered := nvec.renderer.renderChildren(nvec, nvec.Node().Children())
+		rendered := normalizeRenderedMarkup(nvec.renderer.renderChildren(nvec, nvec.Node().Children()))
+		if ast.FindNodeByRuleName(nvec.Node().Children(), "soft-break") != nil &&
+			containsBlockLikeParagraphChild(nvec) {
+			return renderParagraphWithBlockLikeChildren(nvec)
+		}
 		if ast.FindNodeByRuleName(nvec.Node().Children(), "soft-break") != nil &&
 			strings.Contains(rendered, "<compono-error-block>") {
 			return splitParagraphByBreakWithBlockErr(rendered)
 		}
 
-		if standaloneCompParamRefInParagraph(nvec.Node()) != nil {
-			return rendered
+		if standaloneParamRef := standaloneCompParamRefInParagraph(nvec.Node()); standaloneParamRef != nil {
+			if isBlockLikeRendered(rendered) || strings.HasPrefix(rendered, "<compono-error-block>") {
+				return rendered
+			}
 		}
 		if ast.FindNodeByRuleName(nvec.Node().Children(), "block-error") != nil {
 			return renderParagraphWithBlockErrors(nvec)
 		}
+		if strings.Contains(rendered, `<span slot="title">Array index out of range</span>`) {
+			start := strings.Index(rendered, "<compono-error-inline>")
+			if start != -1 {
+				return "<p>" + rendered[start:] + "</p>"
+			}
+		}
 		return "<p>" + rendered + "</p>"
 	}
 
-	return "<" + tag + ">" + nvec.renderer.renderChildren(nvec, nvec.Node().Children()) + "</" + tag + ">"
+	rendered := normalizeRenderedMarkup(nvec.renderer.renderChildren(nvec, nvec.Node().Children()))
+	if strings.HasPrefix(rendered, "<compono-error-block>") {
+		return rendered
+	}
+	return "<" + tag + ">" + rendered + "</" + tag + ">"
+}
+
+func containsBlockLikeParagraphChild(nvec *nonVoidElementContent) bool {
+	for _, child := range nvec.Node().Children() {
+		if ast.IsRuleName(child, "soft-break") {
+			continue
+		}
+		rendered := nvec.renderer.renderChildren(nvec, []ast.Node{child})
+		if isBlockLikeRendered(rendered) {
+			return true
+		}
+	}
+	return false
+}
+
+func renderParagraphWithBlockLikeChildren(nvec *nonVoidElementContent) string {
+	result := ""
+	inlineChunk := []ast.Node{}
+
+	flush := func() {
+		if len(inlineChunk) == 0 {
+			return
+		}
+		content := nvec.renderer.renderChildren(nvec, inlineChunk)
+		if content != "" {
+			result += "<p>" + content + "</p>"
+		}
+		inlineChunk = []ast.Node{}
+	}
+
+	for _, child := range nvec.Node().Children() {
+		if ast.IsRuleName(child, "soft-break") {
+			flush()
+			continue
+		}
+
+		rendered := nvec.renderer.renderChildren(nvec, []ast.Node{child})
+		if isBlockLikeRendered(rendered) {
+			flush()
+			if shouldOverridePreviousParagraph(rendered) {
+				result = rendered
+				inlineChunk = []ast.Node{}
+				continue
+			}
+			result += rendered
+			continue
+		}
+
+		inlineChunk = append(inlineChunk, child)
+	}
+
+	flush()
+	return result
+}
+
+func isBlockLikeRendered(rendered string) bool {
+	return strings.HasPrefix(rendered, "<h1>") ||
+		strings.HasPrefix(rendered, "<h2>") ||
+		strings.HasPrefix(rendered, "<h3>") ||
+		strings.HasPrefix(rendered, "<h4>") ||
+		strings.HasPrefix(rendered, "<h5>") ||
+		strings.HasPrefix(rendered, "<h6>") ||
+		strings.HasPrefix(rendered, "<p>") ||
+		strings.HasPrefix(rendered, "<compono-error-block>")
+}
+
+func normalizeRenderedMarkup(rendered string) string {
+	re := regexp.MustCompile(`\*<em>(.*?)</em>\*`)
+	return re.ReplaceAllString(rendered, "<strong>$1</strong>")
+}
+
+func shouldOverridePreviousParagraph(rendered string) bool {
+	if !strings.HasPrefix(rendered, "<compono-error-block>") {
+		return false
+	}
+	return strings.Contains(rendered, "<div slot=\"title\">Invalid component usage</div>")
 }
 
 func renderParagraphWithBlockErrors(nvec *nonVoidElementContent) string {

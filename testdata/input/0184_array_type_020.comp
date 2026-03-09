@@ -1,0 +1,4 @@
+{{ COMP array = "string" }}
+
+~ COMP array = []
+Hello!
