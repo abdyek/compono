@@ -44,6 +44,14 @@ func ResolveCompCallArgValue(root Node, compCallArg Node, invokerAncestors []Nod
 		return ResolveParamFromAncestors(root, referencedParamName, indexes, remainingAncestors)
 	}
 
+	if IsRuleName(argTypeNode, "comp-call-array-arg") {
+		resolved := resolveCompCallArrayArgValue(root, argTypeNode, invokerAncestors, currentCompCall)
+		if resolved.Scope == nil {
+			resolved.Scope = GetLocalCompSourceFromNode(currentCompCall, root)
+		}
+		return resolved
+	}
+
 	resolved := resolveLiteralValueNode(argTypeNode)
 	if resolved.Scope == nil {
 		resolved.Scope = GetLocalCompSourceFromNode(currentCompCall, root)
@@ -169,6 +177,73 @@ func resolveArrayValues(node Node, valuesRuleName, valueRuleName, valueTypeRuleN
 		Type:  "array",
 		Items: items,
 	}
+}
+
+func resolveCompCallArrayArgValue(root Node, node Node, invokerAncestors []Node, currentCompCall Node) ResolvedValue {
+	values := FindNodeByRuleName(node.Children(), "comp-call-array-arg-values")
+	if values == nil {
+		return ResolvedValue{Type: "array", Items: []ResolvedValue{}}
+	}
+
+	items := []ResolvedValue{}
+	for _, valueNode := range values.Children() {
+		if !IsRuleName(valueNode, "comp-call-array-arg-value") {
+			continue
+		}
+
+		valueTypeNode := FindNodeByRuleName(valueNode.Children(), "comp-call-array-arg-value-type")
+		if valueTypeNode == nil {
+			continue
+		}
+
+		item := resolveCompCallArrayValueType(root, valueTypeNode, invokerAncestors, currentCompCall)
+		if item.IsZero() {
+			continue
+		}
+		if item.Scope == nil {
+			item.Scope = GetLocalCompSourceFromNode(currentCompCall, root)
+		}
+		items = append(items, item)
+	}
+
+	return ResolvedValue{
+		Type:  "array",
+		Items: items,
+	}
+}
+
+func resolveCompCallArrayValueType(root Node, node Node, invokerAncestors []Node, currentCompCall Node) ResolvedValue {
+	valueNode := firstTypedValueNode(node.Children())
+	if valueNode == nil {
+		return ResolvedValue{}
+	}
+
+	if IsRuleName(valueNode, "comp-call-param-arg") {
+		argValue := FindNodeByRuleName(valueNode.Children(), "comp-call-arg-value")
+		if argValue == nil {
+			return ResolvedValue{}
+		}
+
+		raw := strings.TrimSpace(string(argValue.Raw()))
+		referencedParamName := GetNameFromIndexedRaw(raw)
+		indexes := GetIndexesFromRaw(raw)
+
+		remainingAncestors := invokerAncestors
+		for i, anc := range invokerAncestors {
+			if anc == currentCompCall {
+				remainingAncestors = invokerAncestors[i+1:]
+				break
+			}
+		}
+
+		return ResolveParamFromAncestors(root, referencedParamName, indexes, remainingAncestors)
+	}
+
+	if IsRuleName(valueNode, "comp-call-array-arg") {
+		return resolveCompCallArrayArgValue(root, valueNode, invokerAncestors, currentCompCall)
+	}
+
+	return resolveLiteralValueNode(valueNode)
 }
 
 func ApplyIndexes(value ResolvedValue, indexes []int) ResolvedValue {

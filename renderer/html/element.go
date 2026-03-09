@@ -96,8 +96,10 @@ func (nvec *nonVoidElementContent) Render() string {
 			return splitParagraphByBreakWithBlockErr(rendered)
 		}
 
-		if standaloneCompParamRefInParagraph(nvec.Node()) != nil {
-			return rendered
+		if standaloneParamRef := standaloneCompParamRefInParagraph(nvec.Node()); standaloneParamRef != nil {
+			if isBlockLikeRendered(rendered) || strings.HasPrefix(rendered, "<compono-error-block>") {
+				return rendered
+			}
 		}
 		if ast.FindNodeByRuleName(nvec.Node().Children(), "block-error") != nil {
 			return renderParagraphWithBlockErrors(nvec)

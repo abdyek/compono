@@ -1,0 +1,7 @@
+{{ A param = "string" }}
+
+~ A param = ""
+{{ B arr = [param] }}
+
+~ B arr = []
+{{ arr[0] }}

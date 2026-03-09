@@ -309,7 +309,7 @@ func (_ *compArrayParam) Name() string {
 
 func (_ *compArrayParam) Selectors() []selector.Selector {
 	return []selector.Selector{
-		selector.NewArrayLiteral(),
+		selector.NewArrayLiteral(false),
 	}
 }
 
@@ -903,7 +903,7 @@ func (_ *compCallArrayArg) Name() string {
 
 func (_ *compCallArrayArg) Selectors() []selector.Selector {
 	return []selector.Selector{
-		selector.NewArrayLiteral(),
+		selector.NewArrayLiteral(true),
 	}
 }
 

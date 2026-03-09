@@ -109,23 +109,27 @@ func (ai *arrayItems) Select(source []byte, without ...[2]int) [][2]int {
 	return results
 }
 
-type arrayLiteral struct{}
+type arrayLiteral struct {
+	allowParamRef bool
+}
 
-func NewArrayLiteral() Selector {
-	return &arrayLiteral{}
+func NewArrayLiteral(allowParamRef bool) Selector {
+	return &arrayLiteral{
+		allowParamRef: allowParamRef,
+	}
 }
 
 func (_ *arrayLiteral) Name() string {
 	return "array_literal"
 }
 
-func (_ *arrayLiteral) Select(source []byte, without ...[2]int) [][2]int {
+func (al *arrayLiteral) Select(source []byte, without ...[2]int) [][2]int {
 	start := skipComponentSpaces(source, 0)
 	if start >= len(source) || source[start] != '[' {
 		return [][2]int{}
 	}
 
-	end, ok := scanArrayLiteral(source, start, false)
+	end, ok := scanArrayLiteral(source, start, al.allowParamRef)
 	if !ok {
 		return [][2]int{}
 	}
