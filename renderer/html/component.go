@@ -50,7 +50,7 @@ func (cc *compCall) Render() string {
 		if inlineCompCall {
 			return cc.renderInlineCompCall(strings.TrimSpace(string(compCallName.Raw())), localCompDefContent)
 		}
-		return trimToBlockingError(cc.renderer.renderChildren(cc, localCompDefContent.Children()))
+		return cc.renderer.renderChildren(cc, localCompDefContent.Children())
 	}
 
 	globalCompDef := cc.renderer.findGlobalCompDef(string(compCallName.Raw()))
@@ -62,7 +62,7 @@ func (cc *compCall) Render() string {
 		if inlineCompCall {
 			return cc.renderInlineCompCall(strings.TrimSpace(string(compCallName.Raw())), globalCompDefContent)
 		}
-		return trimToBlockingError(cc.renderer.renderChildren(cc, globalCompDefContent.Children()))
+		return cc.renderer.renderChildren(cc, globalCompDefContent.Children())
 	}
 
 	builtinComp := cc.renderer.findBuiltinComp(string(compCallName.Raw()))
@@ -71,21 +71,6 @@ func (cc *compCall) Render() string {
 	}
 
 	return ""
-}
-
-func trimToBlockingError(rendered string) string {
-	invalidIndex := strings.Index(rendered, `<div slot="title">Invalid component usage</div>`)
-
-	start := -1
-	if invalidIndex != -1 {
-		start = strings.LastIndex(rendered[:invalidIndex], "<compono-error-block>")
-	}
-
-	if start != -1 {
-		return rendered[start:]
-	}
-
-	return rendered
 }
 
 func (cc *compCall) renderInlineCompCall(compName string, compDefContent ast.Node) string {

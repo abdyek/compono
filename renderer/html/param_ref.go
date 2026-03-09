@@ -44,9 +44,6 @@ func renderCompParamCall(r *renderer, rn renderableNode, paramRefName string) st
 		}
 	}
 	if localCompDef != nil {
-		if inlineCall && isBlockCompDef(localCompDef) {
-			return `<compono-error-block><div slot="title">Invalid component usage</div><div slot="description">The component <strong>` + target.name + `</strong> is a block component and cannot be used inline.</div></compono-error-block>`
-		}
 		localCompDefContent := ast.FindNodeByRuleName(localCompDef.Children(), "local-comp-def-content")
 		if localCompDefContent == nil {
 			return ""
@@ -54,18 +51,11 @@ func renderCompParamCall(r *renderer, rn renderableNode, paramRefName string) st
 		if inlineCall {
 			return renderInlineCompDefContent(r, rn, localCompDefContent)
 		}
-		rendered := trimToBlockingError(r.renderChildren(rn, localCompDefContent.Children()))
-		if strings.Contains(rendered, "<compono-error-block>") {
-			rendered = strings.ReplaceAll(rendered, "<br>", "</p><p>")
-		}
-		return rendered
+		return r.renderChildren(rn, localCompDefContent.Children())
 	}
 
 	globalCompDef := r.findGlobalCompDef(target.name)
 	if globalCompDef != nil {
-		if inlineCall && isBlockCompDef(globalCompDef) {
-			return `<compono-error-block><div slot="title">Invalid component usage</div><div slot="description">The component <strong>` + target.name + `</strong> is a block component and cannot be used inline.</div></compono-error-block>`
-		}
 		globalCompDefContent := ast.FindNodeByRuleName(globalCompDef.Children(), "global-comp-def-content")
 		if globalCompDefContent == nil {
 			return ""
@@ -73,11 +63,7 @@ func renderCompParamCall(r *renderer, rn renderableNode, paramRefName string) st
 		if inlineCall {
 			return renderInlineCompDefContent(r, rn, globalCompDefContent)
 		}
-		rendered := trimToBlockingError(r.renderChildren(rn, globalCompDefContent.Children()))
-		if strings.Contains(rendered, "<compono-error-block>") {
-			rendered = strings.ReplaceAll(rendered, "<br>", "</p><p>")
-		}
-		return rendered
+		return r.renderChildren(rn, globalCompDefContent.Children())
 	}
 
 	builtinComp := r.findBuiltinComp(target.name)
@@ -222,17 +208,9 @@ func renderResolvedValue(value ast.ResolvedValue) string {
 
 func renderParamRefValue(paramName string, rn renderableNode, r *renderer) string {
 	value := resolveParamRefValue(rn, r, paramName)
-	if value.IsZero() {
-		if len(ast.GetParamRefIndexes(rn.Node())) > 0 {
-			return inlineParamRefError("Array index out of range", "The index used for parameter <strong>"+paramName+"</strong> is out of range.")
-		}
+	if value.IsZero() || value.Type == "array" {
 		return ""
 	}
-
-	if value.Type == "array" {
-		return inlineParamRefError("Invalid parameter usage", "The parameter <strong>"+paramName+"</strong> is an array and cannot be rendered directly.")
-	}
-
 	return renderResolvedValue(value)
 }
 
@@ -492,26 +470,4 @@ func shouldTreatParamRefAsCompCall(compParam ast.Node, rn renderableNode, r *ren
 		return true
 	}
 	return r.findGlobalCompDef(target.name) != nil
-}
-
-func inlineParamRefError(title, msg string) string {
-	return `<compono-error-inline><span slot="title">` + title + `</span><span slot="description">` + msg + `</span></compono-error-inline>`
-}
-
-func isBlockCompDef(compDef ast.Node) bool {
-	content := ast.FindNode(compDef.Children(), func(node ast.Node) bool {
-		return ast.IsRuleNameOneOf(node, []string{"local-comp-def-content", "global-comp-def-content"})
-	})
-	if content == nil {
-		return false
-	}
-	if len(content.Children()) > 1 {
-		return true
-	}
-	if ast.FindNodeByRuleName(content.Children(), "p") != nil {
-		p := ast.FindNodeByRuleName(content.Children(), "p")
-		pContent := ast.FindNodeByRuleName(p.Children(), "p-content")
-		return ast.FindNodeByRuleName(pContent.Children(), "soft-break") != nil
-	}
-	return true
 }

@@ -104,12 +104,6 @@ func (nvec *nonVoidElementContent) Render() string {
 		if ast.FindNodeByRuleName(nvec.Node().Children(), "block-error") != nil {
 			return renderParagraphWithBlockErrors(nvec)
 		}
-		if strings.Contains(rendered, `<span slot="title">Array index out of range</span>`) {
-			start := strings.Index(rendered, "<compono-error-inline>")
-			if start != -1 {
-				return "<p>" + rendered[start:] + "</p>"
-			}
-		}
 		return "<p>" + rendered + "</p>"
 	}
 

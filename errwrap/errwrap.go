@@ -1,6 +1,8 @@
 package errwrap
 
 import (
+	"strings"
+
 	"github.com/umono-cms/compono/ast"
 	"github.com/umono-cms/compono/rule"
 )
@@ -21,14 +23,20 @@ type errorWrapper struct {
 
 func (ew *errorWrapper) Wrap(root ast.Node) {
 	ctx := &wrapContext{
-		root:           root,
-		compCallChains: ew.getCompCallChains(root),
+		root:             root,
+		compCallChains:   ew.getCompCallChains(root),
+		callReplacements: ew.getCallReplacements(root),
 	}
 
 	ew.scanAndWrap(ctx, root)
 }
 
 func (ew *errorWrapper) scanAndWrap(ctx *wrapContext, node ast.Node) {
+	if replacement, ok := ctx.callReplacements[node]; ok {
+		ew.replaceNode(node, replacement)
+		return
+	}
+
 	if ew.wrap(ctx, node) {
 		return
 	}
@@ -115,6 +123,15 @@ func (ew *errorWrapper) wrapWithErr(self ast.Node, title, msg string, block bool
 	self.SetRaw(errNode.Raw())
 }
 
+func (ew *errorWrapper) replaceNode(self ast.Node, replacement ast.Node) {
+	self.SetRule(replacement.Rule())
+	self.SetChildren(replacement.Children())
+	self.SetRaw(replacement.Raw())
+	for _, child := range self.Children() {
+		child.SetParent(self)
+	}
+}
+
 func (ew *errorWrapper) createBlockError(node ast.Node, title, msg string) ast.Node {
 	return ew.createError("block-error", node, title, msg)
 }
@@ -154,4 +171,219 @@ func (ew *errorWrapper) createError(errRuleName string, node ast.Node, title, ms
 	})
 
 	return errNode
+}
+
+func (ew *errorWrapper) getCallReplacements(root ast.Node) map[ast.Node]ast.Node {
+	result := map[ast.Node]ast.Node{}
+
+	rootContent := ast.FindNodeByRuleName(root.Children(), "root-content")
+	if rootContent == nil {
+		return result
+	}
+
+	rootCompCalls := ast.FilterNodesInTree(rootContent, func(node ast.Node) bool {
+		return ast.IsRuleNameOneOf(node, []string{"block-comp-call", "inline-comp-call"})
+	})
+
+	for _, compCall := range rootCompCalls {
+		replacement := ew.getReplacementForCompCall(root, compCall)
+		if replacement != nil {
+			result[compCall] = replacement
+		}
+	}
+
+	return result
+}
+
+func (ew *errorWrapper) getReplacementForCompCall(root ast.Node, compCall ast.Node) ast.Node {
+	compDef := findCompDef(root, compCall, getCompCallNameStr(compCall))
+	if compDef == nil {
+		return nil
+	}
+
+	content := getCompDefContent(compDef)
+	if content == nil {
+		return nil
+	}
+
+	paramValues := resolveCompCallParamValues(root, compDef, compCall)
+	if len(paramValues) == 0 {
+		return nil
+	}
+
+	for _, child := range content.Children() {
+		if !ast.IsRuleName(child, "p") {
+			continue
+		}
+
+		replacement := ew.getParagraphReplacement(compDef, child, paramValues)
+		if replacement != nil {
+			return replacement
+		}
+	}
+
+	return nil
+}
+
+func (ew *errorWrapper) getParagraphReplacement(compDef ast.Node, p ast.Node, values map[string]ast.ResolvedValue) ast.Node {
+	pContent := ast.FindNodeByRuleName(p.Children(), "p-content")
+	if pContent == nil {
+		return nil
+	}
+
+	hasSoftBreak := ast.FindNodeByRuleName(pContent.Children(), "soft-break") != nil
+
+	for _, child := range pContent.Children() {
+		if !ast.IsRuleName(child, "param-ref") || hasCompCallArgsNode(child) || !canRenderParamRefAsValue(compDef, child) {
+			continue
+		}
+
+		paramName := getParamRefNameStr(child)
+		resolved, ok := values[paramName]
+		if !ok {
+			continue
+		}
+
+		indexed := ast.ApplyIndexes(resolved, ast.GetParamRefIndexes(child))
+		if len(ast.GetParamRefIndexes(child)) > 0 && indexed.IsZero() {
+			if hasSoftBreak && isStandaloneParamRefOnLineInParagraph(child, pContent) {
+				return buildParagraphErrorNode(ew.createInlineError(child, "Array index out of range", "The index used for parameter **"+paramName+"** is out of range."))
+			}
+			return cloneParagraphWithReplacement(p, child, ew.createInlineError(child, "Array index out of range", "The index used for parameter **"+paramName+"** is out of range."))
+		}
+
+		if len(ast.GetParamRefIndexes(child)) == 0 && indexed.Type == "array" {
+			return cloneParagraphWithReplacement(p, child, ew.createInlineError(child, "Invalid parameter usage", "The parameter **"+paramName+"** is an array and cannot be rendered directly."))
+		}
+	}
+
+	return nil
+}
+
+func canRenderParamRefAsValue(compDef ast.Node, paramRef ast.Node) bool {
+	paramName := getParamRefNameStr(paramRef)
+	if paramName == "" {
+		return false
+	}
+
+	for _, info := range getCompDefParamInfos(compDef) {
+		if info.name != paramName {
+			continue
+		}
+		return info.typ != "comp"
+	}
+
+	return true
+}
+
+func resolveCompCallParamValues(root ast.Node, compDef ast.Node, compCall ast.Node) map[string]ast.ResolvedValue {
+	values := map[string]ast.ResolvedValue{}
+
+	for _, compParam := range ast.GetCompParamsFromCompDef(compDef) {
+		name := ast.GetParamNameFromCompParam(compParam)
+		if name == "" {
+			continue
+		}
+		values[name] = ast.ResolveCompParamDefaultFromCompDef(root, compDef, name)
+	}
+
+	for _, arg := range ast.GetCompCallArgsFromCompCall(compCall) {
+		name := ast.GetArgNameFromCompCallArg(arg)
+		if name == "" {
+			continue
+		}
+		values[name] = ast.ResolveCompCallArgValue(root, arg, ast.GetAncestors(compCall), compCall)
+	}
+
+	return values
+}
+
+func buildParagraphErrorNode(inlineError ast.Node) ast.Node {
+	p := ast.DefaultEmptyNode()
+	p.SetRule(rule.NewDynamic("p"))
+
+	pContent := ast.DefaultEmptyNode()
+	pContent.SetRule(rule.NewDynamic("p-content"))
+	pContent.SetParent(p)
+
+	inlineError.SetParent(pContent)
+	pContent.SetChildren([]ast.Node{inlineError})
+	p.SetChildren([]ast.Node{pContent})
+
+	return p
+}
+
+func cloneParagraphWithReplacement(srcP ast.Node, target ast.Node, replacement ast.Node) ast.Node {
+	cloned := cloneNode(srcP, map[ast.Node]ast.Node{
+		target: replacement,
+	})
+	return cloned
+}
+
+func cloneNode(src ast.Node, replacements map[ast.Node]ast.Node) ast.Node {
+	if replacement, ok := replacements[src]; ok {
+		return cloneNode(replacement, nil)
+	}
+
+	node := ast.DefaultEmptyNode()
+	node.SetRule(rule.NewDynamic(src.Rule().Name()))
+	node.SetRaw(src.Raw())
+
+	children := make([]ast.Node, 0, len(src.Children()))
+	for _, child := range src.Children() {
+		clonedChild := cloneNode(child, replacements)
+		clonedChild.SetParent(node)
+		children = append(children, clonedChild)
+	}
+	node.SetChildren(children)
+
+	return node
+}
+
+func isStandaloneParamRefOnLineInParagraph(paramRef ast.Node, pContent ast.Node) bool {
+	line := []ast.Node{}
+	for _, child := range pContent.Children() {
+		if ast.IsRuleName(child, "soft-break") {
+			if lineContainsNode(line, paramRef) {
+				return isStandaloneLine(paramRef, line)
+			}
+			line = []ast.Node{}
+			continue
+		}
+		line = append(line, child)
+	}
+
+	if lineContainsNode(line, paramRef) {
+		return isStandaloneLine(paramRef, line)
+	}
+
+	return false
+}
+
+func lineContainsNode(nodes []ast.Node, target ast.Node) bool {
+	for _, node := range nodes {
+		if node == target {
+			return true
+		}
+	}
+	return false
+}
+
+func isStandaloneLine(paramRef ast.Node, line []ast.Node) bool {
+	for _, child := range line {
+		if child == paramRef {
+			continue
+		}
+		if ast.IsRuleName(child, "plain") && string(child.Raw()) == "" {
+			continue
+		}
+		if ast.IsRuleName(child, "plain") && len(string(child.Raw())) > 0 {
+			if len([]rune(string(child.Raw()))) == len([]rune(strings.TrimSpace(string(child.Raw())))) {
+				return false
+			}
+			continue
+		}
+		return false
+	}
+	return true
 }
