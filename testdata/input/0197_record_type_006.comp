@@ -1,0 +1,4 @@
+{{ COMP nested = {record: {key-1: "string", key-2: 123}, empty-record: {} } }}
+
+~ COMP nested = {}
+{{ nested.record.key-1 }} - {{ nested.record.key-2 }}

@@ -1,0 +1,14 @@
+{{ BOLD_POST record = {
+  title: TITLE,
+  body: BODY,
+} }}
+
+~ BOLD_POST record = { title: NO_MATTER, body: NO_MATTER }
+{{ record.title }}
+**{{ record.body }}**
+
+~ TITLE
+# Hello
+
+~ BODY
+I am the body

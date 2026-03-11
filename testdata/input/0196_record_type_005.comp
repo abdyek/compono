@@ -1,0 +1,8 @@
+{{ WRAPPER title = "Title" content = "Content" }}
+
+~ WRAPPER title = "" content = ""
+{{ COMP param-refs = {param-ref-1: title, param-ref-2: content } }}
+
+~ COMP param-refs = { }
+## {{ param-refs.param-ref-1 }}
+{{ param-refs.param-ref-2 }}

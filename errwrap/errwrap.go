@@ -190,6 +190,10 @@ func (ew *errorWrapper) getCallReplacements(root ast.Node) map[ast.Node]ast.Node
 		if replacement != nil {
 			result[compCall] = replacement
 		}
+
+		for node, replacement := range ew.getInlineParamRefReplacements(root, compCall) {
+			result[node] = replacement
+		}
 	}
 
 	return result
@@ -225,6 +229,61 @@ func (ew *errorWrapper) getReplacementForCompCall(root ast.Node, compCall ast.No
 	return nil
 }
 
+func (ew *errorWrapper) getInlineParamRefReplacements(root ast.Node, compCall ast.Node) map[ast.Node]ast.Node {
+	result := map[ast.Node]ast.Node{}
+
+	compDef := findCompDef(root, compCall, getCompCallNameStr(compCall))
+	if compDef == nil {
+		return result
+	}
+
+	content := getCompDefContent(compDef)
+	if content == nil {
+		return result
+	}
+
+	paramValues := resolveCompCallParamValues(root, compDef, compCall)
+	if len(paramValues) == 0 {
+		return result
+	}
+
+	inlineParamRefs := ast.FilterNodesInTree(content, func(node ast.Node) bool {
+		if !ast.IsRuleName(node, "param-ref") || hasCompCallArgsNode(node) || !isInlineParamRefNode(node) || !canRenderParamRefAsValue(compDef, node) {
+			return false
+		}
+
+		for _, accessor := range ast.GetParamRefAccessors(node) {
+			if accessor.Kind == "key" {
+				return true
+			}
+		}
+
+		return false
+	})
+
+	for _, paramRef := range inlineParamRefs {
+		paramName := getParamRefNameStr(paramRef)
+		resolved, ok := paramValues[paramName]
+		if !ok {
+			continue
+		}
+
+		indexed, _ := ast.ApplyAccessorsDetailed(resolved, ast.GetParamRefAccessors(paramRef))
+		if indexed.Type != "comp" || indexed.Raw == "" {
+			continue
+		}
+
+		targetCompDef := findCompDef(root, compCall, indexed.Raw)
+		if targetCompDef == nil || !isBlockComponent(targetCompDef) {
+			continue
+		}
+
+		result[paramRef] = ew.createInlineError(paramRef, "Invalid component usage", "The component **"+indexed.Raw+"** is a block component and cannot be used inline.")
+	}
+
+	return result
+}
+
 func (ew *errorWrapper) getParagraphReplacement(compDef ast.Node, p ast.Node, values map[string]ast.ResolvedValue) ast.Node {
 	pContent := ast.FindNodeByRuleName(p.Children(), "p-content")
 	if pContent == nil {
@@ -244,16 +303,28 @@ func (ew *errorWrapper) getParagraphReplacement(compDef ast.Node, p ast.Node, va
 			continue
 		}
 
-		indexed := ast.ApplyIndexes(resolved, ast.GetParamRefIndexes(child))
-		if len(ast.GetParamRefIndexes(child)) > 0 && indexed.IsZero() {
+		accessors := ast.GetParamRefAccessors(child)
+		indexed, accessErr := ast.ApplyAccessorsDetailed(resolved, accessors)
+		if len(accessors) > 0 && indexed.IsZero() && accessErr.Kind == "array_index_out_of_range" {
 			if hasSoftBreak && isStandaloneParamRefOnLineInParagraph(child, pContent) {
 				return buildParagraphErrorNode(ew.createInlineError(child, "Array index out of range", "The index used for parameter **"+paramName+"** is out of range."))
 			}
 			return cloneParagraphWithReplacement(p, child, ew.createInlineError(child, "Array index out of range", "The index used for parameter **"+paramName+"** is out of range."))
 		}
 
-		if len(ast.GetParamRefIndexes(child)) == 0 && indexed.Type == "array" {
+		if len(accessors) == 0 && indexed.Type == "array" {
 			return cloneParagraphWithReplacement(p, child, ew.createInlineError(child, "Invalid parameter usage", "The parameter **"+paramName+"** is an array and cannot be rendered directly."))
+		}
+
+		if len(accessors) == 0 && indexed.Type == "record" {
+			return cloneParagraphWithReplacement(p, child, ew.createInlineError(child, "Invalid parameter usage", "The parameter **"+paramName+"** is a record and cannot be rendered directly."))
+		}
+
+		if accessErr.Kind == "unknown_record_key" {
+			if hasSoftBreak && isStandaloneParamRefOnLineInParagraph(child, pContent) {
+				return buildParagraphErrorNode(ew.createInlineError(child, "Unknown record key", "The key **"+accessErr.Key+"** is not defined in this record."))
+			}
+			return cloneParagraphWithReplacement(p, child, ew.createInlineError(child, "Unknown record key", "The key **"+accessErr.Key+"** is not defined in this record."))
 		}
 	}
 

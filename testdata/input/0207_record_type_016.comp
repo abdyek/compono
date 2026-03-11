@@ -1,0 +1,5 @@
+{{ COMP record = {} }}
+
+~ COMP record = { title: "Title" }
+No Rendered
+{{ record.title }}

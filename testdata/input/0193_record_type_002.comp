@@ -1,0 +1,4 @@
+{{ COMP bools = { married: false, admin: true } }}
+
+~ COMP bools = {}
+{{ bools.admin }} - {{ bools.married}}

@@ -1,0 +1,5 @@
+{{ COMP arrs = {numbers :[7,8,9], names: ["John", "Jane",]} }}
+
+~ COMP arrs = {}
+{{ arrs.numbers[0] }} - {{ arrs.numbers[1] }} - {{ arrs.numbers[2] }}
+{{ arrs.names[0] }} - {{ arrs.names[1] }}

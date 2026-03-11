@@ -7,6 +7,12 @@ import (
 	"github.com/umono-cms/compono/util"
 )
 
+type ValueAccessor struct {
+	Kind  string
+	Key   string
+	Index int
+}
+
 func IsRuleName(node Node, name string) bool {
 	return node.Rule().Name() == name
 }
@@ -237,57 +243,178 @@ func GetParamDefValFromCompParam(compParam Node) string {
 func GetParamRefName(node Node) string {
 	paramRefName := FindNodeByRuleName(node.Children(), "param-ref-name")
 	if paramRefName == nil {
-		return ""
+		raw := GetParamRefRaw(node)
+		name, _ := GetValuePathFromRaw(raw)
+		return name
 	}
 	return strings.TrimSpace(string(paramRefName.Raw()))
 }
 
 func GetParamRefIndexes(node Node) []int {
-	indexesNode := FindNodeByRuleName(node.Children(), "param-ref-indexes")
-	if indexesNode == nil {
-		return []int{}
-	}
-
 	result := []int{}
-	for _, child := range indexesNode.Children() {
-		raw := strings.Trim(string(child.Raw()), "[]")
-		index, err := strconv.Atoi(raw)
-		if err != nil {
-			continue
+	for _, accessor := range GetParamRefAccessors(node) {
+		if accessor.Kind == "index" {
+			result = append(result, accessor.Index)
 		}
-		result = append(result, index)
 	}
 
 	return result
 }
 
+func GetParamRefAccessors(node Node) []ValueAccessor {
+	raw := GetParamRefRaw(node)
+	_, accessors := GetValuePathFromRaw(raw)
+	return accessors
+}
+
+func GetParamRefRaw(node Node) string {
+	raw := strings.TrimSpace(string(node.Raw()))
+	raw = strings.TrimPrefix(raw, "{{")
+	raw = strings.TrimSuffix(raw, "}}")
+	raw = strings.TrimSpace(raw)
+
+	start := 0
+	if _, ok := scanAccessorBase(raw, start); !ok {
+		return ""
+	}
+
+	end := scanAccessorChain(raw, start)
+	if end <= 0 {
+		return ""
+	}
+
+	return strings.TrimSpace(raw[:end])
+}
+
 func GetIndexesFromRaw(raw string) []int {
 	result := []int{}
-	start := strings.Index(raw, "[")
-	for start != -1 {
-		end := strings.Index(raw[start:], "]")
-		if end == -1 {
-			break
+	_, accessors := GetValuePathFromRaw(raw)
+	for _, accessor := range accessors {
+		if accessor.Kind == "index" {
+			result = append(result, accessor.Index)
 		}
-		index, err := strconv.Atoi(raw[start+1 : start+end])
-		if err == nil {
-			result = append(result, index)
-		}
-		nextStart := strings.Index(raw[start+end+1:], "[")
-		if nextStart == -1 {
-			break
-		}
-		start = start + end + 1 + nextStart
 	}
 	return result
 }
 
 func GetNameFromIndexedRaw(raw string) string {
-	start := strings.Index(raw, "[")
-	if start == -1 {
-		return strings.TrimSpace(raw)
+	name, _ := GetValuePathFromRaw(raw)
+	return name
+}
+
+func GetValuePathFromRaw(raw string) (string, []ValueAccessor) {
+	raw = strings.TrimSpace(raw)
+	start := 0
+
+	end, ok := scanAccessorBase(raw, start)
+	if !ok {
+		return "", nil
 	}
-	return strings.TrimSpace(raw[:start])
+
+	name := strings.TrimSpace(raw[:end])
+	accessors := []ValueAccessor{}
+	offset := end
+
+	for {
+		offset = skipAccessorSpaces(raw, offset)
+		if offset >= len(raw) {
+			break
+		}
+
+		switch raw[offset] {
+		case '.':
+			offset++
+			offset = skipAccessorSpaces(raw, offset)
+			keyEnd, ok := scanAccessorBase(raw, offset)
+			if !ok {
+				return name, accessors
+			}
+			accessors = append(accessors, ValueAccessor{
+				Kind: "key",
+				Key:  strings.TrimSpace(raw[offset:keyEnd]),
+			})
+			offset = keyEnd
+		case '[':
+			indexEnd := strings.Index(raw[offset:], "]")
+			if indexEnd == -1 {
+				return name, accessors
+			}
+			index, err := strconv.Atoi(strings.TrimSpace(raw[offset+1 : offset+indexEnd]))
+			if err != nil {
+				return name, accessors
+			}
+			accessors = append(accessors, ValueAccessor{
+				Kind:  "index",
+				Index: index,
+			})
+			offset = offset + indexEnd + 1
+		default:
+			return name, accessors
+		}
+	}
+
+	return name, accessors
+}
+
+func skipAccessorSpaces(raw string, offset int) int {
+	for offset < len(raw) {
+		if !strings.ContainsRune(" \n\r\t", rune(raw[offset])) {
+			break
+		}
+		offset++
+	}
+	return offset
+}
+
+func scanAccessorBase(raw string, offset int) (int, bool) {
+	if offset >= len(raw) || raw[offset] < 'a' || raw[offset] > 'z' {
+		return 0, false
+	}
+
+	offset++
+	for offset < len(raw) {
+		ch := raw[offset]
+		if (ch >= 'a' && ch <= 'z') || (ch >= '0' && ch <= '9') || ch == '-' {
+			offset++
+			continue
+		}
+		break
+	}
+
+	return offset, true
+}
+
+func scanAccessorChain(raw string, offset int) int {
+	end, ok := scanAccessorBase(raw, offset)
+	if !ok {
+		return 0
+	}
+
+	for {
+		next := skipAccessorSpaces(raw, end)
+		if next >= len(raw) {
+			return end
+		}
+
+		switch raw[next] {
+		case '.':
+			next++
+			next = skipAccessorSpaces(raw, next)
+			keyEnd, ok := scanAccessorBase(raw, next)
+			if !ok {
+				return end
+			}
+			end = keyEnd
+		case '[':
+			closeIdx := strings.Index(raw[next:], "]")
+			if closeIdx == -1 {
+				return end
+			}
+			end = next + closeIdx + 1
+		default:
+			return end
+		}
+	}
 }
 
 func FindCompDef(root Node, compCallNode Node, name string) Node {

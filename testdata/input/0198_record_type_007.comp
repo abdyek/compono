@@ -1,0 +1,8 @@
+{{ COMP mix = {str: "string", num: 456, boo: true, comp: HELLO, arr: ["Yunus Emre"], record: {key: "value"}}}}
+
+~ COMP mix = {}
+{{ mix.comp name = mix.arr[0] }}
+{{ mix.str }} -- {{ mix.num }} -- {{ mix.boo }} -- {{ mix.record.key }}
+
+~ HELLO name = "John"
+# Hello **{{ name }}**!!

@@ -199,7 +199,7 @@ func (p *paramRefInGlobalCompDef) Render() string {
 }
 
 func renderResolvedValue(value ast.ResolvedValue) string {
-	if value.IsZero() || value.Type == "array" {
+	if value.IsZero() || value.Type == "array" || value.Type == "record" {
 		return ""
 	}
 
@@ -208,14 +208,14 @@ func renderResolvedValue(value ast.ResolvedValue) string {
 
 func renderParamRefValue(paramName string, rn renderableNode, r *renderer) string {
 	value := resolveParamRefValue(rn, r, paramName)
-	if value.IsZero() || value.Type == "array" {
+	if value.IsZero() || value.Type == "array" || value.Type == "record" {
 		return ""
 	}
 	return renderResolvedValue(value)
 }
 
 func resolveParamRefValue(rn renderableNode, r *renderer, paramName string) ast.ResolvedValue {
-	indexes := ast.GetParamRefIndexes(rn.Node())
+	accessors := ast.GetParamRefAccessors(rn.Node())
 	invokerAncestors := getAncestorsByInvoker(rn)
 
 	for _, anc := range invokerAncestors {
@@ -230,14 +230,14 @@ func resolveParamRefValue(rn renderableNode, r *renderer, paramName string) ast.
 				return argName != nil && strings.TrimSpace(string(argName.Raw())) == paramName
 			})
 			if compCallArg != nil {
-				return ast.ApplyIndexes(ast.ResolveCompCallArgValue(r.root, compCallArg, invokerAncestors, anc), indexes)
+				return ast.ApplyAccessors(ast.ResolveCompCallArgValue(r.root, compCallArg, invokerAncestors, anc), accessors)
 			}
 		}
 
 		if ast.IsRuleNameOneOf(anc, []string{"block-comp-call", "inline-comp-call"}) {
 			resolved := ast.ResolveParamDefaultFromCompCall(r.root, anc, paramName)
 			if !resolved.IsZero() {
-				return ast.ApplyIndexes(resolved, indexes)
+				return ast.ApplyAccessors(resolved, accessors)
 			}
 		}
 	}
@@ -249,7 +249,7 @@ func resolveParamRefValue(rn renderableNode, r *renderer, paramName string) ast.
 		return ast.ResolvedValue{}
 	}
 
-	return ast.ApplyIndexes(ast.ResolveCompParamDefaultFromCompDef(r.root, compDef, paramName), indexes)
+	return ast.ApplyAccessors(ast.ResolveCompParamDefaultFromCompDef(r.root, compDef, paramName), accessors)
 }
 
 func findCompDefFromCompCall(compCallNode ast.Node, r *renderer) ast.Node {
@@ -423,7 +423,7 @@ func isCompTargetInInvokerChain(r *renderer, rn renderableNode, targetName strin
 		if paramRefName == "" {
 			continue
 		}
-		resolved := ast.ResolveParamFromAncestors(r.root, paramRefName, ast.GetParamRefIndexes(anc), ancestors[i+1:])
+		resolved := ast.ResolveParamFromAncestors(r.root, paramRefName, ast.GetParamRefAccessors(anc), ancestors[i+1:])
 		if resolved.Type == "comp" && resolved.Raw == targetName {
 			return true
 		}
@@ -433,7 +433,7 @@ func isCompTargetInInvokerChain(r *renderer, rn renderableNode, targetName strin
 }
 
 func shouldTreatParamRefAsCompCall(compParam ast.Node, rn renderableNode, r *renderer, paramRefName string) bool {
-	if rn != nil && r != nil && len(ast.GetParamRefIndexes(rn.Node())) > 0 {
+	if rn != nil && r != nil && len(ast.GetParamRefAccessors(rn.Node())) > 0 {
 		return resolveParamRefValue(rn, r, paramRefName).Type == "comp"
 	}
 

@@ -1,7 +1,6 @@
 package rule
 
 import (
-	"regexp"
 	"strings"
 
 	"github.com/umono-cms/compono/selector"
@@ -193,6 +192,7 @@ func (_ *compParamType) Selectors() []selector.Selector {
 
 func (_ *compParamType) Rules() []Rule {
 	return []Rule{
+		newCompRecordParam(),
 		newCompArrayParam(),
 		newCompStringParam(),
 		newCompNumberParam(),
@@ -381,6 +381,123 @@ func (_ *compArrayParamValueType) Selectors() []selector.Selector {
 
 func (_ *compArrayParamValueType) Rules() []Rule {
 	return []Rule{
+		newCompRecordParam(),
+		newCompArrayParam(),
+		newCompStringParam(),
+		newCompNumberParam(),
+		newCompBoolParam(),
+		newCompCompParam(),
+	}
+}
+
+type compRecordParam struct{}
+
+func newCompRecordParam() Rule {
+	return &compRecordParam{}
+}
+
+func (_ *compRecordParam) Name() string {
+	return "comp-record-param"
+}
+
+func (_ *compRecordParam) Selectors() []selector.Selector {
+	return []selector.Selector{
+		selector.NewRecordLiteral(false),
+	}
+}
+
+func (_ *compRecordParam) Rules() []Rule {
+	return []Rule{
+		newCompRecordParamValues(),
+	}
+}
+
+type compRecordParamValues struct{}
+
+func newCompRecordParamValues() Rule {
+	return &compRecordParamValues{}
+}
+
+func (_ *compRecordParamValues) Name() string {
+	return "comp-record-param-values"
+}
+
+func (_ *compRecordParamValues) Selectors() []selector.Selector {
+	return []selector.Selector{
+		selector.NewRecordInner(),
+	}
+}
+
+func (_ *compRecordParamValues) Rules() []Rule {
+	return []Rule{
+		newCompRecordParamValue(),
+	}
+}
+
+type compRecordParamValue struct{}
+
+func newCompRecordParamValue() Rule {
+	return &compRecordParamValue{}
+}
+
+func (_ *compRecordParamValue) Name() string {
+	return "comp-record-param-value"
+}
+
+func (_ *compRecordParamValue) Selectors() []selector.Selector {
+	return []selector.Selector{
+		selector.NewRecordItems(false),
+	}
+}
+
+func (_ *compRecordParamValue) Rules() []Rule {
+	return []Rule{
+		newCompRecordParamKey(),
+		newCompRecordParamValueType(),
+	}
+}
+
+type compRecordParamKey struct{}
+
+func newCompRecordParamKey() Rule {
+	return &compRecordParamKey{}
+}
+
+func (_ *compRecordParamKey) Name() string {
+	return "comp-record-param-key"
+}
+
+func (_ *compRecordParamKey) Selectors() []selector.Selector {
+	seli, _ := selector.NewStartEndLeftInner(`^\s*([a-z][a-z0-9-]*)\s*`, `:`)
+	return []selector.Selector{
+		seli,
+	}
+}
+
+func (_ *compRecordParamKey) Rules() []Rule {
+	return []Rule{}
+}
+
+type compRecordParamValueType struct{}
+
+func newCompRecordParamValueType() Rule {
+	return &compRecordParamValueType{}
+}
+
+func (_ *compRecordParamValueType) Name() string {
+	return "comp-record-param-value-type"
+}
+
+func (_ *compRecordParamValueType) Selectors() []selector.Selector {
+	sei := selector.NewStartEndInner(`:[\s\n\r]*`, `\z`)
+	return []selector.Selector{
+		sei,
+	}
+}
+
+func (_ *compRecordParamValueType) Rules() []Rule {
+	return []Rule{
+		newCompRecordParam(),
 		newCompArrayParam(),
 		newCompStringParam(),
 		newCompNumberParam(),
@@ -454,9 +571,8 @@ func (_ *paramRef) Name() string {
 }
 
 func (_ *paramRef) Selectors() []selector.Selector {
-	se, _ := selector.NewStartEnd(`\{\{\s*[a-z][a-z0-9-]*`, `\s*\}\}`)
 	return []selector.Selector{
-		se,
+		selector.NewMustacheCall(true),
 	}
 }
 
@@ -480,7 +596,7 @@ func (_ *paramRefName) Name() string {
 }
 
 func (_ *paramRefName) Selectors() []selector.Selector {
-	sei := selector.NewStartEndInner(`\{\{\s*`, `\[|\s+|\s*\}\}`)
+	sei := selector.NewStartEndInner(`\{\{\s*`, `\.|\[|\s+|\s*\}\}`)
 	return []selector.Selector{
 		sei,
 	}
@@ -550,9 +666,8 @@ func (_ *blockCompCall) Name() string {
 }
 
 func (_ *blockCompCall) Selectors() []selector.Selector {
-	se, _ := selector.NewStartEnd(`\{\{\s*[A-Z0-9]+(?:_[A-Z0-9]+)*`, `\s*\}\}`)
 	return []selector.Selector{
-		selector.NewFilter(se, func(source []byte, index [][2]int) [][2]int {
+		selector.NewFilter(selector.NewMustacheCall(false), func(source []byte, index [][2]int) [][2]int {
 			if len(index) == 0 {
 				return [][2]int{}
 			}
@@ -578,14 +693,7 @@ func (_ *blockCompCall) Selectors() []selector.Selector {
 					}
 				}
 
-				insideOK := true
-				re := regexp.MustCompile(`}}`)
-				closingInd := re.FindAllStringIndex(string(source[ind[0]:ind[1]]), -1)
-				if len(closingInd) > 1 {
-					insideOK = false
-				}
-
-				if leftOK && rightOK && insideOK {
+				if leftOK && rightOK {
 					filtered = append(filtered, ind)
 				}
 			}
@@ -623,9 +731,8 @@ func (_ *compCall) Name() string {
 }
 
 func (_ *compCall) Selectors() []selector.Selector {
-	seSelector, _ := selector.NewStartEnd(`\{\{\s*[A-Z0-9]+(?:_[A-Z0-9]+)*`, `\s*\}\}`)
 	return []selector.Selector{
-		seSelector,
+		selector.NewMustacheCall(false),
 	}
 }
 
@@ -772,6 +879,7 @@ func (_ *compCallArgType) Selectors() []selector.Selector {
 
 func (_ *compCallArgType) Rules() []Rule {
 	return []Rule{
+		newCompCallRecordArg(),
 		newCompCallArrayArg(),
 		newCompCallStringArg(),
 		newCompCallNumberArg(),
@@ -864,7 +972,7 @@ func (_ *compCallParamArg) Name() string {
 }
 
 func (_ *compCallParamArg) Selectors() []selector.Selector {
-	p, _ := selector.NewPattern(`^\s*[a-z][a-z0-9-]*(?:\[\d+\])*\s*$`)
+	p, _ := selector.NewPattern(`^\s*[a-z][a-z0-9-]*(?:\s*(?:\.\s*[a-z][a-z0-9-]*|\[\d+\]))*\s*$`)
 	return []selector.Selector{
 		selector.NewFilter(p, func(source []byte, index [][2]int) [][2]int {
 			if len(index) == 0 {
@@ -975,6 +1083,124 @@ func (_ *compCallArrayArgValueType) Selectors() []selector.Selector {
 
 func (_ *compCallArrayArgValueType) Rules() []Rule {
 	return []Rule{
+		newCompCallRecordArg(),
+		newCompCallArrayArg(),
+		newCompCallStringArg(),
+		newCompCallNumberArg(),
+		newCompCallBoolArg(),
+		newCompCallParamArg(),
+		newCompCallCompArg(),
+	}
+}
+
+type compCallRecordArg struct{}
+
+func newCompCallRecordArg() Rule {
+	return &compCallRecordArg{}
+}
+
+func (_ *compCallRecordArg) Name() string {
+	return "comp-call-record-arg"
+}
+
+func (_ *compCallRecordArg) Selectors() []selector.Selector {
+	return []selector.Selector{
+		selector.NewRecordLiteral(true),
+	}
+}
+
+func (_ *compCallRecordArg) Rules() []Rule {
+	return []Rule{
+		newCompCallRecordArgValues(),
+	}
+}
+
+type compCallRecordArgValues struct{}
+
+func newCompCallRecordArgValues() Rule {
+	return &compCallRecordArgValues{}
+}
+
+func (_ *compCallRecordArgValues) Name() string {
+	return "comp-call-record-arg-values"
+}
+
+func (_ *compCallRecordArgValues) Selectors() []selector.Selector {
+	return []selector.Selector{
+		selector.NewRecordInner(),
+	}
+}
+
+func (_ *compCallRecordArgValues) Rules() []Rule {
+	return []Rule{
+		newCompCallRecordArgValue(),
+	}
+}
+
+type compCallRecordArgValue struct{}
+
+func newCompCallRecordArgValue() Rule {
+	return &compCallRecordArgValue{}
+}
+
+func (_ *compCallRecordArgValue) Name() string {
+	return "comp-call-record-arg-value"
+}
+
+func (_ *compCallRecordArgValue) Selectors() []selector.Selector {
+	return []selector.Selector{
+		selector.NewRecordItems(true),
+	}
+}
+
+func (_ *compCallRecordArgValue) Rules() []Rule {
+	return []Rule{
+		newCompCallRecordArgKey(),
+		newCompCallRecordArgValueType(),
+	}
+}
+
+type compCallRecordArgKey struct{}
+
+func newCompCallRecordArgKey() Rule {
+	return &compCallRecordArgKey{}
+}
+
+func (_ *compCallRecordArgKey) Name() string {
+	return "comp-call-record-arg-key"
+}
+
+func (_ *compCallRecordArgKey) Selectors() []selector.Selector {
+	seli, _ := selector.NewStartEndLeftInner(`^\s*([a-z][a-z0-9-]*)\s*`, `:`)
+	return []selector.Selector{
+		seli,
+	}
+}
+
+func (_ *compCallRecordArgKey) Rules() []Rule {
+	return []Rule{}
+}
+
+type compCallRecordArgValueType struct{}
+
+func newCompCallRecordArgValueType() Rule {
+	return &compCallRecordArgValueType{}
+}
+
+func (_ *compCallRecordArgValueType) Name() string {
+	return "comp-call-record-arg-value-type"
+}
+
+func (_ *compCallRecordArgValueType) Selectors() []selector.Selector {
+	sei := selector.NewStartEndInner(`:[\s\n\r]*`, `\z`)
+	return []selector.Selector{
+		sei,
+	}
+}
+
+func (_ *compCallRecordArgValueType) Rules() []Rule {
+	return []Rule{
+		newCompCallRecordArg(),
 		newCompCallArrayArg(),
 		newCompCallStringArg(),
 		newCompCallNumberArg(),
@@ -1103,7 +1329,7 @@ func (_ *globalCompDefHead) Name() string {
 }
 
 func (_ *globalCompDefHead) Selectors() []selector.Selector {
-	p, _ := selector.NewStartEnd(`^([a-z][a-z0-9-]*)[ \t\r\n]*=[ \t\r\n]*(".*?"|\d+(?:\.\d+)?|true|false|\[|[A-Z0-9]+(?:_[A-Z0-9]+)*)`, `\n|\z`)
+	p, _ := selector.NewStartEnd(`^([a-z][a-z0-9-]*)[ \t\r\n]*=[ \t\r\n]*(".*?"|\d+(?:\.\d+)?|true|false|\[|\{|[A-Z0-9]+(?:_[A-Z0-9]+)*)`, `\n|\z`)
 	return []selector.Selector{
 		p,
 	}

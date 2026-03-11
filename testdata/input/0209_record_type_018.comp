@@ -1,0 +1,11 @@
+{{ COMP inline-comps = { title: TITLE, content : CONTENT } }}
+
+~ COMP inline-comps = {}
+# {{ inline-comps.title }}
+*{{ inline-comps.content }}*
+
+~ TITLE
+# Title
+
+~ CONTENT
+content
