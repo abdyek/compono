@@ -6,6 +6,47 @@ type componentAssignments struct {
 	requireValue bool
 }
 
+type mustacheCall struct {
+	paramRefName bool
+}
+
+func NewMustacheCall(paramRefName bool) Selector {
+	return &mustacheCall{
+		paramRefName: paramRefName,
+	}
+}
+
+func (_ *mustacheCall) Name() string {
+	return "mustache_call"
+}
+
+func (mc *mustacheCall) Select(source []byte, without ...[2]int) [][2]int {
+	results := [][2]int{}
+	noSelected := filterNoSelected(without, len(source))
+
+	for _, ns := range noSelected {
+		offset := ns[0]
+		for offset < ns[1] {
+			start := bytes.Index(source[offset:ns[1]], []byte("{{"))
+			if start == -1 {
+				break
+			}
+			start += offset
+
+			end, ok := scanMustacheCall(source, start, mc.paramRefName)
+			if ok && end <= ns[1] {
+				results = append(results, [2]int{start, end})
+				offset = end
+				continue
+			}
+
+			offset = start + 2
+		}
+	}
+
+	return results
+}
+
 func NewComponentAssignments(requireValue bool) Selector {
 	return &componentAssignments{
 		requireValue: requireValue,
@@ -109,6 +150,50 @@ func (ai *arrayItems) Select(source []byte, without ...[2]int) [][2]int {
 	return results
 }
 
+type recordItems struct {
+	allowParamRef bool
+}
+
+func NewRecordItems(allowParamRef bool) Selector {
+	return &recordItems{
+		allowParamRef: allowParamRef,
+	}
+}
+
+func (_ *recordItems) Name() string {
+	return "record_items"
+}
+
+func (ri *recordItems) Select(source []byte, without ...[2]int) [][2]int {
+	results := [][2]int{}
+	offset := 0
+
+	for {
+		offset = skipComponentSpaces(source, offset)
+		if offset >= len(source) {
+			break
+		}
+
+		start := offset
+		valueEnd, ok := scanRecordEntry(source, offset, ri.allowParamRef)
+		if !ok {
+			break
+		}
+		results = append(results, [2]int{start, valueEnd})
+
+		offset = skipComponentSpaces(source, valueEnd)
+		if offset >= len(source) {
+			break
+		}
+		if source[offset] != ',' {
+			break
+		}
+		offset++
+	}
+
+	return results
+}
+
 type arrayLiteral struct {
 	allowParamRef bool
 }
@@ -130,6 +215,38 @@ func (al *arrayLiteral) Select(source []byte, without ...[2]int) [][2]int {
 	}
 
 	end, ok := scanArrayLiteral(source, start, al.allowParamRef)
+	if !ok {
+		return [][2]int{}
+	}
+
+	if skipComponentSpaces(source, end) != len(source) {
+		return [][2]int{}
+	}
+
+	return [][2]int{{start, end}}
+}
+
+type recordLiteral struct {
+	allowParamRef bool
+}
+
+func NewRecordLiteral(allowParamRef bool) Selector {
+	return &recordLiteral{
+		allowParamRef: allowParamRef,
+	}
+}
+
+func (_ *recordLiteral) Name() string {
+	return "record_literal"
+}
+
+func (rl *recordLiteral) Select(source []byte, without ...[2]int) [][2]int {
+	start := skipComponentSpaces(source, 0)
+	if start >= len(source) || source[start] != '{' {
+		return [][2]int{}
+	}
+
+	end, ok := scanRecordLiteral(source, start, rl.allowParamRef)
 	if !ok {
 		return [][2]int{}
 	}
@@ -208,6 +325,33 @@ func (_ *arrayInner) Select(source []byte, without ...[2]int) [][2]int {
 	return [][2]int{{start + 1, end}}
 }
 
+type recordInner struct{}
+
+func NewRecordInner() Selector {
+	return &recordInner{}
+}
+
+func (_ *recordInner) Name() string {
+	return "record_inner"
+}
+
+func (_ *recordInner) Select(source []byte, without ...[2]int) [][2]int {
+	start := skipComponentSpaces(source, 0)
+	if start >= len(source) || source[start] != '{' {
+		return [][2]int{}
+	}
+
+	end := len(source) - 1
+	for end >= 0 && bytes.ContainsRune([]byte{' ', '\n', '\r', '\t'}, rune(source[end])) {
+		end--
+	}
+	if end <= start || source[end] != '}' {
+		return [][2]int{}
+	}
+
+	return [][2]int{{start + 1, end}}
+}
+
 func skipComponentSpaces(source []byte, offset int) int {
 	for offset < len(source) {
 		if !bytes.ContainsRune([]byte{' ', '\n', '\r', '\t'}, rune(source[offset])) {
@@ -246,6 +390,8 @@ func scanComponentValue(source []byte, offset int, allowParamRef bool) (int, boo
 		return scanQuotedString(source, offset)
 	case source[offset] == '[':
 		return scanArrayLiteral(source, offset, allowParamRef)
+	case source[offset] == '{':
+		return scanRecordLiteral(source, offset, allowParamRef)
 	case source[offset] >= '0' && source[offset] <= '9':
 		return scanNumberLiteral(source, offset)
 	case hasComponentKeywordAt(source, offset, "true"):
@@ -258,6 +404,55 @@ func scanComponentValue(source []byte, offset int, allowParamRef bool) (int, boo
 		return scanParamReferenceValue(source, offset)
 	default:
 		return 0, false
+	}
+}
+
+func scanMustacheCall(source []byte, offset int, paramRefName bool) (int, bool) {
+	if offset+1 >= len(source) || source[offset] != '{' || source[offset+1] != '{' {
+		return 0, false
+	}
+
+	offset += 2
+	offset = skipComponentSpaces(source, offset)
+
+	var end int
+	var ok bool
+	if paramRefName {
+		end, ok = scanParamReferenceValue(source, offset)
+	} else {
+		end, ok = scanComponentName(source, offset)
+	}
+	if !ok {
+		return 0, false
+	}
+	offset = end
+
+	for {
+		offset = skipComponentSpaces(source, offset)
+		if offset >= len(source) {
+			return 0, false
+		}
+
+		if offset+1 < len(source) && source[offset] == '}' && source[offset+1] == '}' {
+			return offset + 2, true
+		}
+
+		nameEnd, ok := scanComponentParamName(source, offset)
+		if !ok {
+			return 0, false
+		}
+		offset = skipComponentSpaces(source, nameEnd)
+		if offset >= len(source) || source[offset] != '=' {
+			return 0, false
+		}
+
+		offset++
+		offset = skipComponentSpaces(source, offset)
+		valueEnd, ok := scanComponentValue(source, offset, true)
+		if !ok {
+			return 0, false
+		}
+		offset = valueEnd
 	}
 }
 
@@ -314,14 +509,24 @@ func scanParamReferenceValue(source []byte, offset int) (int, bool) {
 	}
 
 	for {
-		next, ok := scanArrayIndex(source, end)
-		if !ok {
-			break
+		next := skipComponentSpaces(source, end)
+		switch {
+		case next < len(source) && source[next] == '.':
+			next++
+			next = skipComponentSpaces(source, next)
+			keyEnd, ok := scanComponentParamName(source, next)
+			if !ok {
+				return 0, false
+			}
+			end = keyEnd
+		default:
+			indexEnd, ok := scanArrayIndex(source, next)
+			if !ok {
+				return end, true
+			}
+			end = indexEnd
 		}
-		end = next
 	}
-
-	return end, true
 }
 
 func scanArrayLiteral(source []byte, offset int, allowParamRef bool) (int, bool) {
@@ -355,6 +560,56 @@ func scanArrayLiteral(source []byte, offset int, allowParamRef bool) (int, bool)
 		}
 		offset++
 	}
+}
+
+func scanRecordLiteral(source []byte, offset int, allowParamRef bool) (int, bool) {
+	if source[offset] != '{' {
+		return 0, false
+	}
+
+	offset++
+	for {
+		offset = skipComponentSpaces(source, offset)
+		if offset >= len(source) {
+			return 0, false
+		}
+		if source[offset] == '}' {
+			return offset + 1, true
+		}
+
+		entryEnd, ok := scanRecordEntry(source, offset, allowParamRef)
+		if !ok {
+			return 0, false
+		}
+
+		offset = skipComponentSpaces(source, entryEnd)
+		if offset >= len(source) {
+			return 0, false
+		}
+		if source[offset] == '}' {
+			return offset + 1, true
+		}
+		if source[offset] != ',' {
+			return 0, false
+		}
+		offset++
+	}
+}
+
+func scanRecordEntry(source []byte, offset int, allowParamRef bool) (int, bool) {
+	keyEnd, ok := scanComponentParamName(source, offset)
+	if !ok {
+		return 0, false
+	}
+
+	offset = skipComponentSpaces(source, keyEnd)
+	if offset >= len(source) || source[offset] != ':' {
+		return 0, false
+	}
+
+	offset++
+	offset = skipComponentSpaces(source, offset)
+	return scanComponentValue(source, offset, allowParamRef)
 }
 
 func scanArrayIndex(source []byte, offset int) (int, bool) {

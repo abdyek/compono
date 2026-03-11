@@ -946,6 +946,17 @@ func getResolvedInlineBlockCompName(ctx *wrapContext, compCall ast.Node) string 
 	})
 
 	for _, ipc := range inlineParamCalls {
+		hasKeyAccessor := false
+		for _, accessor := range ast.GetParamRefAccessors(ipc) {
+			if accessor.Kind == "key" {
+				hasKeyAccessor = true
+				break
+			}
+		}
+		if hasKeyAccessor {
+			continue
+		}
+
 		ipcName := getParamRefNameStr(ipc)
 		if ipcName == "" {
 			continue
@@ -1005,18 +1016,18 @@ func resolveInlineParamRefValue(
 		return ast.ResolvedValue{}, false
 	}
 
-	indexes := ast.GetParamRefIndexes(paramRef)
-	if len(indexes) > 0 {
+	accessors := ast.GetParamRefAccessors(paramRef)
+	if len(accessors) > 0 {
 		if explicitArg := ast.GetCompCallArgByParamName(ast.GetCompCallArgsFromCompCall(compCall), paramName); explicitArg != nil {
-			return ast.ApplyIndexes(
+			return ast.ApplyAccessors(
 				ast.ResolveCompCallArgValue(ctx.root, explicitArg, ast.GetAncestors(compCall), compCall),
-				indexes,
+				accessors,
 			), true
 		}
 
-		return ast.ApplyIndexes(
+		return ast.ApplyAccessors(
 			ast.ResolveParamDefaultFromCompCall(ctx.root, compCall, paramName),
-			indexes,
+			accessors,
 		), true
 	}
 
@@ -1034,7 +1045,7 @@ func resolveInlineParamRefValue(
 
 func isNotCompParamCompCall() func(*wrapContext, ast.Node) bool {
 	return func(_ *wrapContext, node ast.Node) bool {
-		if len(ast.GetParamRefIndexes(node)) > 0 {
+		if len(ast.GetParamRefAccessors(node)) > 0 {
 			return false
 		}
 
@@ -1306,23 +1317,22 @@ func getResolvedArgTypeForNestedParamCompCall(ctx *wrapContext, compCall ast.Nod
 	}
 
 	raw := ast.GetArgValueFromCompCallArg(arg)
-	paramName := ast.GetNameFromIndexedRaw(raw)
-	indexes := ast.GetIndexesFromRaw(raw)
+	paramName, accessors := ast.GetValuePathFromRaw(raw)
 	if paramName == "" {
 		return ""
 	}
 
 	explicitArg := ast.GetCompCallArgByParamName(ast.GetCompCallArgsFromCompCall(compCall), paramName)
 	if explicitArg != nil {
-		return ast.ApplyIndexes(
+		return ast.ApplyAccessors(
 			ast.ResolveCompCallArgValue(ctx.root, explicitArg, ast.GetAncestors(compCall), compCall),
-			indexes,
+			accessors,
 		).Type
 	}
 
-	return ast.ApplyIndexes(
+	return ast.ApplyAccessors(
 		ast.ResolveParamDefaultFromCompCall(ctx.root, compCall, paramName),
-		indexes,
+		accessors,
 	).Type
 }
 
@@ -1501,11 +1511,7 @@ func getCompCallNameStr(node ast.Node) string {
 }
 
 func getParamRefNameStr(node ast.Node) string {
-	refNameNode := ast.FindNodeByRuleName(node.Children(), "param-ref-name")
-	if refNameNode != nil {
-		return strings.TrimSpace(string(refNameNode.Raw()))
-	}
-	return ""
+	return ast.GetParamRefName(node)
 }
 
 func getParamCompCallNameStr(node ast.Node) string {
