@@ -1,0 +1,41 @@
+{{ WRAPPER record = {
+  str : "Jane",
+  num : 22,
+  boo : true,
+  comp : SAY_HELLO,
+  arr : [7,8,9],
+  ite : { key-1: 5, key-2: true, }
+} }}
+
+~ WRAPPER record = {}
+{{ COMP_1 string = record.str }}
+{{ COMP_2 number = record.num }}
+{{ COMP_3 bool = record.boo }}
+{{ COMP_4 comp = record.comp }}
+{{ COMP_5 array = record.arr }}
+{{ COMP_6 items = record.ite }}
+{{ COMP_7 record = record }}
+
+~ COMP_1 string = ""
+# {{ string }}
+
+~ COMP_2 number = 0
+*{{number}}*
+
+~ COMP_3 bool = false
+**{{ bool }}**
+
+~ COMP_4 comp = NO_MATTER
+{{ comp }}
+
+~ COMP_5 array = []
+{{ array[0] }} - {{ array[1] }} - {{ array[2] }}
+
+~ COMP_6 items = {}
+{{ items.key-1 }} -- {{ items.key-2 }}
+
+~ COMP_7 record = {}
+{{ record.str }} - {{ record.boo }}
+
+~ SAY_HELLO
+# Hello

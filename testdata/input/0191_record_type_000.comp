@@ -1,0 +1,5 @@
+{{ COMP record = { title: "Hello", content: "Here Content" } }}
+
+~ COMP record = {}
+# {{ record.title }}
+{{ record.content }}

@@ -1,0 +1,4 @@
+{{ COMP data = { name : "John", content : "content",} }}
+
+~ COMP data = {}
+{{ data.name }} -- {{ data.content }}

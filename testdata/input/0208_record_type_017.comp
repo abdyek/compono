@@ -1,0 +1,4 @@
+{{ COMP config = "string" }}
+{{ COMP config = true }}
+~ COMP config = {}
+{{ config.title }}

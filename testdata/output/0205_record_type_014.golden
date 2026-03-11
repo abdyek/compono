@@ -1,0 +1,1 @@
+<p>Rendered<br><compono-error-inline><span slot="title">Invalid parameter usage</span><span slot="description">The parameter <strong>record</strong> is a record and cannot be rendered directly.</span></compono-error-inline></p>

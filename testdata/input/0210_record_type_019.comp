@@ -1,0 +1,9 @@
+{{ WRAPPER rec = {key: "string"} }}
+
+~ WRAPPER rec = {}
+No Rendered
+{{ COMP num = rec.key }}
+
+~ COMP num = 0
+No Rendered
+{{ num }}

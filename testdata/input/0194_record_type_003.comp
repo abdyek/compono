@@ -1,0 +1,15 @@
+{{ COMP main-comps = { header: HEADER, content: CONTENT, footer: FOOTER }}}
+
+~ COMP main-comps = {}
+{{ main-comps.header }}
+{{ main-comps.content }}
+{{ main-comps.footer }}
+
+~ HEADER
+header
+
+~ CONTENT
+content
+
+~ FOOTER
+footer

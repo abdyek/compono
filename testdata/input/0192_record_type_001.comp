@@ -1,0 +1,4 @@
+{{ COMP numbers = { age : 31, height: 180 } }}
+
+~ COMP numbers = {}
+{{ numbers.age }} - {{ numbers.height }}
