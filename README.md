@@ -181,6 +181,7 @@ Supported parameter types:
 - **Bool** → `active = true`
 - **Component** → `comp = COMP`
 - **Array** → `items = ["Jane", 22, true, COMP]`
+- **Record** → `config = { lang: "tr", for-admin: true }`
 
 ---
 
@@ -293,6 +294,26 @@ Arrays can be nested.
 ~ TABLE data = []
 {{ data[0][0] }} - {{ data[0][1] }}
 {{ data[1][0] }} - {{ data[1][1] }}
+```
+
+---
+
+### Record Parameters
+Pass data as key - value
+
+```
+{{ COMP record = { title: "Hello", content: "Here Content" } }}
+
+~ COMP record = {}
+# {{ record.title }}
+{{ record.content }}
+```
+Records can be nested
+```
+{{ COMP nested = {record: {key-1: "string", key-2: 123}, empty-record: {} } }}
+
+~ COMP nested = {}
+{{ nested.record.key-1 }} - {{ nested.record.key-2 }}
 ```
 
 ---
