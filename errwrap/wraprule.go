@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"github.com/umono-cms/compono/ast"
+	"github.com/umono-cms/compono/builtin"
 	"github.com/umono-cms/compono/util"
 )
 
@@ -41,11 +42,25 @@ func wrapRules() []wrapRule {
 		blockCompInsideInline(),
 		blockParamCompInsideInline(),
 		undefinedParam(),
+		invalidBuiltinCompCallSchema(),
 		wrongArgType(),
 		paramRefInRootContent(),
 		undefinedParamRef(),
 		notCompParamCompCall(),
 		undefinedParamCompCall(),
+	}
+}
+
+func invalidBuiltinCompCallSchema() wrapRule {
+	return wrapRule{
+		conditions: []func(*wrapContext, ast.Node) bool{
+			isRuleNameOneOf("block-comp-call", "inline-comp-call"),
+			isKnownComponent(),
+			hasBuiltinSchemaMismatches(),
+		},
+		title:   staticTitle("Invalid built-in arguments"),
+		message: invalidBuiltinCompCallSchemaMsg,
+		block:   blockFromRuleName,
 	}
 }
 
@@ -377,6 +392,23 @@ func wrongArgTypeMsg(ctx *wrapContext, node ast.Node) string {
 	}
 
 	return "The parameters **" + strings.Join(wrongTypeArgNames, "**, **") + "** have the wrong type."
+}
+
+func invalidBuiltinCompCallSchemaMsg(ctx *wrapContext, node ast.Node) string {
+	mismatchedArgNames := getBuiltinSchemaMismatchArgNames(ctx, node)
+	compName := getBuiltinSchemaMismatchTargetName(ctx, node)
+	if compName == "" {
+		compName = getCompCallNameStr(node)
+	}
+	if len(mismatchedArgNames) == 0 {
+		return "One or more arguments do not match the schema of the built-in component **" + compName + "**."
+	}
+
+	if len(mismatchedArgNames) == 1 {
+		return "The parameter **" + mismatchedArgNames[0] + "** does not match the schema of the built-in component **" + compName + "**."
+	}
+
+	return "The parameters **" + strings.Join(mismatchedArgNames, "**, **") + "** do not match the schema of the built-in component **" + compName + "**."
 }
 
 func paramRefInRootMsg(_ *wrapContext, _ ast.Node) string {
@@ -1113,6 +1145,118 @@ func hasWrongTypeArgs() func(*wrapContext, ast.Node) bool {
 	}
 }
 
+func hasBuiltinSchemaMismatches() func(*wrapContext, ast.Node) bool {
+	return func(ctx *wrapContext, compCall ast.Node) bool {
+		return len(getBuiltinSchemaMismatchArgNames(ctx, compCall)) > 0
+	}
+}
+
+func getBuiltinSchemaMismatchArgNames(ctx *wrapContext, compCall ast.Node) []string {
+	result := getBuiltinSchemaMismatchArgNamesForCompCall(ctx, compCall, compCall)
+	result = appendUniqueStrings(result, getBuiltinSchemaMismatchArgNamesFromResolvedParamCompCalls(ctx, compCall)...)
+	result = appendUniqueStrings(result, getBuiltinSchemaMismatchArgNamesFromNestedCompCalls(ctx, compCall)...)
+	return result
+}
+
+func getBuiltinSchemaMismatchTargetName(ctx *wrapContext, compCall ast.Node) string {
+	if len(getBuiltinSchemaMismatchArgNamesForCompCall(ctx, compCall, compCall)) > 0 {
+		return getCompCallNameStr(compCall)
+	}
+
+	compCallName := getCompCallNameStr(compCall)
+	if compCallName == "" {
+		return ""
+	}
+
+	compDef := findCompDef(ctx.root, compCall, compCallName)
+	if compDef == nil {
+		return ""
+	}
+
+	compDefContent := getCompDefContent(compDef)
+	if compDefContent == nil {
+		return ""
+	}
+
+	resolvedCompArgs := resolveCompArgValues(ctx, compCall)
+	if len(resolvedCompArgs) > 0 {
+		paramCompCalls := ast.FilterNodesInTree(compDefContent, func(node ast.Node) bool {
+			return isCompParamRefInCompDef(compDef, node) && hasCompCallArgsNode(node)
+		})
+
+		for _, paramCompCall := range paramCompCalls {
+			targetCompName, targetCompDef := resolveParamCompCallTarget(ctx, compCall, paramCompCall, resolvedCompArgs)
+			if targetCompName == "" || targetCompDef == nil || !ast.IsRuleName(targetCompDef, "builtin-comp") {
+				continue
+			}
+			if len(getBuiltinSchemaMismatchArgNamesForCompCall(ctx, compCall, paramCompCall)) > 0 {
+				return targetCompName
+			}
+		}
+	}
+
+	nestedCompCalls := ast.FilterNodesInTree(compDefContent, func(node ast.Node) bool {
+		return ast.IsRuleNameOneOf(node, []string{"block-comp-call", "inline-comp-call"})
+	})
+
+	for _, nestedCompCall := range nestedCompCalls {
+		nestedName := getCompCallNameStr(nestedCompCall)
+		nestedDef := findCompDef(ctx.root, nestedCompCall, nestedName)
+		if nestedName == "" || nestedDef == nil || !ast.IsRuleName(nestedDef, "builtin-comp") {
+			continue
+		}
+		if len(getBuiltinSchemaMismatchArgNamesForCompCall(ctx, compCall, nestedCompCall)) > 0 {
+			return nestedName
+		}
+	}
+
+	return ""
+}
+
+func getBuiltinSchemaMismatchArgNamesForCompCall(ctx *wrapContext, ownerCompCall ast.Node, targetCompCall ast.Node) []string {
+	compName := getCompCallNameStr(targetCompCall)
+	if compName == "" {
+		return nil
+	}
+
+	compDef := findCompDef(ctx.root, targetCompCall, compName)
+	if compDef == nil || !ast.IsRuleName(compDef, "builtin-comp") {
+		return nil
+	}
+
+	definition, ok := builtin.FindDefinition(compName)
+	if !ok {
+		return nil
+	}
+
+	paramSchemaByName := make(map[string]builtin.ValueSchema, len(definition.Params))
+	for _, param := range definition.Params {
+		paramSchemaByName[param.Name] = param.Schema
+	}
+
+	mismatches := []string{}
+	for _, arg := range ast.GetCompCallArgsFromCompCall(targetCompCall) {
+		if !ast.IsRuleName(arg, "comp-call-arg") {
+			continue
+		}
+
+		argName := ast.GetArgNameFromCompCallArg(arg)
+		schema, ok := paramSchemaByName[argName]
+		if !ok {
+			continue
+		}
+
+		resolved := ast.ResolveCompCallArgValue(ctx.root, arg, ast.GetAncestors(ownerCompCall), ownerCompCall)
+		if resolved.IsZero() || builtin.MatchesResolvedValue(schema, resolved) {
+			continue
+		}
+
+		mismatches = appendUniqueStrings(mismatches, argName)
+	}
+
+	return mismatches
+}
+
 func getWrongTypeArgNames(ctx *wrapContext, compCall ast.Node) []string {
 	compCallName := getCompCallNameStr(compCall)
 	if compCallName == "" {
@@ -1197,6 +1341,34 @@ func getWrongTypeArgNamesFromNestedCompCalls(ctx *wrapContext, compCall ast.Node
 
 			result = appendUniqueStrings(result, argName)
 		}
+	}
+
+	return result
+}
+
+func getBuiltinSchemaMismatchArgNamesFromNestedCompCalls(ctx *wrapContext, compCall ast.Node) []string {
+	compCallName := getCompCallNameStr(compCall)
+	if compCallName == "" {
+		return nil
+	}
+
+	compDef := findCompDef(ctx.root, compCall, compCallName)
+	if compDef == nil {
+		return nil
+	}
+
+	compDefContent := getCompDefContent(compDef)
+	if compDefContent == nil {
+		return nil
+	}
+
+	nestedCompCalls := ast.FilterNodesInTree(compDefContent, func(node ast.Node) bool {
+		return ast.IsRuleNameOneOf(node, []string{"block-comp-call", "inline-comp-call"})
+	})
+
+	result := []string{}
+	for _, nestedCompCall := range nestedCompCalls {
+		result = appendUniqueStrings(result, getBuiltinSchemaMismatchArgNamesForCompCall(ctx, compCall, nestedCompCall)...)
 	}
 
 	return result
@@ -1305,6 +1477,44 @@ func getWrongTypeArgNamesFromResolvedParamCompCalls(ctx *wrapContext, compCall a
 
 			result = appendUniqueStrings(result, argName)
 		}
+	}
+
+	return result
+}
+
+func getBuiltinSchemaMismatchArgNamesFromResolvedParamCompCalls(ctx *wrapContext, compCall ast.Node) []string {
+	compCallName := getCompCallNameStr(compCall)
+	if compCallName == "" {
+		return nil
+	}
+
+	compDef := findCompDef(ctx.root, compCall, compCallName)
+	if compDef == nil {
+		return nil
+	}
+
+	compDefContent := getCompDefContent(compDef)
+	if compDefContent == nil {
+		return nil
+	}
+
+	resolvedCompArgs := resolveCompArgValues(ctx, compCall)
+	if len(resolvedCompArgs) == 0 {
+		return nil
+	}
+
+	paramCompCalls := ast.FilterNodesInTree(compDefContent, func(node ast.Node) bool {
+		return isCompParamRefInCompDef(compDef, node) && hasCompCallArgsNode(node)
+	})
+
+	result := []string{}
+	for _, paramCompCall := range paramCompCalls {
+		targetCompName, targetCompDef := resolveParamCompCallTarget(ctx, compCall, paramCompCall, resolvedCompArgs)
+		if targetCompName == "" || targetCompDef == nil || !ast.IsRuleName(targetCompDef, "builtin-comp") {
+			continue
+		}
+
+		result = appendUniqueStrings(result, getBuiltinSchemaMismatchArgNamesForCompCall(ctx, compCall, paramCompCall)...)
 	}
 
 	return result
