@@ -1,44 +1,23 @@
 package builtin
 
-type ParamType int
-
-const (
-	StringType ParamType = iota + 1
-	NumberType
-	BoolType
-	ComponentType
-)
-
-type Component struct {
-	Name             string
-	Params           []Param
-	InlineRenderable bool
-}
-
-type Param struct {
-	Name         string
-	Type         ParamType
-	DefaultValue any
-}
-
-func BuiltinComponents() []Component {
-	return []Component{
+func BuiltinComponents() []Definition {
+	return []Definition{
 		{
 			Name: "LINK",
 			Params: []Param{
 				{
 					Name:         "text",
-					Type:         StringType,
+					Schema:       String(),
 					DefaultValue: "",
 				},
 				{
 					Name:         "url",
-					Type:         StringType,
+					Schema:       String(),
 					DefaultValue: "",
 				},
 				{
 					Name:         "new-tab",
-					Type:         BoolType,
+					Schema:       Bool(),
 					DefaultValue: false,
 				},
 			},
