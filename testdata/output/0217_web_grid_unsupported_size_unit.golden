@@ -1,0 +1,1 @@
+<compono-error-block><div slot="title">Unsupported size unit</div><div slot="description">The value <strong>10px</strong> uses an unsupported size unit.</div></compono-error-block>

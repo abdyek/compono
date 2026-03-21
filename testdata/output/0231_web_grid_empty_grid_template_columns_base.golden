@@ -1,0 +1,1 @@
+<compono-error-block><div slot="title">Empty grid template columns</div><div slot="description">The parameter <strong>grid-template-columns</strong> cannot be an empty array.</div></compono-error-block>

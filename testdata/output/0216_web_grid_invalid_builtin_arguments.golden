@@ -1,0 +1,1 @@
+<compono-error-block><div slot="title">Invalid built-in arguments</div><div slot="description">The parameters <strong>items</strong>, <strong>grid-template-columns</strong>, <strong>grid-template-rows</strong>, <strong>grid-template-areas</strong> do not match the schema of the built-in component <strong>WEB_GRID</strong>.</div></compono-error-block>

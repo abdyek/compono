@@ -1,0 +1,23 @@
+{{ WEB_GRID
+  items = [
+    { component: HEADER, grid-area: "header" },
+    { component: CONTENT, grid-area: "content" },
+    { component: FOOTER, grid-area: "footer" }
+  ]
+  grid-template-columns = ["1fr"]
+  grid-template-rows = ["min-content", "1fr", "min-content"]
+  grid-template-areas = [
+    ["header"],
+    ["content"],
+    ["footer"]
+  ]
+}}
+
+~ HEADER
+# Header
+
+~ CONTENT
+Main content.
+
+~ FOOTER
+Footer

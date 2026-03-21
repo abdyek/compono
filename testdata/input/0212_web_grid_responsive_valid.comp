@@ -1,0 +1,28 @@
+{{ WEB_GRID
+  items = [
+    { component: HERO, grid-area: "hero" },
+    { component: ASIDE, grid-area: "aside" }
+  ]
+  grid-template-columns = ["minmax(min-content,1fr)"]
+  grid-template-rows = ["max-content", "1fr"]
+  grid-template-areas = [
+    ["hero"],
+    ["aside"]
+  ]
+  sm-grid-template-columns = ["1fr", "2fr"]
+  sm-grid-template-rows = ["1fr"]
+  sm-grid-template-areas = [
+    ["hero", "aside"]
+  ]
+  lg-grid-template-columns = ["2fr", "1fr", "1fr"]
+  lg-grid-template-rows = ["1fr"]
+  lg-grid-template-areas = [
+    ["hero", "aside", "aside"]
+  ]
+}}
+
+~ HERO
+# Hero
+
+~ ASIDE
+Sidebar

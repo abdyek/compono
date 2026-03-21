@@ -1,0 +1,1 @@
+<compono-error-block><div slot="title">Grid areas must be unique</div><div slot="description">The grid area <strong>hero</strong> is used more than once in <strong>items</strong>.</div></compono-error-block>
