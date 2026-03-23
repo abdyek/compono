@@ -159,6 +159,44 @@ Output:
 <a href="https://example.com" target="_blank" rel="noopener noreferrer">Visit us</a>
 ```
 
+### WEB_GRID
+
+Creates a web grid wrapper from component items and grid template definitions:
+
+```
+{{ WEB_GRID
+  items = [
+    { component: HEADER, grid-area: "header" },
+    { component: CONTENT, grid-area: "content" },
+    { component: FOOTER, grid-area: "footer" }
+  ]
+  grid-template-columns = ["1fr"]
+  grid-template-rows = ["min-content", "1fr", "min-content"]
+  grid-template-areas = [
+    ["header"],
+    ["content"],
+    ["footer"]
+  ]
+}}
+
+~ HEADER
+# Header
+
+~ CONTENT
+Main content.
+
+~ FOOTER
+Footer
+```
+
+Output:
+```html
+<compono-web-grid data-grid-template-columns="1fr" data-grid-template-rows="min-content 1fr min-content" data-grid-template-areas='[["header"],["content"],["footer"]]'><compono-web-grid-item data-grid-area="header"><h1>Header</h1></compono-web-grid-item><compono-web-grid-item data-grid-area="content"><p>Main content.</p></compono-web-grid-item><compono-web-grid-item data-grid-area="footer"><p>Footer</p></compono-web-grid-item></compono-web-grid>
+```
+
+`WEB_GRID` also supports responsive breakpoint variants for the grid template parameters:
+`sm-grid-template-columns`, `md-grid-template-columns`, `lg-grid-template-columns`, `xl-grid-template-columns`, `xxl-grid-template-columns`, and the corresponding `*-grid-template-rows` / `*-grid-template-areas` parameters.
+
 ## Parameters
 
 Components can accept parameters. Each parameter must have a **default value** defined in the component definition.
