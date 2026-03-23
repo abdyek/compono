@@ -42,7 +42,9 @@ func wrapRules() []wrapRule {
 		blockCompInsideInline(),
 		blockParamCompInsideInline(),
 		undefinedParam(),
+		invalidWebGrid(),
 		invalidBuiltinCompCallSchema(),
+		unknownWebGridItemComponent(),
 		wrongArgType(),
 		paramRefInRootContent(),
 		undefinedParamRef(),
@@ -55,6 +57,7 @@ func invalidBuiltinCompCallSchema() wrapRule {
 	return wrapRule{
 		conditions: []func(*wrapContext, ast.Node) bool{
 			isRuleNameOneOf("block-comp-call", "inline-comp-call"),
+			not(func(_ *wrapContext, node ast.Node) bool { return findEnclosingCompDef(node) != nil }),
 			isKnownComponent(),
 			hasBuiltinSchemaMismatches(),
 		},
@@ -1246,7 +1249,14 @@ func getBuiltinSchemaMismatchArgNamesForCompCall(ctx *wrapContext, ownerCompCall
 			continue
 		}
 
-		resolved := ast.ResolveCompCallArgValue(ctx.root, arg, ast.GetAncestors(ownerCompCall), ownerCompCall)
+		invokerAncestors := ast.GetAncestors(ownerCompCall)
+		currentCompCall := ownerCompCall
+		if ownerCompCall != targetCompCall {
+			invokerAncestors = append([]ast.Node{targetCompCall, ownerCompCall}, invokerAncestors...)
+			currentCompCall = targetCompCall
+		}
+
+		resolved := ast.ResolveCompCallArgValue(ctx.root, arg, invokerAncestors, currentCompCall)
 		if resolved.IsZero() || builtin.MatchesResolvedValue(schema, resolved) {
 			continue
 		}

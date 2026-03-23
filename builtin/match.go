@@ -35,6 +35,9 @@ func matchesScalarSchema(schema *ScalarSchema, value ast.ResolvedValue) bool {
 	}
 
 	if len(schema.AllowedValues) == 0 {
+		if schema.Matcher != nil {
+			return schema.Matcher(value)
+		}
 		return true
 	}
 
@@ -45,6 +48,9 @@ func matchesScalarSchema(schema *ScalarSchema, value ast.ResolvedValue) bool {
 
 	for _, allowed := range schema.AllowedValues {
 		if scalarValuesEqual(normalized, allowed) {
+			if schema.Matcher != nil {
+				return schema.Matcher(value)
+			}
 			return true
 		}
 	}

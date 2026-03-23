@@ -45,6 +45,7 @@ func NewRenderer(log logger.Logger) *renderer {
 
 	builtinComps := []builtinComponent{
 		newLink(r),
+		newWebGrid(r),
 	}
 
 	for _, bc := range builtinComps {

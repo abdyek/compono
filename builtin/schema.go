@@ -1,6 +1,10 @@
 package builtin
 
-import "fmt"
+import (
+	"fmt"
+
+	"github.com/umono-cms/compono/ast"
+)
 
 type ValueKind int
 
@@ -39,6 +43,7 @@ type ValueSchema interface {
 type ScalarSchema struct {
 	valueKind     ValueKind
 	AllowedValues []any
+	Matcher       func(ast.ResolvedValue) bool
 }
 
 func (s *ScalarSchema) Kind() ValueKind {
@@ -47,6 +52,11 @@ func (s *ScalarSchema) Kind() ValueKind {
 
 func (s *ScalarSchema) OneOf(values ...any) *ScalarSchema {
 	s.AllowedValues = append([]any(nil), values...)
+	return s
+}
+
+func (s *ScalarSchema) Matching(fn func(ast.ResolvedValue) bool) *ScalarSchema {
+	s.Matcher = fn
 	return s
 }
 
