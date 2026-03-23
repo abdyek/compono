@@ -1,0 +1,1 @@
+<compono-error-block><div slot="title">Unused grid area</div><div slot="description">The grid area <strong>aside</strong> is defined in <strong>items</strong> but is not used in any grid template areas.</div></compono-error-block>

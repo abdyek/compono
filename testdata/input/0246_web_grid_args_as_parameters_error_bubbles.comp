@@ -1,0 +1,20 @@
+{{ PAGE cols = ["1fr"] }}
+{{ PAGE cols = ["10px"] }}
+
+~ PAGE cols = []
+{{ GRID_WRAPPER cols = cols }}
+
+~ GRID_WRAPPER cols = []
+{{ WEB_GRID
+  items = [
+    { component: HERO, grid-area: "hero" }
+  ]
+  grid-template-columns = cols
+  grid-template-rows = ["1fr"]
+  grid-template-areas = [
+    ["hero"]
+  ]
+}}
+
+~ HERO
+Hero

@@ -1,0 +1,6 @@
+{{ WEB_GRID
+  items = 123
+  grid-template-columns = "1fr"
+  grid-template-rows = false
+  grid-template-areas = "hero"
+}}

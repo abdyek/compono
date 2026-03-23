@@ -1,0 +1,1 @@
+<compono-error-block><div slot="title">Empty grid template area</div><div slot="description">The parameter <strong>grid-template-areas</strong> cannot be empty.</div></compono-error-block>

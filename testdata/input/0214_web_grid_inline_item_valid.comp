@@ -1,0 +1,13 @@
+{{ WEB_GRID
+  items = [
+    { component: LABEL, grid-area: "label" }
+  ]
+  grid-template-columns = ["1fr"]
+  grid-template-rows = ["1fr"]
+  grid-template-areas = [
+    ["label"]
+  ]
+}}
+
+~ LABEL
+hello inline

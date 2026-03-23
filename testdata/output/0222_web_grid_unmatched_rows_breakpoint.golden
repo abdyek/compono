@@ -1,0 +1,1 @@
+<compono-error-block><div slot="title">Unmatched rows</div><div slot="description">The number of rows in <strong>sm-grid-template-areas</strong> does not match <strong>sm-grid-template-rows</strong>.</div></compono-error-block>

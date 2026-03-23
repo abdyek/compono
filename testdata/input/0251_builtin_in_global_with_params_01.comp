@@ -1,0 +1,4 @@
+{{ DEFAULT_LAYOUT comp = CONTENT cols = ["1fr"] rows = ["min-content", "1fr", "min-content",] }}
+
+~ CONTENT
+`content`

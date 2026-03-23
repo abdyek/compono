@@ -1,0 +1,8 @@
+{{ WEB_GRID
+  items = []
+  grid-template-columns = ["1fr"]
+  grid-template-rows = ["1fr"]
+  grid-template-areas = [
+    ["hero"]
+  ]
+}}

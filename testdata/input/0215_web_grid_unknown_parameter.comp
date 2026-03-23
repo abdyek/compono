@@ -1,0 +1,11 @@
+{{ WEB_GRID
+  items = [
+    { component: HERO, grid-area: "hero" }
+  ]
+  grid-template-columns = ["1fr"]
+  grid-template-rows = ["1fr"]
+  grid-template-areas = [
+    ["hero"]
+  ]
+  gap = "1fr"
+}}

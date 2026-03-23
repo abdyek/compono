@@ -1,0 +1,1 @@
+<compono-web-grid data-grid-template-columns="1fr" data-grid-template-rows="min-content 1fr" data-grid-template-areas='[["header"],["body"]]'><compono-web-grid-item data-grid-area="header"><h1>Header</h1></compono-web-grid-item><compono-web-grid-item data-grid-area="body"><p>Body</p></compono-web-grid-item></compono-web-grid>

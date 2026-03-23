@@ -1,0 +1,13 @@
+{{ WEB_GRID
+  items = [
+    { component: HERO, grid-area: "hero" }
+  ]
+  grid-template-columns = ["1fr"]
+  grid-template-rows = ["1fr"]
+  grid-template-areas = [
+    ["hero"]
+  ]
+  sm-grid-template-columns = ["1fr"]
+  sm-grid-template-rows = ["1fr"]
+  sm-grid-template-areas = []
+}}

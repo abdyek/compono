@@ -1,0 +1,34 @@
+{{ WEB_GRID
+  items = [
+    { component: NAV, grid-area: "nav" },
+    { component: BODY, grid-area: "body" }
+  ]
+  grid-template-columns = ["1fr", "2fr"]
+  grid-template-rows = ["1fr"]
+  grid-template-areas = [
+    ["nav", "body"]
+  ]
+}}
+
+~ NAV
+Nav
+
+~ BODY
+{{ WEB_GRID
+  items = [
+    { component: ALPHA, grid-area: "alpha" },
+    { component: BETA, grid-area: "beta" }
+  ]
+  grid-template-columns = ["1fr"]
+  grid-template-rows = ["1fr", "1fr"]
+  grid-template-areas = [
+    ["alpha"],
+    ["beta"]
+  ]
+}}
+
+~ ALPHA
+Alpha
+
+~ BETA
+Beta

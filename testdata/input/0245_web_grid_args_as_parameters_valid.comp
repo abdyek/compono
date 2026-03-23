@@ -1,0 +1,21 @@
+{{ GRID_WRAPPER
+  items = [
+    { component: HERO, grid-area: "hero" }
+  ]
+  cols = ["1fr"]
+  rows = ["1fr"]
+  areas = [
+    ["hero"]
+  ]
+}}
+
+~ GRID_WRAPPER items = [] cols = [] rows = [] areas = []
+{{ WEB_GRID
+  items = items
+  grid-template-columns = cols
+  grid-template-rows = rows
+  grid-template-areas = areas
+}}
+
+~ HERO
+Hero

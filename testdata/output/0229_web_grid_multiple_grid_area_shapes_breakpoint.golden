@@ -1,0 +1,1 @@
+<compono-error-block><div slot="title">Multiple grid area shapes</div><div slot="description">The grid area <strong>hero</strong> in <strong>sm-grid-template-areas</strong> creates multiple separate shapes.</div></compono-error-block>

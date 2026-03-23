@@ -1,0 +1,12 @@
+{{ WEB_GRID
+  items = [
+    { component: HEADER, grid-area: "header" },
+    { component: BODY, grid-area: "body" }
+  ]
+  grid-template-columns = ["1fr"]
+  grid-template-rows = ["min-content", "1fr"]
+  grid-template-areas = [
+    ["header"],
+    ["body"]
+  ]
+}}
