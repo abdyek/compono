@@ -1,0 +1,25 @@
+comp-item = { component: CONTENT, grid-area: "content" }
+
+{{ WEB_GRID
+  items = [
+    { component: HEADER, grid-area: "header" },
+    comp-item,
+    { component: FOOTER, grid-area: "footer" }
+  ]
+  grid-template-columns = ["1fr"]
+  grid-template-rows = ["min-content", "1fr", "min-content"]
+  grid-template-areas = [
+    ["header"],
+    ["content"],
+    ["footer"]
+  ]
+}}
+
+~ HEADER
+# Header
+
+~ FOOTER
+Footer
+
+~ CONTENT
+content from the local component of the global component

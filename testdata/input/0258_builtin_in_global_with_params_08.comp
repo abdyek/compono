@@ -1,0 +1,1 @@
+{{ DEFAULT_LAYOUT comp-item = { component: CONTENT, grid-area: "content" } }}

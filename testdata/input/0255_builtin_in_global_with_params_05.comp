@@ -1,0 +1,4 @@
+{{ DEFAULT_LAYOUT comp = CONTENT cols = ["1fr"] }}
+
+~ CONTENT
+`content`

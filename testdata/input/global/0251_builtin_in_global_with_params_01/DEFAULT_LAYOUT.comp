@@ -1,0 +1,22 @@
+comp = NO_MATTER cols = [] rows = []
+
+{{ WEB_GRID
+  items = [
+    { component: HEADER, grid-area: "header" },
+    { component: comp, grid-area: "content" },
+    { component: FOOTER, grid-area: "footer" }
+  ]
+  grid-template-columns = cols
+  grid-template-rows = rows
+  grid-template-areas = [
+    ["header"],
+    ["content"],
+    ["footer"]
+  ]
+}}
+
+~ HEADER
+# Header
+
+~ FOOTER
+Footer
