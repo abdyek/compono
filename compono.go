@@ -26,8 +26,7 @@ const (
 )
 
 type Compono interface {
-	Convert(source []byte, writer io.Writer) error
-	ConvertGlobalComponent(string, []byte, io.Writer) error
+	Convert(source []byte, writer io.Writer, opts ...ConvertOption) error
 	RegisterGlobalComponent(string, []byte) error
 	UnregisterGlobalComponent(string) error
 	Parser() parser.Parser
@@ -81,64 +80,26 @@ type compono struct {
 	builtinWrapper ast.Node
 }
 
-func (c *compono) Convert(source []byte, writer io.Writer) error {
+func (c *compono) Convert(source []byte, writer io.Writer, opts ...ConvertOption) error {
 	if len(source) == 0 {
 		return nil
+	}
+
+	cfg, err := c.newConvertConfig(opts...)
+	if err != nil {
+		return err
 	}
 
 	root := c.parser.Parse(source, ast.DefaultRootNode())
 
-	c.globalWrapper.SetParent(root)
-	root.SetChildren(append(root.Children(), c.globalWrapper))
+	globalWrapper := c.newGlobalWrapper(cfg.globalComponents)
+	globalWrapper.SetParent(root)
+	root.SetChildren(append(root.Children(), globalWrapper))
 
 	c.builtinWrapper.SetParent(root)
 	root.SetChildren(append(root.Children(), c.builtinWrapper))
 
-	err := c.validator.Validate(root)
-	if err != nil {
-		return NewComponoError(ErrInvalidAST, err.Error())
-	}
-
-	c.errorWrapper.Wrap(root)
-
-	err = c.renderer.Render(writer, root)
-	if err != nil {
-		return NewComponoError(ErrRender, err.Error())
-	}
-	return nil
-}
-
-func (c *compono) ConvertGlobalComponent(name string, source []byte, writer io.Writer) error {
-	if len(source) == 0 {
-		return nil
-	}
-
-	node := ast.DefaultEmptyNode()
-	node.SetRule(rule.NewGlobalCompDef())
-
-	globalCompDef := c.parser.Parse(source, node)
-
-	root := c.parser.Parse([]byte(`{{ `+name+` }}`), ast.DefaultRootNode())
-
-	gcName := ast.DefaultEmptyNode()
-	gcName.SetRule(rule.NewGlobalCompName())
-	gcName.SetParent(root)
-	gcName.SetRaw([]byte(name))
-
-	globalCompDef.SetChildren(append([]ast.Node{gcName}, globalCompDef.Children()...))
-
-	gw := ast.DefaultEmptyNode()
-	gw.SetRule(rule.NewGlobalCompDefWrapper())
-	gw.SetParent(root)
-	gw.SetChildren(append([]ast.Node{globalCompDef}, c.cloneGlobalComponents()...))
-
-	for _, child := range gw.Children() {
-		child.SetParent(gw)
-	}
-
-	root.SetChildren(append(root.Children(), gw))
-
-	err := c.validator.Validate(root)
+	err = c.validator.Validate(root)
 	if err != nil {
 		return NewComponoError(ErrInvalidAST, err.Error())
 	}
@@ -153,25 +114,15 @@ func (c *compono) ConvertGlobalComponent(name string, source []byte, writer io.W
 }
 
 func (c *compono) RegisterGlobalComponent(name string, source []byte) error {
-	if !util.IsScreamingSnakeCase(name) {
-		return NewComponoError(ErrInvalidGlobalName, fmt.Sprintf("invalid global component name %q: must be SCREAMING_SNAKE_CASE (digits allowed)", name))
-	}
-
 	if registered := c.getGlobalCompDefByName(name); registered != nil {
 		return NewComponoError(ErrGlobalAlreadyRegistered, fmt.Sprintf("cannot register global component %q: already registered", name))
 	}
 
-	node := ast.DefaultEmptyNode()
-	node.SetRule(rule.NewGlobalCompDef())
+	parsed, err := c.newGlobalComponentNode(name, source)
+	if err != nil {
+		return err
+	}
 
-	parsed := c.parser.Parse(source, node)
-
-	globalCompName := ast.DefaultEmptyNode()
-	globalCompName.SetRule(rule.NewGlobalCompName())
-	globalCompName.SetParent(parsed)
-	globalCompName.SetRaw([]byte(name))
-
-	parsed.SetChildren(append([]ast.Node{globalCompName}, parsed.Children()...))
 	c.globalWrapper.SetChildren(append([]ast.Node{parsed}, c.globalWrapper.Children()...))
 
 	return nil
@@ -282,6 +233,53 @@ func (c *compono) cloneNode(node ast.Node) ast.Node {
 	}
 
 	return clone
+}
+
+func (c *compono) newConvertConfig(opts ...ConvertOption) (*convertConfig, error) {
+	cfg := &convertConfig{}
+	for _, opt := range opts {
+		if opt == nil {
+			continue
+		}
+		if err := opt.applyConvert(c, cfg); err != nil {
+			return nil, err
+		}
+	}
+	return cfg, nil
+}
+
+func (c *compono) newGlobalWrapper(injected []ast.Node) ast.Node {
+	gw := ast.DefaultEmptyNode()
+	gw.SetRule(rule.NewGlobalCompDefWrapper())
+
+	children := append([]ast.Node{}, injected...)
+	children = append(children, c.cloneGlobalComponents()...)
+	gw.SetChildren(children)
+
+	for _, child := range gw.Children() {
+		child.SetParent(gw)
+	}
+
+	return gw
+}
+
+func (c *compono) newGlobalComponentNode(name string, source []byte) (ast.Node, error) {
+	if !util.IsScreamingSnakeCase(name) {
+		return nil, NewComponoError(ErrInvalidGlobalName, fmt.Sprintf("invalid global component name %q: must be SCREAMING_SNAKE_CASE (digits allowed)", name))
+	}
+
+	node := ast.DefaultEmptyNode()
+	node.SetRule(rule.NewGlobalCompDef())
+
+	parsed := c.parser.Parse(source, node)
+
+	globalCompName := ast.DefaultEmptyNode()
+	globalCompName.SetRule(rule.NewGlobalCompName())
+	globalCompName.SetParent(parsed)
+	globalCompName.SetRaw([]byte(name))
+
+	parsed.SetChildren(append([]ast.Node{globalCompName}, parsed.Children()...))
+	return parsed, nil
 }
 
 func (c *compono) fillBuiltins() {

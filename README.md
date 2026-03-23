@@ -332,7 +332,7 @@ Fatal errors during conversion stop the process and no output is produced.
 c := compono.New()
 
 // Convert source to HTML
-err := c.Convert(source []byte, writer io.Writer)
+err := c.Convert(source []byte, writer io.Writer, opts ...compono.ConvertOption)
 
 // Register a global component
 err := c.RegisterGlobalComponent(name string, source []byte)
@@ -340,8 +340,8 @@ err := c.RegisterGlobalComponent(name string, source []byte)
 // Unregister a global component
 err := c.UnregisterGlobalComponent(name string)
 
-// Convert and preview a global component
-err := c.ConvertGlobalComponent(name string, source []byte, writer io.Writer)
+// Inject a global component for a single conversion
+err := c.Convert(source, writer, compono.WithGlobalComponent(name, globalSource))
 ```
 
 ## Component Naming Convention

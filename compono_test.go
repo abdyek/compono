@@ -58,7 +58,7 @@ func (s *componoTestSuite) TestGolden() {
 	}
 }
 
-func (s *componoTestSuite) TestGoldenForConvertGlobalComponent() {
+func (s *componoTestSuite) TestGoldenForWithGlobalComponent() {
 	inputFiles, err := filepath.Glob("testdata/global_input/*.comp")
 	require.Nil(s.T(), err)
 	require.NotEmpty(s.T(), inputFiles, "no .comp files found")
@@ -84,7 +84,11 @@ func (s *componoTestSuite) TestGoldenForConvertGlobalComponent() {
 		}
 
 		var buf bytes.Buffer
-		err = comp.ConvertGlobalComponent(strings.TrimSuffix(name, ".comp"), []byte(strings.TrimSpace(string(input))), &buf)
+		err = comp.Convert(
+			[]byte(`{{ `+strings.TrimSuffix(name, ".comp")+` }}`),
+			&buf,
+			WithGlobalComponent(strings.TrimSuffix(name, ".comp"), []byte(strings.TrimSpace(string(input)))),
+		)
 		assert.Nil(s.T(), err)
 
 		goldenPath := filepath.Join(
@@ -100,12 +104,12 @@ func (s *componoTestSuite) TestGoldenForConvertGlobalComponent() {
 }
 
 func (s *componoTestSuite) TestUnregisterGlobalComponent() {
-  compono := New().(*compono)
-  err := compono.RegisterGlobalComponent("SAY_HELLO", []byte("# Hello"))
-  require.Nil(s.T(), err)
-  err = compono.UnregisterGlobalComponent("SAY_HELLO")
-  require.Nil(s.T(),err)
-  assert.Equal(s.T(), 0, len(compono.globalWrapper.Children()))
+	compono := New().(*compono)
+	err := compono.RegisterGlobalComponent("SAY_HELLO", []byte("# Hello"))
+	require.Nil(s.T(), err)
+	err = compono.UnregisterGlobalComponent("SAY_HELLO")
+	require.Nil(s.T(), err)
+	assert.Equal(s.T(), 0, len(compono.globalWrapper.Children()))
 }
 
 func TestComponoTestSuite(t *testing.T) {
