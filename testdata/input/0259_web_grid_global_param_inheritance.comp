@@ -1,0 +1,4 @@
+{{ DEFAULT_LAYOUT page-title = "Home" content = CONTENT }}
+
+~ CONTENT
+`here content`
