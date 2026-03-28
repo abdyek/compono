@@ -66,13 +66,15 @@ func (wg *webGrid) Render(invoker renderableNode, node ast.Node) string {
 			continue
 		}
 
-		renderedItems = append(renderedItems, `<compono-web-grid-item data-grid-area="`+html.EscapeString(area.Raw)+`">`+wg.renderComponent(node, component.Raw, component.Scope)+`</compono-web-grid-item>`)
+		renderedItems = append(renderedItems, `<compono-web-grid-item data-grid-area="`+html.EscapeString(area.Raw)+`">`+wg.renderComponent(invoker, node, component.Raw, component.Scope)+`</compono-web-grid-item>`)
 	}
 
 	return `<compono-web-grid ` + strings.Join(attrs, " ") + `>` + strings.Join(renderedItems, "") + `</compono-web-grid>`
 }
 
-func (wg *webGrid) renderComponent(parent ast.Node, name string, scope ast.Node) string {
+func (wg *webGrid) renderComponent(invoker renderableNode, parent ast.Node, name string, scope ast.Node) string {
+	renderCtx := newPassthroughRenderable(parent, invoker)
+
 	localCompDefSrc := scope
 	if localCompDefSrc == nil {
 		localCompDefSrc = localCompSourceFromNode(parent, wg.renderer.root)
@@ -92,7 +94,7 @@ func (wg *webGrid) renderComponent(parent ast.Node, name string, scope ast.Node)
 		if localCompDefContent == nil {
 			return ""
 		}
-		return wg.renderer.renderChildren(nil, localCompDefContent.Children())
+		return wg.renderer.renderChildren(renderCtx, localCompDefContent.Children())
 	}
 
 	globalCompDef := wg.renderer.findGlobalCompDef(name)
@@ -101,7 +103,7 @@ func (wg *webGrid) renderComponent(parent ast.Node, name string, scope ast.Node)
 		if globalCompDefContent == nil {
 			return ""
 		}
-		return wg.renderer.renderChildren(nil, globalCompDefContent.Children())
+		return wg.renderer.renderChildren(renderCtx, globalCompDefContent.Children())
 	}
 
 	compCall := ast.DefaultEmptyNode()
@@ -114,7 +116,11 @@ func (wg *webGrid) renderComponent(parent ast.Node, name string, scope ast.Node)
 	compCallName.SetRaw([]byte(name))
 
 	compCall.SetChildren([]ast.Node{compCallName})
-	return wg.renderer.render(compCall)
+	re := wg.renderer.findRenderable(renderCtx, compCall)
+	if re == nil {
+		return ""
+	}
+	return renderNode(re, renderCtx, compCall)
 }
 
 func (wg *webGrid) resolveArg(invoker renderableNode, compCall ast.Node, name string) ast.ResolvedValue {

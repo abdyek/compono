@@ -1,0 +1,22 @@
+page-title = "[Page Title]" content = NO_MATTER
+
+{{ WEB_GRID
+  items = [
+    { component: HEADER_WRAPPER, grid-area: "header" },
+    { component: content, grid-area: "content" },
+    { component: FOOTER, grid-area: "footer" }
+  ]
+  grid-template-columns = ["1fr"]
+  grid-template-rows = ["min-content", "1fr", "min-content"]
+  grid-template-areas = [
+    ["header"],
+    ["content"],
+    ["footer"]
+  ]
+}}
+
+~ HEADER_WRAPPER
+{{ HEADER title=page-title }}
+
+~ NO_MATTER
+no matter
