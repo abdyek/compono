@@ -1,0 +1,5 @@
+{{ COMP_FOR_NEGATIVE_INTEGER int = -123 }}
+
+~ COMP_FOR_NEGATIVE_INTEGER int = 0
+Negative
+{{ int }}

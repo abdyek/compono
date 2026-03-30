@@ -1,0 +1,13 @@
+{{ COMP_FOR_NEGATIVE_INTEGER array = [-123, -999] }}
+{{ COMP_FOR_NEGATIVE_INTEGER_2 record = { num-1: -112, num-2: 17, num-3: -1} }}
+
+~ COMP_FOR_NEGATIVE_INTEGER array = []
+Negative
+{{ array[0] }}
+{{ array[1] }}
+
+~ COMP_FOR_NEGATIVE_INTEGER_2 record = {}
+Negative
+{{ record.num-1 }}
+{{ record.num-2 }}
+{{ record.num-3 }}
