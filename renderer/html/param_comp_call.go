@@ -127,7 +127,7 @@ func resolveCompCallArgValueTarget(compCallArg ast.Node, invokerAncestors []ast.
 		return resolvedCompTarget{}
 	}
 	argTypeNode := ast.FindNode(compCallArgType.Children(), func(node ast.Node) bool {
-		return ast.IsRuleNameOneOf(node, []string{"comp-call-string-arg", "comp-call-number-arg", "comp-call-bool-arg", "comp-call-param-arg", "comp-call-comp-arg"})
+		return ast.IsRuleNameOneOf(node, []string{"comp-call-string-arg", "comp-call-integer-arg", "comp-call-bool-arg", "comp-call-param-arg", "comp-call-comp-arg"})
 	})
 	if argTypeNode == nil {
 		return resolvedCompTarget{}
@@ -219,7 +219,7 @@ func getCompParamDefault(compDef ast.Node, paramName string) string {
 	}
 
 	typeNode := ast.FindNode(compParamType.Children(), func(node ast.Node) bool {
-		return ast.IsRuleNameOneOf(node, []string{"comp-string-param", "comp-number-param", "comp-bool-param", "comp-comp-param"})
+		return ast.IsRuleNameOneOf(node, []string{"comp-string-param", "comp-integer-param", "comp-bool-param", "comp-comp-param"})
 	})
 	if typeNode == nil {
 		return ""

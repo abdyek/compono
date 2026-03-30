@@ -392,8 +392,8 @@ func scanComponentValue(source []byte, offset int, allowParamRef bool) (int, boo
 		return scanArrayLiteral(source, offset, allowParamRef)
 	case source[offset] == '{':
 		return scanRecordLiteral(source, offset, allowParamRef)
-	case source[offset] >= '0' && source[offset] <= '9':
-		return scanNumberLiteral(source, offset)
+	case source[offset] == '-' || (source[offset] >= '0' && source[offset] <= '9'):
+		return scanIntegerLiteral(source, offset)
 	case hasComponentKeywordAt(source, offset, "true"):
 		return offset + len("true"), true
 	case hasComponentKeywordAt(source, offset, "false"):
@@ -472,17 +472,21 @@ func scanQuotedString(source []byte, offset int) (int, bool) {
 	return 0, false
 }
 
-func scanNumberLiteral(source []byte, offset int) (int, bool) {
+func scanIntegerLiteral(source []byte, offset int) (int, bool) {
 	start := offset
+	if source[offset] == '-' {
+		offset++
+		if offset >= len(source) || source[offset] < '0' || source[offset] > '9' {
+			return 0, false
+		}
+	}
+
 	for offset < len(source) && source[offset] >= '0' && source[offset] <= '9' {
 		offset++
 	}
 
 	if offset < len(source) && source[offset] == '.' {
-		offset++
-		for offset < len(source) && source[offset] >= '0' && source[offset] <= '9' {
-			offset++
-		}
+		return 0, false
 	}
 
 	return offset, offset > start

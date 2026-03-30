@@ -135,7 +135,7 @@ func resolveLiteralValueNode(node Node) ResolvedValue {
 	}
 
 	switch node.Rule().Name() {
-	case "comp-string-param", "comp-number-param", "comp-bool-param", "comp-comp-param":
+	case "comp-string-param", "comp-integer-param", "comp-bool-param", "comp-comp-param":
 		value := FindNodeByRuleName(node.Children(), "comp-param-defa-value")
 		raw := strings.TrimSpace(string(node.Raw()))
 		if value != nil {
@@ -145,7 +145,7 @@ func resolveLiteralValueNode(node Node) ResolvedValue {
 			Type: strings.TrimSuffix(strings.TrimPrefix(node.Rule().Name(), "comp-"), "-param"),
 			Raw:  raw,
 		}
-	case "comp-call-string-arg", "comp-call-number-arg", "comp-call-bool-arg", "comp-call-comp-arg", "comp-call-param-arg":
+	case "comp-call-string-arg", "comp-call-integer-arg", "comp-call-bool-arg", "comp-call-comp-arg", "comp-call-param-arg":
 		value := FindNodeByRuleName(node.Children(), "comp-call-arg-value")
 		raw := strings.TrimSpace(string(node.Raw()))
 		if value != nil {
@@ -421,13 +421,13 @@ func firstTypedValueNode(nodes []Node) Node {
 			"comp-array-param",
 			"comp-record-param",
 			"comp-string-param",
-			"comp-number-param",
+			"comp-integer-param",
 			"comp-bool-param",
 			"comp-comp-param",
 			"comp-call-array-arg",
 			"comp-call-record-arg",
 			"comp-call-string-arg",
-			"comp-call-number-arg",
+			"comp-call-integer-arg",
 			"comp-call-bool-arg",
 			"comp-call-param-arg",
 			"comp-call-comp-arg",

@@ -1774,8 +1774,13 @@ func getCompDefParamInfos(compDef ast.Node) []compParamInfo {
 
 		defVal := ""
 		compParamType := ast.FindNodeByRuleName(compParam.Children(), "comp-param-type")
+		typ := "comp"
+		if compParamType != nil && len(compParamType.Children()) == 0 {
+			continue
+		}
 		if compParamType != nil && len(compParamType.Children()) > 0 {
 			typeVariant := compParamType.Children()[0]
+			typ = ast.GetTypeFromCompParam(compParam)
 			if ast.FindNodeByRuleName(typeVariant.Children(), "comp-param-defa-value") != nil {
 				defVal = ast.GetParamDefValFromCompParam(compParam)
 			}
@@ -1783,7 +1788,7 @@ func getCompDefParamInfos(compDef ast.Node) []compParamInfo {
 
 		result = append(result, compParamInfo{
 			name:   name,
-			typ:    ast.GetTypeFromCompParam(compParam),
+			typ:    typ,
 			defVal: defVal,
 		})
 	}

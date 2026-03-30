@@ -195,7 +195,7 @@ func (_ *compParamType) Rules() []Rule {
 		newCompRecordParam(),
 		newCompArrayParam(),
 		newCompStringParam(),
-		newCompNumberParam(),
+		newCompIntegerParam(),
 		newCompBoolParam(),
 		newCompCompParam(),
 	}
@@ -224,25 +224,25 @@ func (_ *compStringParam) Rules() []Rule {
 	}
 }
 
-// Component's number parameter
-type compNumberParam struct{}
+// Component's integer parameter
+type compIntegerParam struct{}
 
-func newCompNumberParam() Rule {
-	return &compNumberParam{}
+func newCompIntegerParam() Rule {
+	return &compIntegerParam{}
 }
 
-func (_ *compNumberParam) Name() string {
-	return "comp-number-param"
+func (_ *compIntegerParam) Name() string {
+	return "comp-integer-param"
 }
 
-func (_ *compNumberParam) Selectors() []selector.Selector {
-	p, _ := selector.NewPattern(`^\d+(?:\.\d+)?$`)
+func (_ *compIntegerParam) Selectors() []selector.Selector {
+	p, _ := selector.NewPattern(`^-?\d+$`)
 	return []selector.Selector{
 		p,
 	}
 }
 
-func (_ *compNumberParam) Rules() []Rule {
+func (_ *compIntegerParam) Rules() []Rule {
 	return []Rule{
 		newCompParamDefaValue(),
 	}
@@ -384,7 +384,7 @@ func (_ *compArrayParamValueType) Rules() []Rule {
 		newCompRecordParam(),
 		newCompArrayParam(),
 		newCompStringParam(),
-		newCompNumberParam(),
+		newCompIntegerParam(),
 		newCompBoolParam(),
 		newCompCompParam(),
 	}
@@ -500,7 +500,7 @@ func (_ *compRecordParamValueType) Rules() []Rule {
 		newCompRecordParam(),
 		newCompArrayParam(),
 		newCompStringParam(),
-		newCompNumberParam(),
+		newCompIntegerParam(),
 		newCompBoolParam(),
 		newCompCompParam(),
 	}
@@ -882,7 +882,7 @@ func (_ *compCallArgType) Rules() []Rule {
 		newCompCallRecordArg(),
 		newCompCallArrayArg(),
 		newCompCallStringArg(),
-		newCompCallNumberArg(),
+		newCompCallIntegerArg(),
 		newCompCallBoolArg(),
 		newCompCallParamArg(),
 		newCompCallCompArg(),
@@ -912,25 +912,25 @@ func (_ *compCallStringArg) Rules() []Rule {
 	}
 }
 
-// Component call's number argument
-type compCallNumberArg struct{}
+// Component call's integer argument
+type compCallIntegerArg struct{}
 
-func newCompCallNumberArg() Rule {
-	return &compCallNumberArg{}
+func newCompCallIntegerArg() Rule {
+	return &compCallIntegerArg{}
 }
 
-func (_ *compCallNumberArg) Name() string {
-	return "comp-call-number-arg"
+func (_ *compCallIntegerArg) Name() string {
+	return "comp-call-integer-arg"
 }
 
-func (_ *compCallNumberArg) Selectors() []selector.Selector {
-	p, _ := selector.NewPattern(`^\d+(?:\.\d+)?$`)
+func (_ *compCallIntegerArg) Selectors() []selector.Selector {
+	p, _ := selector.NewPattern(`^-?\d+$`)
 	return []selector.Selector{
 		p,
 	}
 }
 
-func (_ *compCallNumberArg) Rules() []Rule {
+func (_ *compCallIntegerArg) Rules() []Rule {
 	return []Rule{
 		newCompCallArgValue(),
 	}
@@ -1086,7 +1086,7 @@ func (_ *compCallArrayArgValueType) Rules() []Rule {
 		newCompCallRecordArg(),
 		newCompCallArrayArg(),
 		newCompCallStringArg(),
-		newCompCallNumberArg(),
+		newCompCallIntegerArg(),
 		newCompCallBoolArg(),
 		newCompCallParamArg(),
 		newCompCallCompArg(),
@@ -1203,7 +1203,7 @@ func (_ *compCallRecordArgValueType) Rules() []Rule {
 		newCompCallRecordArg(),
 		newCompCallArrayArg(),
 		newCompCallStringArg(),
-		newCompCallNumberArg(),
+		newCompCallIntegerArg(),
 		newCompCallBoolArg(),
 		newCompCallParamArg(),
 		newCompCallCompArg(),
