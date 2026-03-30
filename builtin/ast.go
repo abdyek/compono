@@ -184,8 +184,8 @@ func schemaRuleName(kind ValueKind) string {
 	switch kind {
 	case StringKind:
 		return "comp-string-param"
-	case NumberKind:
-		return "comp-number-param"
+	case IntegerKind:
+		return "comp-integer-param"
 	case BoolKind:
 		return "comp-bool-param"
 	case ComponentKind:
@@ -210,7 +210,7 @@ func formatScalarValue(kind ValueKind, value any) string {
 			return ""
 		}
 		return fmt.Sprint(value)
-	case NumberKind:
+	case IntegerKind:
 		switch typed := value.(type) {
 		case int:
 			return strconv.Itoa(typed)
@@ -232,10 +232,6 @@ func formatScalarValue(kind ValueKind, value any) string {
 			return strconv.FormatUint(uint64(typed), 10)
 		case uint64:
 			return strconv.FormatUint(typed, 10)
-		case float32:
-			return strconv.FormatFloat(float64(typed), 'f', -1, 32)
-		case float64:
-			return strconv.FormatFloat(typed, 'f', -1, 64)
 		default:
 			return fmt.Sprint(value)
 		}
@@ -271,8 +267,8 @@ func schemaForNestedValue(fallback ValueSchema, value any) ValueSchema {
 		switch resolved.Type {
 		case "string":
 			return String()
-		case "number":
-			return Number()
+		case "integer":
+			return Integer()
 		case "bool":
 			return Bool()
 		case "comp":
@@ -288,8 +284,8 @@ func schemaForNestedValue(fallback ValueSchema, value any) ValueSchema {
 		switch kind {
 		case StringKind:
 			return String()
-		case NumberKind:
-			return Number()
+		case IntegerKind:
+			return Integer()
 		case BoolKind:
 			return Bool()
 		case ComponentKind:

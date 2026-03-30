@@ -1,0 +1,1 @@
+<p>{{ COMP_FOR_NEGATIVE_INTEGER int = --123 }}</p><compono-error-block><div slot="title">Unknown parameter</div><div slot="description">The parameter <strong>int</strong> is not defined for this component.</div></compono-error-block>

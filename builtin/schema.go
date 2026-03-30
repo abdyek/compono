@@ -10,7 +10,7 @@ type ValueKind int
 
 const (
 	StringKind ValueKind = iota + 1
-	NumberKind
+	IntegerKind
 	BoolKind
 	ComponentKind
 	ArrayKind
@@ -21,8 +21,8 @@ func (k ValueKind) String() string {
 	switch k {
 	case StringKind:
 		return "string"
-	case NumberKind:
-		return "number"
+	case IntegerKind:
+		return "integer"
 	case BoolKind:
 		return "bool"
 	case ComponentKind:
@@ -163,8 +163,8 @@ func String() *ScalarSchema {
 	return &ScalarSchema{valueKind: StringKind}
 }
 
-func Number() *ScalarSchema {
-	return &ScalarSchema{valueKind: NumberKind}
+func Integer() *ScalarSchema {
+	return &ScalarSchema{valueKind: IntegerKind}
 }
 
 func Bool() *ScalarSchema {

@@ -34,13 +34,13 @@ func TestMatchesResolvedValueArray(t *testing.T) {
 }
 
 func TestMatchesResolvedValueHeterogeneousArray(t *testing.T) {
-	schema := Array(String(), Number(), Bool())
+	schema := Array(String(), Integer(), Bool())
 
 	assert.True(t, MatchesResolvedValue(schema, ast.ResolvedValue{
 		Type: "array",
 		Items: []ast.ResolvedValue{
 			{Type: "string", Raw: "john"},
-			{Type: "number", Raw: "42"},
+			{Type: "integer", Raw: "42"},
 			{Type: "bool", Raw: "false"},
 		},
 	}))
@@ -58,7 +58,7 @@ func TestMatchesResolvedValueRecord(t *testing.T) {
 		Field("title", String()).Required(),
 		Field("meta", Record(
 			Field("layout", Enum("hero", "stack")).Required(),
-			Field("order", Number()),
+			Field("order", Integer()),
 		).DisallowUnknownKeys()),
 	).DisallowUnknownKeys()
 
@@ -70,7 +70,7 @@ func TestMatchesResolvedValueRecord(t *testing.T) {
 				Type: "record",
 				Fields: map[string]ast.ResolvedValue{
 					"layout": {Type: "string", Raw: "hero"},
-					"order":  {Type: "number", Raw: "2"},
+					"order":  {Type: "integer", Raw: "2"},
 				},
 			},
 		},

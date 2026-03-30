@@ -154,8 +154,8 @@ func kindFromResolvedValue(value ast.ResolvedValue) ValueKind {
 	switch value.Type {
 	case "string":
 		return StringKind
-	case "number":
-		return NumberKind
+	case "integer":
+		return IntegerKind
 	case "bool":
 		return BoolKind
 	case "comp":
@@ -173,12 +173,12 @@ func normalizeScalarResolvedValue(value ast.ResolvedValue) (any, bool) {
 	switch value.Type {
 	case "string", "comp":
 		return value.Raw, true
-	case "number":
-		number, err := strconv.ParseFloat(value.Raw, 64)
+	case "integer":
+		integer, err := strconv.ParseInt(value.Raw, 10, 64)
 		if err != nil {
 			return nil, false
 		}
-		return number, true
+		return integer, true
 	case "bool":
 		boolean, err := strconv.ParseBool(value.Raw)
 		if err != nil {
@@ -191,40 +191,36 @@ func normalizeScalarResolvedValue(value ast.ResolvedValue) (any, bool) {
 }
 
 func scalarValuesEqual(left any, right any) bool {
-	leftNumber, leftIsNumber := numericValue(left)
-	rightNumber, rightIsNumber := numericValue(right)
-	if leftIsNumber || rightIsNumber {
-		return leftIsNumber && rightIsNumber && leftNumber == rightNumber
+	leftInteger, leftIsInteger := integerValue(left)
+	rightInteger, rightIsInteger := integerValue(right)
+	if leftIsInteger || rightIsInteger {
+		return leftIsInteger && rightIsInteger && leftInteger == rightInteger
 	}
 	return left == right
 }
 
-func numericValue(value any) (float64, bool) {
+func integerValue(value any) (int64, bool) {
 	switch typed := value.(type) {
 	case int:
-		return float64(typed), true
+		return int64(typed), true
 	case int8:
-		return float64(typed), true
+		return int64(typed), true
 	case int16:
-		return float64(typed), true
+		return int64(typed), true
 	case int32:
-		return float64(typed), true
+		return int64(typed), true
 	case int64:
-		return float64(typed), true
-	case uint:
-		return float64(typed), true
-	case uint8:
-		return float64(typed), true
-	case uint16:
-		return float64(typed), true
-	case uint32:
-		return float64(typed), true
-	case uint64:
-		return float64(typed), true
-	case float32:
-		return float64(typed), true
-	case float64:
 		return typed, true
+	case uint:
+		return int64(typed), true
+	case uint8:
+		return int64(typed), true
+	case uint16:
+		return int64(typed), true
+	case uint32:
+		return int64(typed), true
+	case uint64:
+		return int64(typed), true
 	default:
 		return 0, false
 	}
@@ -238,8 +234,8 @@ func scalarKindOf(value any) (ValueKind, bool) {
 		return BoolKind, true
 	}
 
-	if _, ok := numericValue(value); ok {
-		return NumberKind, true
+	if _, ok := integerValue(value); ok {
+		return IntegerKind, true
 	}
 
 	return 0, false

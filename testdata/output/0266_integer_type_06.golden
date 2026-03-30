@@ -1,0 +1,1 @@
+<p>{{ PI no-pi = -3.14 }}</p><compono-error-block><div slot="title">Unknown parameter</div><div slot="description">The parameter <strong>no-pi</strong> is not defined for this component.</div></compono-error-block>

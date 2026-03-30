@@ -1,0 +1,13 @@
+{{ COMP }}
+{{ COMP number = 999 }}
+{{ COMP_2 array = [123] }}
+{{ COMP_3 record = { num: 789 } }}
+
+~ COMP number = 99
+# {{ number }}
+
+~ COMP_2 array = []
+## {{ array[0] }}
+
+~ COMP_3 record = {}
+### {{ record.num }}

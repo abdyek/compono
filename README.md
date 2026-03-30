@@ -215,7 +215,7 @@ If a parameter value is not provided during the call, the **default value is use
 Supported parameter types:
 
 - **String** → `name = "John"`
-- **Number** → `age = 25`
+- **Integer** → `age = 25`
 - **Bool** → `active = true`
 - **Component** → `comp = COMP`
 - **Array** → `items = ["Jane", 22, true, COMP]`
@@ -231,10 +231,10 @@ A parameter can be passed directly to another component call.
 {{ USER age=31 }}
 
 ~ USER age=18
-{{ ANOTHER_COMP another-number-param=age }}
+{{ ANOTHER_COMP another-integer-param=age }}
 
-~ ANOTHER_COMP another-number-param=0
-Number: *{{ another-number-param }}*
+~ ANOTHER_COMP another-integer-param=0
+Integer: *{{ another-integer-param }}*
 ```
 
 Here:

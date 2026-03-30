@@ -1,0 +1,4 @@
+{{ COMP number = 3.14 }}
+
+~ COMP number = 123
+Now: {{ number }}

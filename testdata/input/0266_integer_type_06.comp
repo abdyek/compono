@@ -1,0 +1,8 @@
+{{ PI no-pi = -3.14 }}
+{{ PI_2 no-pi = 3 }}
+
+~ PI no-pi = 0
+Negative {{ no-pi }}
+
+~ PI_2 no-pi = -3.14
+Negative {{ no-pi }}
