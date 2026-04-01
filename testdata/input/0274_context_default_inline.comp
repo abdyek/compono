@@ -1,0 +1,4 @@
+Welcome, {{ USERNAME }}!
+
+~ USERNAME name = context(user/name)
+{{ name }}

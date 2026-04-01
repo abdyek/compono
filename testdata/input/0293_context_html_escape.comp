@@ -1,0 +1,4 @@
+{{ CONTENT }}
+
+~ CONTENT body = context(page/body)
+{{ body }}

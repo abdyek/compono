@@ -1,0 +1,1 @@
+<p>{{ context(current_user/name) }}</p>

@@ -1,0 +1,4 @@
+Welcome, {{ USERNAME name = context(user/name) }}!
+
+~ USERNAME name = "Jane"
+{{ name }}

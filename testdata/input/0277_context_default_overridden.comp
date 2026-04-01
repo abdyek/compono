@@ -1,0 +1,4 @@
+{{ GREETING name = "Jane" }}
+
+~ GREETING name = context(user/name)
+Hello **{{ name }}**!
