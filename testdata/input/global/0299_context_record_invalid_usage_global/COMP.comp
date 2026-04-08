@@ -1,0 +1,2 @@
+record = context(user/profile)
+{{ record }}
