@@ -19,6 +19,10 @@ type componoTestSuite struct {
 	suite.Suite
 }
 
+type invalidContextKeyNotation struct {
+	Title string `compono:"invalid_key"`
+}
+
 func (s *componoTestSuite) TestGolden() {
 	inputFiles, err := filepath.Glob("testdata/input/*.comp")
 	require.Nil(s.T(), err)
@@ -120,6 +124,38 @@ func (s *componoTestSuite) TestUnregisterGlobalComponent() {
 	err = compono.UnregisterGlobalComponent("SAY_HELLO")
 	require.Nil(s.T(), err)
 	assert.Equal(s.T(), 0, len(compono.globalWrapper.Children()))
+}
+
+func (s *componoTestSuite) TestConvertWithContextErrUnsupportedType() {
+	compono := New()
+
+	var buf bytes.Buffer
+	err := compono.Convert([]byte("context"), &buf, WithContext(map[string]any{
+		"value": func() {},
+	}))
+
+	require.Error(s.T(), err)
+
+	var compErr *ComponoError
+	require.ErrorAs(s.T(), err, &compErr)
+	assert.Equal(s.T(), ErrUnsupportedType, compErr.Code)
+	assert.Contains(s.T(), compErr.Message, "unsupported context value type")
+}
+
+func (s *componoTestSuite) TestConvertWithContextErrUnsupportedKeyNotation() {
+	compono := New()
+
+	var buf bytes.Buffer
+	err := compono.Convert([]byte("context"), &buf, WithContext(map[string]any{
+		"value": invalidContextKeyNotation{Title: "Hello"},
+	}))
+
+	require.Error(s.T(), err)
+
+	var compErr *ComponoError
+	require.ErrorAs(s.T(), err, &compErr)
+	assert.Equal(s.T(), ErrUnsupportedKeyNotation, compErr.Code)
+	assert.Contains(s.T(), compErr.Message, `invalid compono struct tag "invalid_key"`)
 }
 
 func TestComponoTestSuite(t *testing.T) {
