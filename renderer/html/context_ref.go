@@ -20,11 +20,5 @@ func (_ *contextRef) Condition(_ renderableNode, node ast.Node) bool {
 }
 
 func (c *contextRef) Render() string {
-	resolved := ast.ResolveContextReferenceValue(c.renderer.root, c.Node())
-	if resolved.MissingContextKey != "" {
-		return `<compono-error-inline><span slot="title">Unknown key</span><span slot="description">The key <strong>` +
-			resolved.MissingContextKey +
-			`</strong> is not injected.</span></compono-error-inline>`
-	}
-	return renderResolvedValue(resolved)
+	return renderResolvedValue(ast.ResolveContextReferenceValue(c.renderer.root, c.Node()))
 }

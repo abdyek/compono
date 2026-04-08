@@ -602,7 +602,6 @@ func scanContextValue(source []byte, offset int) (int, bool) {
 	}
 
 	offset += len("context")
-	offset = skipComponentSpaces(source, offset)
 	if offset >= len(source) || source[offset] != '(' {
 		return 0, false
 	}

@@ -114,7 +114,6 @@ func scanContextPath(raw string) (string, int, bool) {
 		return "", 0, false
 	}
 	offset += len("context")
-	offset = skipAccessorSpaces(raw, offset)
 	if offset >= len(raw) || raw[offset] != '(' {
 		return "", 0, false
 	}
