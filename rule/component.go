@@ -192,12 +192,34 @@ func (_ *compParamType) Selectors() []selector.Selector {
 
 func (_ *compParamType) Rules() []Rule {
 	return []Rule{
+		newCompContextParam(),
 		newCompRecordParam(),
 		newCompArrayParam(),
 		newCompStringParam(),
 		newCompIntegerParam(),
 		newCompBoolParam(),
 		newCompCompParam(),
+	}
+}
+
+type compContextParam struct{}
+
+func newCompContextParam() Rule {
+	return &compContextParam{}
+}
+
+func (_ *compContextParam) Name() string {
+	return "comp-context-param"
+}
+
+func (_ *compContextParam) Selectors() []selector.Selector {
+	p, _ := selector.NewPattern(`^\s*context[\s\n\r]*\([\s\n\r]*[a-z0-9]+(?:-[a-z0-9]+)*(?:/[a-z0-9]+(?:-[a-z0-9]+)*)*[\s\n\r]*\)(?:\s*(?:\.\s*[a-z][a-z0-9-]*|\[\d+\]))*\s*$`)
+	return []selector.Selector{p}
+}
+
+func (_ *compContextParam) Rules() []Rule {
+	return []Rule{
+		newContextKey(),
 	}
 }
 
@@ -381,6 +403,7 @@ func (_ *compArrayParamValueType) Selectors() []selector.Selector {
 
 func (_ *compArrayParamValueType) Rules() []Rule {
 	return []Rule{
+		newCompContextParam(),
 		newCompRecordParam(),
 		newCompArrayParam(),
 		newCompStringParam(),
@@ -497,6 +520,7 @@ func (_ *compRecordParamValueType) Selectors() []selector.Selector {
 
 func (_ *compRecordParamValueType) Rules() []Rule {
 	return []Rule{
+		newCompContextParam(),
 		newCompRecordParam(),
 		newCompArrayParam(),
 		newCompStringParam(),
@@ -582,6 +606,47 @@ func (_ *paramRef) Rules() []Rule {
 		newParamRefIndexes(),
 		newCompCallArgs(),
 	}
+}
+
+type contextRef struct{}
+
+func newContextRef() Rule {
+	return &contextRef{}
+}
+
+func (_ *contextRef) Name() string {
+	return "context-ref"
+}
+
+func (_ *contextRef) Selectors() []selector.Selector {
+	return []selector.Selector{
+		selector.NewContextMustacheCall(),
+	}
+}
+
+func (_ *contextRef) Rules() []Rule {
+	return []Rule{
+		newContextKey(),
+	}
+}
+
+type contextKey struct{}
+
+func newContextKey() Rule {
+	return &contextKey{}
+}
+
+func (_ *contextKey) Name() string {
+	return "context-key"
+}
+
+func (_ *contextKey) Selectors() []selector.Selector {
+	sei := selector.NewStartEndInner(`context[\s\n\r]*\([\s\n\r]*`, `[\s\n\r]*\)`)
+	return []selector.Selector{sei}
+}
+
+func (_ *contextKey) Rules() []Rule {
+	return []Rule{}
 }
 
 // Parameter reference's name
@@ -879,6 +944,7 @@ func (_ *compCallArgType) Selectors() []selector.Selector {
 
 func (_ *compCallArgType) Rules() []Rule {
 	return []Rule{
+		newCompCallContextArg(),
 		newCompCallRecordArg(),
 		newCompCallArrayArg(),
 		newCompCallStringArg(),
@@ -886,6 +952,27 @@ func (_ *compCallArgType) Rules() []Rule {
 		newCompCallBoolArg(),
 		newCompCallParamArg(),
 		newCompCallCompArg(),
+	}
+}
+
+type compCallContextArg struct{}
+
+func newCompCallContextArg() Rule {
+	return &compCallContextArg{}
+}
+
+func (_ *compCallContextArg) Name() string {
+	return "comp-call-context-arg"
+}
+
+func (_ *compCallContextArg) Selectors() []selector.Selector {
+	p, _ := selector.NewPattern(`^\s*context[\s\n\r]*\([\s\n\r]*[a-z0-9]+(?:-[a-z0-9]+)*(?:/[a-z0-9]+(?:-[a-z0-9]+)*)*[\s\n\r]*\)(?:\s*(?:\.\s*[a-z][a-z0-9-]*|\[\d+\]))*\s*$`)
+	return []selector.Selector{p}
+}
+
+func (_ *compCallContextArg) Rules() []Rule {
+	return []Rule{
+		newContextKey(),
 	}
 }
 
@@ -1083,6 +1170,7 @@ func (_ *compCallArrayArgValueType) Selectors() []selector.Selector {
 
 func (_ *compCallArrayArgValueType) Rules() []Rule {
 	return []Rule{
+		newCompCallContextArg(),
 		newCompCallRecordArg(),
 		newCompCallArrayArg(),
 		newCompCallStringArg(),
@@ -1200,6 +1288,7 @@ func (_ *compCallRecordArgValueType) Selectors() []selector.Selector {
 
 func (_ *compCallRecordArgValueType) Rules() []Rule {
 	return []Rule{
+		newCompCallContextArg(),
 		newCompCallRecordArg(),
 		newCompCallArrayArg(),
 		newCompCallStringArg(),
@@ -1329,7 +1418,7 @@ func (_ *globalCompDefHead) Name() string {
 }
 
 func (_ *globalCompDefHead) Selectors() []selector.Selector {
-	p, _ := selector.NewStartEnd(`^([a-z][a-z0-9-]*)[ \t\r\n]*=[ \t\r\n]*(".*?"|\d+(?:\.\d+)?|true|false|\[|\{|[A-Z0-9]+(?:_[A-Z0-9]+)*)`, `\n|\z`)
+	p, _ := selector.NewStartEnd(`^([a-z][a-z0-9-]*)[ \t\r\n]*=[ \t\r\n]*(".*?"|\d+(?:\.\d+)?|true|false|\[|\{|[A-Z0-9]+(?:_[A-Z0-9]+)*|context\s*\()`, `\n|\z`)
 	return []selector.Selector{
 		p,
 	}

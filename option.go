@@ -14,6 +14,7 @@ func (f convertOptionFunc) applyConvert(c *compono, cfg *convertConfig) error {
 
 type convertConfig struct {
 	globalComponents []ast.Node
+	contextValues    map[string]any
 }
 
 func WithGlobalComponent(name string, source []byte) ConvertOption {
@@ -24,6 +25,24 @@ func WithGlobalComponent(name string, source []byte) ConvertOption {
 		}
 
 		cfg.globalComponents = append(cfg.globalComponents, globalComponent)
+		return nil
+	})
+}
+
+func WithContext(values map[string]any) ConvertOption {
+	return convertOptionFunc(func(_ *compono, cfg *convertConfig) error {
+		if len(values) == 0 {
+			return nil
+		}
+
+		if cfg.contextValues == nil {
+			cfg.contextValues = map[string]any{}
+		}
+
+		for key, value := range values {
+			cfg.contextValues[key] = value
+		}
+
 		return nil
 	})
 }

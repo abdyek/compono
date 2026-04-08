@@ -438,6 +438,9 @@ func shouldTreatParamRefAsCompCall(compParam ast.Node, rn renderableNode, r *ren
 	}
 
 	paramType := ast.GetTypeFromCompParam(compParam)
+	if paramType == "context" {
+		paramType = resolveParamRefValue(rn, r, paramRefName).Type
+	}
 	if paramType == "comp" {
 		return true
 	}

@@ -23,6 +23,8 @@ const (
 	ErrGlobalNotExist
 	ErrInvalidAST
 	ErrRender
+	ErrUnsupportedType
+	ErrUnsupportedKeyNotation
 )
 
 type Compono interface {
@@ -91,6 +93,12 @@ func (c *compono) Convert(source []byte, writer io.Writer, opts ...ConvertOption
 	}
 
 	root := c.parser.Parse(source, ast.DefaultRootNode())
+
+	contextWrapper, err := buildContextWrapper(root, cfg.contextValues)
+	if err != nil {
+		return err
+	}
+	root.SetChildren(append(root.Children(), contextWrapper))
 
 	globalWrapper := c.newGlobalWrapper(cfg.globalComponents)
 	globalWrapper.SetParent(root)

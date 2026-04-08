@@ -1287,11 +1287,14 @@ func getWrongTypeArgNames(ctx *wrapContext, compCall ast.Node) []string {
 
 		argNameStr := ast.GetArgNameFromCompCallArg(arg)
 		expectedType, ok := paramTypeMap[argNameStr]
-		if !ok {
+		if !ok || expectedType == "" {
 			continue
 		}
 
 		actualType := ast.GetTypeFromCompCallArg(arg)
+		if actualType == "context" {
+			actualType = ast.ResolveCompCallArgValue(ctx.root, arg, ast.GetAncestors(compCall), compCall).Type
+		}
 		if actualType == "" || actualType == "param" || actualType == expectedType {
 			continue
 		}
@@ -1340,7 +1343,7 @@ func getWrongTypeArgNamesFromNestedCompCalls(ctx *wrapContext, compCall ast.Node
 
 			argName := ast.GetArgNameFromCompCallArg(arg)
 			expectedType, ok := targetParamTypeMap[argName]
-			if !ok {
+			if !ok || expectedType == "" {
 				continue
 			}
 
@@ -1476,7 +1479,7 @@ func getWrongTypeArgNamesFromResolvedParamCompCalls(ctx *wrapContext, compCall a
 
 			argName := ast.GetArgNameFromCompCallArg(arg)
 			expectedType, ok := targetParamTypeMap[argName]
-			if !ok {
+			if !ok || expectedType == "" {
 				continue
 			}
 
@@ -1532,6 +1535,9 @@ func getBuiltinSchemaMismatchArgNamesFromResolvedParamCompCalls(ctx *wrapContext
 
 func getResolvedArgTypeForNestedParamCompCall(ctx *wrapContext, compCall ast.Node, arg ast.Node) string {
 	actualType := ast.GetTypeFromCompCallArg(arg)
+	if actualType == "context" {
+		return ast.ResolveCompCallArgValue(ctx.root, arg, ast.GetAncestors(compCall), compCall).Type
+	}
 	if actualType != "param" {
 		return actualType
 	}
@@ -1781,6 +1787,14 @@ func getCompDefParamInfos(compDef ast.Node) []compParamInfo {
 		if compParamType != nil && len(compParamType.Children()) > 0 {
 			typeVariant := compParamType.Children()[0]
 			typ = ast.GetTypeFromCompParam(compParam)
+			if typ == "context" {
+				root := compDef
+				ancestors := ast.GetAncestors(compDef)
+				if len(ancestors) > 0 {
+					root = ancestors[len(ancestors)-1]
+				}
+				typ = ast.ResolveCompParamDefaultFromCompDef(root, compDef, name).Type
+			}
 			if ast.FindNodeByRuleName(typeVariant.Children(), "comp-param-defa-value") != nil {
 				defVal = ast.GetParamDefValFromCompParam(compParam)
 			}
