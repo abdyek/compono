@@ -356,6 +356,105 @@ Records can be nested
 
 ---
 
+## Context
+
+`context(key)` is a built-in reference mechanism for injecting immutable values at convert time.
+
+Use it with `compono.WithContext`:
+
+```go
+type CurrentUser struct {
+    FirstName string `compono:"first-name"`
+    LastName  string `compono:"last-name"`
+}
+
+err := c.Convert(source, &buf, compono.WithContext(map[string]any{
+    "app/version":   "1.2.0",
+    "feature/live":  true,
+    "stats/numbers": []int{10, 20, 30},
+    "current-user": CurrentUser{
+        FirstName: "Yunus",
+        LastName:  "Emre",
+    },
+}))
+```
+
+Direct usage:
+
+```
+Version: {{ context(app/version) }}
+```
+
+It can also be used as:
+
+- a component argument
+- a default parameter value
+- an array item
+- a record value
+- built-in component arguments
+
+Example:
+
+```
+{{ LINK text=context(link/text) url=context(link/url) new-tab=context(link/new-tab) }}
+
+~ GREETING name=context(current-user/first-name)
+Hello **{{ name }}**!
+```
+
+If the resolved value is a record or array, you can keep using normal access syntax:
+
+```
+# {{ context(current-user).first-name }}
+## {{ context(stats/numbers)[1] }}
+```
+
+### Context Keys
+
+Keys are static and unquoted. They are made of `segment`s joined by `/`.
+
+- segments may contain lowercase Latin letters, numbers, and `-`
+- `/` cannot appear at the beginning or end
+- repeated separators are invalid
+- whitespace is allowed around the key inside `context(...)`
+
+If `context()` is empty or the key format is invalid, it is treated as plain text instead of a context reference.
+
+### Supported Go Types
+
+`WithContext` supports:
+
+- `string`
+- `bool`
+- `int`, `int8`, `int16`, `int32`, `int64`
+- `[]T` and `[N]T`
+- `map[string]T`
+- structs
+
+Notes:
+
+- `nil` is not supported
+- map keys must be `string`
+- struct fields must be exported
+- `compono` struct tags must be valid `kebab-case`
+- if a struct field has no `compono` tag, its name is converted to `kebab-case`
+- unsupported types such as floats, pointers, functions, and channels return a fatal conversion error
+- fatal context injection errors are returned as `ErrUnsupportedType` or `ErrUnsupportedKeyNotation`
+
+### Missing Keys and Errors
+
+If a referenced key is not injected, Compono renders an error placeholder with:
+
+- Title: `Unknown key`
+- Message: `The key **[key]** is not injected.`
+
+Error placement depends on how `context(...)` is used:
+
+- direct usage always renders an inline error
+- using it in a block component call renders a block error at the call site
+- using it in an inline component call renders an inline error at the call site
+- default values are resolved lazily, so no error is produced unless that parameter is actually used
+
 ## Error Handling
 
 Compono provides error feedback by rendering placeholders where errors occur.
@@ -380,6 +479,11 @@ err := c.UnregisterGlobalComponent(name string)
 
 // Inject a global component for a single conversion
 err := c.Convert(source, writer, compono.WithGlobalComponent(name, globalSource))
+
+// Inject convert-time context values
+err := c.Convert(source, writer, compono.WithContext(map[string]any{
+    "app/version": "1.2.0",
+}))
 ```
 
 ## Component Naming Convention
