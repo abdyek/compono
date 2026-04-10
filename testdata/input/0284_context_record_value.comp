@@ -1,0 +1,4 @@
+{{ PROFILE user = { name: context(user/name) } }}
+
+~ PROFILE user = {}
+# {{ user.name }}

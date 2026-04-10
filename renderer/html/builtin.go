@@ -31,54 +31,44 @@ func (_ *link) Name() string {
 	return "LINK"
 }
 
-func (_ *link) Render(invoker renderableNode, node ast.Node) string {
+func (l *link) Render(invoker renderableNode, node ast.Node) string {
 	newTabStr := ""
-	newTab, ok := getBoolArgValue(node, "new-tab")
+	newTab, ok := getBoolArgValue(invoker, node, "new-tab")
 	if ok && newTab {
 		newTabStr = ` target="_blank" rel="noopener noreferrer"`
 	}
-	return "<a href=\"" + getArgValueWithDefa(node, "url", "url") + "\"" + newTabStr + ">" + getArgValueWithDefa(node, "text", "") + "</a>"
+	return "<a href=\"" + getArgValueWithDefa(l.renderer, invoker, node, "url", "url") + "\"" + newTabStr + ">" + getArgValueWithDefa(l.renderer, invoker, node, "text", "") + "</a>"
 }
 
-func getArgValueWithDefa(compCall ast.Node, name string, defa string) string {
-	value, ok := getArgValue(compCall, name)
+func getArgValueWithDefa(r *renderer, invoker renderableNode, compCall ast.Node, name string, defa string) string {
+	value, ok := getArgValue(r, invoker, compCall, name)
 	if !ok {
 		return defa
 	}
 	return value
 }
 
-func getArgValue(compCall ast.Node, name string) (string, bool) {
-	compCallArgs := ast.FindNodeByRuleName(compCall.Children(), "comp-call-args")
-	if compCallArgs == nil {
-		return "", false
-	}
-	compCallArg := ast.FindNode(compCallArgs.Children(), func(node ast.Node) bool {
-		argName := ast.FindNodeByRuleName(node.Children(), "comp-call-arg-name")
-		return strings.TrimSpace(string(argName.Raw())) == name
-	})
+func getArgValue(r *renderer, invoker renderableNode, compCall ast.Node, name string) (string, bool) {
+	compCallArg := ast.GetCompCallArgByParamName(ast.GetCompCallArgsFromCompCall(compCall), name)
 	if compCallArg == nil {
 		return "", false
 	}
-	compCallArgType := ast.FindNodeByRuleName(compCallArg.Children(), "comp-call-arg-type")
-	if compCallArgType == nil {
+
+	resolved := ast.ResolveCompCallArgValue(r.root, compCallArg, getAncestorsByInvoker(invoker), compCall)
+	if resolved.IsZero() || resolved.Type == "array" || resolved.Type == "record" || resolved.MissingContextKey != "" {
 		return "", false
 	}
-	typedArg := ast.FindNode(compCallArgType.Children(), func(node ast.Node) bool {
-		return ast.IsRuleNameOneOf(node, []string{"comp-call-string-arg", "comp-call-integer-arg", "comp-call-bool-arg"})
-	})
-	if typedArg == nil {
-		return "", false
-	}
-	argValue := ast.FindNodeByRuleName(typedArg.Children(), "comp-call-arg-value")
-	if argValue == nil {
-		return "", false
-	}
-	return html.EscapeString(strings.TrimSpace(string(argValue.Raw()))), true
+
+	return html.EscapeString(strings.TrimSpace(resolved.Raw)), true
 }
 
-func getBoolArgValue(compCall ast.Node, name string) (bool, bool) {
-	value, ok := getArgValue(compCall, name)
+func getBoolArgValue(invoker renderableNode, callNode ast.Node, name string) (bool, bool) {
+	rnd, _ := invoker.(*compCall)
+	if rnd == nil {
+		return false, false
+	}
+
+	value, ok := getArgValue(rnd.renderer, invoker, callNode, name)
 	if !ok {
 		return false, false
 	}

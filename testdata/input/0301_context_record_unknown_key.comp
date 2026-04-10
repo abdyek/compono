@@ -1,0 +1,4 @@
+{{ COMP record = context(current-user) }}
+
+~ COMP record = {}
+{{ record.title }}

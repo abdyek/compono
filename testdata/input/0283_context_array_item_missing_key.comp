@@ -1,0 +1,4 @@
+{{ USERS names = [context(user/first-name), "Jane"] }}
+
+~ USERS names = []
+{{ names[0] }} and {{ names[1] }}

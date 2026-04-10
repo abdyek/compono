@@ -1,0 +1,1 @@
+<compono-error-block><div slot="title">Unknown key</div><div slot="description">The key <strong>current-user</strong> is not injected.</div></compono-error-block>

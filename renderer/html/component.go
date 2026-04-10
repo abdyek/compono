@@ -67,7 +67,7 @@ func (cc *compCall) Render() string {
 
 	builtinComp := cc.renderer.findBuiltinComp(string(compCallName.Raw()))
 	if builtinComp != nil {
-		return builtinComp.Render(cc.Invoker(), cc.Node())
+		return builtinComp.Render(cc, cc.Node())
 	}
 
 	return ""

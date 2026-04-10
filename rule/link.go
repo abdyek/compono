@@ -65,6 +65,7 @@ func (_ *linkText) Rules() []Rule {
 		newStrong(),
 		newEm(),
 		newInlineCode(),
+		newContextRef(),
 		newPlain(),
 	}
 }

@@ -1,0 +1,4 @@
+{{ COMP }}
+
+~ COMP items = context(users/items)
+{{ items }}

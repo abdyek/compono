@@ -1,0 +1,4 @@
+{{ COMP arr = context(stats/numbers) }}
+
+~ COMP arr = []
+{{ arr[3] }}

@@ -200,6 +200,13 @@ func (ew *errorWrapper) getCallReplacements(root ast.Node) map[ast.Node]ast.Node
 }
 
 func (ew *errorWrapper) getReplacementForCompCall(root ast.Node, compCall ast.Node) ast.Node {
+	if missingKey := ew.getMissingContextKeyForCompCall(root, compCall, ast.GetAncestors(compCall), compCall, map[ast.Node]bool{}); missingKey != "" {
+		if ast.IsRuleName(compCall, "block-comp-call") {
+			return ew.createBlockError(compCall, "Unknown key", "The key **"+missingKey+"** is not injected.")
+		}
+		return ew.createInlineError(compCall, "Unknown key", "The key **"+missingKey+"** is not injected.")
+	}
+
 	compDef := findCompDef(root, compCall, getCompCallNameStr(compCall))
 	if compDef == nil {
 		return nil
@@ -227,6 +234,55 @@ func (ew *errorWrapper) getReplacementForCompCall(root ast.Node, compCall ast.No
 	}
 
 	return nil
+}
+
+func (ew *errorWrapper) getMissingContextKeyForCompCall(root ast.Node, compCall ast.Node, invokerAncestors []ast.Node, currentCompCall ast.Node, seen map[ast.Node]bool) string {
+	if seen[compCall] {
+		return ""
+	}
+	seen[compCall] = true
+
+	compDef := findCompDef(root, compCall, getCompCallNameStr(compCall))
+	if compDef == nil {
+		return ""
+	}
+
+	for _, arg := range ast.GetCompCallArgsFromCompCall(compCall) {
+		if key := ast.ResolveCompCallArgValue(root, arg, invokerAncestors, currentCompCall).MissingContextKey; key != "" {
+			return key
+		}
+	}
+
+	content := getCompDefContent(compDef)
+	if content == nil {
+		return ""
+	}
+
+	paramValues := resolveCompCallParamValues(root, compDef, compCall)
+	for _, paramRef := range ast.FilterNodesInTree(content, func(node ast.Node) bool {
+		return ast.IsRuleName(node, "param-ref") && !hasCompCallArgsNode(node)
+	}) {
+		value, ok := paramValues[getParamRefNameStr(paramRef)]
+		if !ok {
+			continue
+		}
+		resolved, _ := ast.ApplyAccessorsDetailed(value, ast.GetParamRefAccessors(paramRef))
+		if resolved.MissingContextKey != "" {
+			return resolved.MissingContextKey
+		}
+	}
+
+	nestedCompCalls := ast.FilterNodesInTree(content, func(node ast.Node) bool {
+		return ast.IsRuleNameOneOf(node, []string{"block-comp-call", "inline-comp-call"})
+	})
+	for _, nestedCompCall := range nestedCompCalls {
+		nestedAncestors := append([]ast.Node{nestedCompCall, currentCompCall}, invokerAncestors...)
+		if key := ew.getMissingContextKeyForCompCall(root, nestedCompCall, nestedAncestors, nestedCompCall, seen); key != "" {
+			return key
+		}
+	}
+
+	return ""
 }
 
 func (ew *errorWrapper) getInlineParamRefReplacements(root ast.Node, compCall ast.Node) map[ast.Node]ast.Node {

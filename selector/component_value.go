@@ -10,14 +10,24 @@ type mustacheCall struct {
 	paramRefName bool
 }
 
+type contextMustacheCall struct{}
+
 func NewMustacheCall(paramRefName bool) Selector {
 	return &mustacheCall{
 		paramRefName: paramRefName,
 	}
 }
 
+func NewContextMustacheCall() Selector {
+	return &contextMustacheCall{}
+}
+
 func (_ *mustacheCall) Name() string {
 	return "mustache_call"
+}
+
+func (_ *contextMustacheCall) Name() string {
+	return "context_mustache_call"
 }
 
 func (mc *mustacheCall) Select(source []byte, without ...[2]int) [][2]int {
@@ -34,6 +44,33 @@ func (mc *mustacheCall) Select(source []byte, without ...[2]int) [][2]int {
 			start += offset
 
 			end, ok := scanMustacheCall(source, start, mc.paramRefName)
+			if ok && end <= ns[1] {
+				results = append(results, [2]int{start, end})
+				offset = end
+				continue
+			}
+
+			offset = start + 2
+		}
+	}
+
+	return results
+}
+
+func (_ *contextMustacheCall) Select(source []byte, without ...[2]int) [][2]int {
+	results := [][2]int{}
+	noSelected := filterNoSelected(without, len(source))
+
+	for _, ns := range noSelected {
+		offset := ns[0]
+		for offset < ns[1] {
+			start := bytes.Index(source[offset:ns[1]], []byte("{{"))
+			if start == -1 {
+				break
+			}
+			start += offset
+
+			end, ok := scanContextMustacheCall(source, start)
 			if ok && end <= ns[1] {
 				results = append(results, [2]int{start, end})
 				offset = end
@@ -386,6 +423,8 @@ func scanComponentValue(source []byte, offset int, allowParamRef bool) (int, boo
 	}
 
 	switch {
+	case hasContextKeywordAt(source, offset):
+		return scanContextValue(source, offset)
 	case source[offset] == '"':
 		return scanQuotedString(source, offset)
 	case source[offset] == '[':
@@ -405,6 +444,10 @@ func scanComponentValue(source []byte, offset int, allowParamRef bool) (int, boo
 	default:
 		return 0, false
 	}
+}
+
+func hasContextKeywordAt(source []byte, offset int) bool {
+	return offset+7 <= len(source) && string(source[offset:offset+7]) == "context"
 }
 
 func scanMustacheCall(source []byte, offset int, paramRefName bool) (int, bool) {
@@ -454,6 +497,26 @@ func scanMustacheCall(source []byte, offset int, paramRefName bool) (int, bool) 
 		}
 		offset = valueEnd
 	}
+}
+
+func scanContextMustacheCall(source []byte, offset int) (int, bool) {
+	if offset+1 >= len(source) || source[offset] != '{' || source[offset+1] != '{' {
+		return 0, false
+	}
+
+	offset += 2
+	offset = skipComponentSpaces(source, offset)
+	end, ok := scanContextValue(source, offset)
+	if !ok {
+		return 0, false
+	}
+
+	offset = skipComponentSpaces(source, end)
+	if offset+1 >= len(source) || source[offset] != '}' || source[offset+1] != '}' {
+		return 0, false
+	}
+
+	return offset + 2, true
 }
 
 func scanQuotedString(source []byte, offset int) (int, bool) {
@@ -531,6 +594,77 @@ func scanParamReferenceValue(source []byte, offset int) (int, bool) {
 			end = indexEnd
 		}
 	}
+}
+
+func scanContextValue(source []byte, offset int) (int, bool) {
+	if !hasContextKeywordAt(source, offset) {
+		return 0, false
+	}
+
+	offset += len("context")
+	if offset >= len(source) || source[offset] != '(' {
+		return 0, false
+	}
+
+	offset++
+	offset = skipComponentSpaces(source, offset)
+	start := offset
+	for offset < len(source) && source[offset] != ')' {
+		ch := source[offset]
+		if ch == ' ' || ch == '\n' || ch == '\r' || ch == '\t' {
+			offset++
+			continue
+		}
+		if ch == '/' || ch == '-' || (ch >= 'a' && ch <= 'z') || (ch >= '0' && ch <= '9') {
+			offset++
+			continue
+		}
+		return 0, false
+	}
+	if offset >= len(source) || !isValidContextKey(string(bytes.TrimSpace(source[start:offset]))) {
+		return 0, false
+	}
+
+	offset++
+	for {
+		next := skipComponentSpaces(source, offset)
+		switch {
+		case next < len(source) && source[next] == '.':
+			next++
+			next = skipComponentSpaces(source, next)
+			keyEnd, ok := scanComponentParamName(source, next)
+			if !ok {
+				return 0, false
+			}
+			offset = keyEnd
+		default:
+			indexEnd, ok := scanArrayIndex(source, next)
+			if !ok {
+				return offset, true
+			}
+			offset = indexEnd
+		}
+	}
+}
+
+func isValidContextKey(key string) bool {
+	if len(key) == 0 || key[0] == '/' || key[len(key)-1] == '/' {
+		return false
+	}
+	for i := 0; i < len(key); i++ {
+		ch := key[i]
+		if ch == '/' {
+			if i+1 < len(key) && key[i+1] == '/' {
+				return false
+			}
+			continue
+		}
+		if ch == '-' || (ch >= 'a' && ch <= 'z') || (ch >= '0' && ch <= '9') {
+			continue
+		}
+		return false
+	}
+	return true
 }
 
 func scanArrayLiteral(source []byte, offset int, allowParamRef bool) (int, bool) {

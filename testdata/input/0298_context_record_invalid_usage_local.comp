@@ -1,0 +1,4 @@
+{{ COMP }}
+
+~ COMP record = context(user/profile)
+{{ record }}

@@ -1,0 +1,7 @@
+{{ PAGE }}
+
+~ PAGE user = context(current-user)
+{{ CARD user = user }}
+
+~ CARD user = {}
+# {{ user.name }}
