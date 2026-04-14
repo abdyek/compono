@@ -1,0 +1,31 @@
+{{ WEB_GRID
+  items = [
+    { component: HERO_IMAGE, grid-area: "hero" },
+    { component: CONTENT, grid-area: "content" }
+  ]
+  grid-template-columns = ["1fr"]
+  grid-template-rows = ["min-content", "1fr"]
+  grid-template-areas = [
+    ["hero"],
+    ["content"]
+  ]
+}}
+
+~ HERO_IMAGE
+{{ IMAGE media = {
+  url: "https://cdn.example.com/grid-hero.jpg",
+  width: 1600,
+  height: 900,
+  mime-type: "image/jpeg",
+  variants: [
+    {
+      url: "https://cdn.example.com/grid-hero-640.webp",
+      width: 640,
+      height: 360,
+      mime-type: "image/webp"
+    }
+  ]
+} alt = "Grid hero" }}
+
+~ CONTENT
+Grid content.

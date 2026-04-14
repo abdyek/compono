@@ -1,0 +1,1 @@
+<img src="https://cdn.example.com/valid.jpg" alt="Valid image" width="800" height="450"><compono-error-block><div slot="title">Unsupported mime-type</div><div slot="description">The mime-type <strong>image/svg+xml</strong> is unsupported.</div></compono-error-block>

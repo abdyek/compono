@@ -1,0 +1,1 @@
+Look: {{ IMAGE media = context(image/media) alt = "Context image" }}.

@@ -1,0 +1,6 @@
+# {{ IMAGE media = {
+  url: "https://cdn.example.com/logo.png",
+  width: 320,
+  height: 80,
+  mime-type: "image/png"
+} alt = "Site logo" }}

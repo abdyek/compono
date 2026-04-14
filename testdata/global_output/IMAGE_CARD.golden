@@ -1,0 +1,1 @@
+<picture><source type="image/webp" srcset="https://cdn.example.com/card-640.webp 640w"><img src="https://cdn.example.com/card.jpg" alt="Card image" width="1200" height="630"></picture>

@@ -1,0 +1,6 @@
+{{ IMAGE media = {
+  url: "https://cdn.example.com/photo.jpg",
+  width: 0,
+  height: 900,
+  mime-type: "image/jpeg"
+} alt = "Photo" }}
