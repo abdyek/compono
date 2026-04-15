@@ -1,0 +1,1 @@
+<compono-error-block><div slot="title">Invalid built-in arguments</div><div slot="description">The parameter <strong>media</strong> does not match the schema of the built-in component <strong>IMAGE</strong>.</div></compono-error-block>
