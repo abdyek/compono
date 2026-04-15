@@ -49,11 +49,6 @@ outer:
 			}
 		}
 
-		content := strings.TrimSpace(strings.TrimPrefix(string(source[ind[0]:ind[1]]), prefix))
-		if strings.HasPrefix(content, "{{") && !strings.Contains(content, "}}") {
-			continue
-		}
-
 		filtered = append(filtered, ind)
 	}
 
@@ -78,6 +73,9 @@ outer:
 
 		content := strings.TrimSpace(strings.TrimPrefix(string(source[ind[0]:ind[1]]), prefix))
 		if !strings.HasPrefix(content, "{{") {
+			continue
+		}
+		if strings.Contains(content, "\n") {
 			continue
 		}
 
