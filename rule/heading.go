@@ -1,33 +1,112 @@
 package rule
 
-import "github.com/umono-cms/compono/selector"
+import (
+	"strings"
+
+	"github.com/umono-cms/compono/selector"
+)
 
 func headingSelectors(prefix string) []selector.Selector {
+	mustache, _ := selector.NewStartEnd(prefix+` (\t| )*\{\{`, `\}\}[\t ]*(?:\n|\z)`)
 	se, _ := selector.NewStartEnd(prefix+` (\t| )*`, `\n|\z`)
 	return []selector.Selector{
+		selector.NewFilter(mustache, func(source []byte, index [][2]int) [][2]int {
+			return filterHeadingMustacheBlocks(source, index, prefix)
+		}),
 		selector.NewFilter(se, func(source []byte, index [][2]int) [][2]int {
-			if len(index) == 0 {
-				return [][2]int{}
-			}
-
-			filtered := [][2]int{}
-
-		outer:
-			for _, ind := range index {
-				start := ind[0]
-
-				for i := start - 1; i >= 0 && source[i] != '\n'; i-- {
-					if source[i] != ' ' && source[i] != '\t' {
-						continue outer
-					}
-				}
-
-				filtered = append(filtered, ind)
-			}
-
-			return filtered
+			return filterHeadingLines(source, index, prefix)
 		}),
 	}
+}
+
+func headingContentSelectors(prefix string) []selector.Selector {
+	mustache := selector.NewMustacheCall(false)
+	singleLine := selector.NewStartEndInner(prefix+`\s+`, `\n|\z`)
+	return []selector.Selector{
+		selector.NewFilter(mustache, func(source []byte, index [][2]int) [][2]int {
+			return filterHeadingMustacheContent(source, index, prefix)
+		}),
+		selector.NewFilter(singleLine, func(source []byte, index [][2]int) [][2]int {
+			return filterSingleLineHeadingContent(index)
+		}),
+	}
+}
+
+func filterHeadingLines(source []byte, index [][2]int, prefix string) [][2]int {
+	if len(index) == 0 {
+		return [][2]int{}
+	}
+
+	filtered := [][2]int{}
+
+outer:
+	for _, ind := range index {
+		start := ind[0]
+
+		for i := start - 1; i >= 0 && source[i] != '\n'; i-- {
+			if source[i] != ' ' && source[i] != '\t' {
+				continue outer
+			}
+		}
+
+		content := strings.TrimSpace(strings.TrimPrefix(string(source[ind[0]:ind[1]]), prefix))
+		if strings.HasPrefix(content, "{{") && !strings.Contains(content, "}}") {
+			continue
+		}
+
+		filtered = append(filtered, ind)
+	}
+
+	return filtered
+}
+
+func filterHeadingMustacheBlocks(source []byte, index [][2]int, prefix string) [][2]int {
+	if len(index) == 0 {
+		return [][2]int{}
+	}
+
+	filtered := [][2]int{}
+
+outer:
+	for _, ind := range index {
+		start := ind[0]
+		for i := start - 1; i >= 0 && source[i] != '\n'; i-- {
+			if source[i] != ' ' && source[i] != '\t' {
+				continue outer
+			}
+		}
+
+		content := strings.TrimSpace(strings.TrimPrefix(string(source[ind[0]:ind[1]]), prefix))
+		if !strings.HasPrefix(content, "{{") {
+			continue
+		}
+
+		filtered = append(filtered, ind)
+	}
+
+	return filtered
+}
+
+func filterHeadingMustacheContent(source []byte, index [][2]int, prefix string) [][2]int {
+	if len(index) == 0 {
+		return [][2]int{}
+	}
+
+	filtered := make([][2]int, 0, len(index))
+	for _, ind := range index {
+		before := strings.TrimSpace(strings.TrimPrefix(string(source[:ind[0]]), prefix))
+		after := strings.TrimSpace(string(source[ind[1]:]))
+		if before != "" || after != "" {
+			continue
+		}
+		filtered = append(filtered, ind)
+	}
+
+	return filtered
+}
+
+func filterSingleLineHeadingContent(index [][2]int) [][2]int {
+	return index
 }
 
 type h1 struct{}
@@ -61,9 +140,7 @@ func (_ *h1Content) Name() string {
 }
 
 func (_ *h1Content) Selectors() []selector.Selector {
-	return []selector.Selector{
-		selector.NewStartEndInner(`#\s+`, `\n|\z`),
-	}
+	return headingContentSelectors("#")
 }
 
 func (_ *h1Content) Rules() []Rule {
@@ -110,9 +187,7 @@ func (_ *h2Content) Name() string {
 }
 
 func (_ *h2Content) Selectors() []selector.Selector {
-	return []selector.Selector{
-		selector.NewStartEndInner(`##\s+`, `\n|\z`),
-	}
+	return headingContentSelectors("##")
 }
 
 func (_ *h2Content) Rules() []Rule {
@@ -159,9 +234,7 @@ func (_ *h3Content) Name() string {
 }
 
 func (_ *h3Content) Selectors() []selector.Selector {
-	return []selector.Selector{
-		selector.NewStartEndInner(`###\s+`, `\n|\z`),
-	}
+	return headingContentSelectors("###")
 }
 
 func (_ *h3Content) Rules() []Rule {
@@ -208,9 +281,7 @@ func (_ *h4Content) Name() string {
 }
 
 func (_ *h4Content) Selectors() []selector.Selector {
-	return []selector.Selector{
-		selector.NewStartEndInner(`####\s+`, `\n|\z`),
-	}
+	return headingContentSelectors("####")
 }
 
 func (_ *h4Content) Rules() []Rule {
@@ -257,9 +328,7 @@ func (_ *h5Content) Name() string {
 }
 
 func (_ *h5Content) Selectors() []selector.Selector {
-	return []selector.Selector{
-		selector.NewStartEndInner(`#####\s+`, `\n|\z`),
-	}
+	return headingContentSelectors("#####")
 }
 
 func (_ *h5Content) Rules() []Rule {
@@ -306,9 +375,7 @@ func (_ *h6Content) Name() string {
 }
 
 func (_ *h6Content) Selectors() []selector.Selector {
-	return []selector.Selector{
-		selector.NewStartEndInner(`######\s+`, `\n|\z`),
-	}
+	return headingContentSelectors("######")
 }
 
 func (_ *h6Content) Rules() []Rule {
