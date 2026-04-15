@@ -1,0 +1,1 @@
+<h1>{{ IMAGE media = {</h1><p> url: &#34;https://cdn.example.com/logo.png&#34;,<br> width: 320,<br> height: 80,<br> mime-type: &#34;image/png&#34;<br>} alt = &#34;Site logo&#34; }}</p>

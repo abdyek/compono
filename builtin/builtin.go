@@ -33,6 +33,22 @@ func BuiltinComponents() []Definition {
 			InlineRenderable: true,
 		},
 		{
+			Name: "IMAGE",
+			Params: []Param{
+				{
+					Name:         "media",
+					Schema:       imageMediaSchema(),
+					DefaultValue: map[string]any{},
+				},
+				{
+					Name:         "alt",
+					Schema:       String(),
+					DefaultValue: "",
+				},
+			},
+			InlineRenderable: true,
+		},
+		{
 			Name: "WEB_GRID",
 			Params: []Param{
 				{
@@ -133,6 +149,25 @@ func BuiltinComponents() []Definition {
 			},
 		},
 	}
+}
+
+func imageMediaSchema() ValueSchema {
+	return Record(
+		Field("url", String()).Required(),
+		Field("width", Integer()).Required(),
+		Field("height", Integer()).Required(),
+		Field("mime-type", String()).Required(),
+		Field("variants", ArrayOf(imageVariantSchema())),
+	).DisallowUnknownKeys()
+}
+
+func imageVariantSchema() ValueSchema {
+	return Record(
+		Field("url", String()).Required(),
+		Field("width", Integer()).Required(),
+		Field("height", Integer()).Required(),
+		Field("mime-type", String()).Required(),
+	).DisallowUnknownKeys()
 }
 
 func webGridItemSchema() ValueSchema {

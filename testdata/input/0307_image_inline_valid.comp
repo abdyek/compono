@@ -1,0 +1,6 @@
+Gallery cover: {{ IMAGE media = {
+  url: "https://cdn.example.com/gallery-cover.jpg",
+  width: 800,
+  height: 450,
+  mime-type: "image/jpeg"
+} alt = "Gallery cover" }} is ready.

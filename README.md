@@ -159,6 +159,134 @@ Output:
 <a href="https://example.com" target="_blank" rel="noopener noreferrer">Visit us</a>
 ```
 
+### IMAGE
+
+Creates a semantic image output from a `media` record and optional responsive variants.
+
+Basic usage:
+
+```
+{{ IMAGE media = {
+  url: "https://cdn.example.com/my-photo.jpg",
+  width: 1600,
+  height: 900,
+  mime-type: "image/jpeg",
+  variants: [
+    {
+      url: "https://cdn.example.com/my-photo-640.avif",
+      width: 640,
+      height: 360,
+      mime-type: "image/avif"
+    },
+    {
+      url: "https://cdn.example.com/my-photo-1280.avif",
+      width: 1280,
+      height: 720,
+      mime-type: "image/avif"
+    },
+    {
+      url: "https://cdn.example.com/my-photo-1600.avif",
+      width: 1600,
+      height: 900,
+      mime-type: "image/avif"
+    },
+    {
+      url: "https://cdn.example.com/my-photo-640.webp",
+      width: 640,
+      height: 360,
+      mime-type: "image/webp"
+    },
+    {
+      url: "https://cdn.example.com/my-photo-1280.webp",
+      width: 1280,
+      height: 720,
+      mime-type: "image/webp"
+    },
+    {
+      url: "https://cdn.example.com/my-photo-1600.webp",
+      width: 1600,
+      height: 900,
+      mime-type: "image/webp"
+    }
+  ]
+} alt = "My photo" }}
+```
+
+Output:
+```html
+<picture><source type="image/avif" srcset="https://cdn.example.com/my-photo-640.avif 640w, https://cdn.example.com/my-photo-1280.avif 1280w, https://cdn.example.com/my-photo-1600.avif 1600w"><source type="image/webp" srcset="https://cdn.example.com/my-photo-640.webp 640w, https://cdn.example.com/my-photo-1280.webp 1280w, https://cdn.example.com/my-photo-1600.webp 1600w"><img src="https://cdn.example.com/my-photo.jpg" alt="My photo" width="1600" height="900"></picture>
+```
+
+Without variants, `IMAGE` renders a plain `img` element:
+
+```
+{{ IMAGE media = {
+  url: "https://cdn.example.com/avatar.png",
+  width: 512,
+  height: 512,
+  mime-type: "image/png"
+} alt = "Profile avatar" }}
+```
+
+Output:
+```html
+<img src="https://cdn.example.com/avatar.png" alt="Profile avatar" width="512" height="512">
+```
+
+`IMAGE` can be used inline or as a block component depending on where it is called:
+
+```
+Gallery cover: {{ IMAGE media = {
+  url: "https://cdn.example.com/gallery-cover.jpg",
+  width: 800,
+  height: 450,
+  mime-type: "image/jpeg"
+} alt = "Gallery cover" }} is ready.
+```
+
+#### IMAGE Parameters
+
+- `media` is required and must be a record with:
+  - `url`
+  - `width`
+  - `height`
+  - `mime-type`
+  - optional `variants`
+- `alt` is a string. Pass `alt=""` for decorative images.
+
+Each item in `variants` must be a record with:
+
+- `url`
+- `width`
+- `height`
+- `mime-type`
+
+Supported mime types:
+
+- `image/jpeg`
+- `image/png`
+- `image/webp`
+- `image/gif`
+- `image/avif`
+
+#### IMAGE Behavior
+
+- `media` is always the fallback image source.
+- variants are grouped by first-seen `mime-type`, preserving the original group order.
+- within each mime type group, `srcset` entries are sorted by ascending width.
+- an empty `variants` array is valid and renders only the fallback `img`.
+- all widths and heights must be greater than `0`.
+- all variants must preserve the same aspect ratio as the main `media`.
+- duplicate `mime-type` + `width` pairs are invalid.
+
+When validation fails, Compono renders an error placeholder instead of silently producing invalid markup. Common IMAGE-specific errors include:
+
+- `Invalid built-in arguments`
+- `Unsupported mime-type`
+- `Invalid dimension`
+- `Duplicate variant`
+- `Inconsistent aspect ratio`
+
 ### WEB_GRID
 
 Creates a web grid wrapper from component items and grid template definitions:

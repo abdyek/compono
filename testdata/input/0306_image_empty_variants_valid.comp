@@ -1,0 +1,7 @@
+{{ IMAGE media = {
+  url: "https://cdn.example.com/poster.webp",
+  width: 1200,
+  height: 1600,
+  mime-type: "image/webp",
+  variants: [],
+} alt = "Poster" }}

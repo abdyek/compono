@@ -1,0 +1,1 @@
+<picture><source type="image/webp" srcset="https://cdn.example.com/wrapped-640.webp 640w, https://cdn.example.com/wrapped-1280.webp 1280w"><img src="https://cdn.example.com/wrapped.jpg" alt="Wrapped image" width="1600" height="900"></picture>

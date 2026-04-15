@@ -1,0 +1,23 @@
+{
+  "image/media": {
+    "url": "https://cdn.example.com/context-photo.jpg",
+    "width": 1600,
+    "height": 900,
+    "mime-type": "image/jpeg",
+    "variants": [
+      {
+        "url": "https://cdn.example.com/context-photo-640.avif",
+        "width": 640,
+        "height": 360,
+        "mime-type": "image/avif"
+      },
+      {
+        "url": "https://cdn.example.com/context-photo-640.webp",
+        "width": 640,
+        "height": 360,
+        "mime-type": "image/webp"
+      }
+    ]
+  },
+  "image/alt": "Context photo"
+}

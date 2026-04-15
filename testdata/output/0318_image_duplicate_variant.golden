@@ -1,0 +1,1 @@
+<compono-error-block><div slot="title">Duplicate variant</div><div slot="description">The variant with mime-type <strong>image/webp</strong> and width <strong>640</strong> is defined more than once.</div></compono-error-block>

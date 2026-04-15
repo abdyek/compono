@@ -1,0 +1,6 @@
+{{ IMAGE media = {
+  url: "https://cdn.example.com/diagram.svg",
+  width: 800,
+  height: 600,
+  mime-type: "image/svg+xml"
+} alt = "Diagram" }}

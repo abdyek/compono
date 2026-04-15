@@ -1,0 +1,15 @@
+{{ CARD media = {
+  url: "https://cdn.example.com/valid.jpg",
+  width: 800,
+  height: 450,
+  mime-type: "image/jpeg"
+} alt = "Valid image" }}
+{{ CARD media = {
+  url: "https://cdn.example.com/invalid.svg",
+  width: 800,
+  height: 450,
+  mime-type: "image/svg+xml"
+} alt = "Invalid image" }}
+
+~ CARD media = {} alt = ""
+{{ IMAGE media = media alt = alt }}

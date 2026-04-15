@@ -1,0 +1,6 @@
+{{ IMAGE media = {
+  url: "https://cdn.example.com/avatar.png",
+  width: 512,
+  height: 512,
+  mime-type: "image/png"
+} alt = "Profile avatar" }}

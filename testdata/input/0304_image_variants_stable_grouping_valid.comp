@@ -1,0 +1,44 @@
+{{ IMAGE media = {
+  url: "https://cdn.example.com/hero.jpg",
+  width: 1600,
+  height: 900,
+  mime-type: "image/jpeg",
+  variants: [
+    {
+      url: "https://cdn.example.com/hero-1280.webp",
+      width: 1280,
+      height: 720,
+      mime-type: "image/webp"
+    },
+    {
+      url: "https://cdn.example.com/hero-1280.avif",
+      width: 1280,
+      height: 720,
+      mime-type: "image/avif"
+    },
+    {
+      url: "https://cdn.example.com/hero-640.webp",
+      width: 640,
+      height: 360,
+      mime-type: "image/webp"
+    },
+    {
+      url: "https://cdn.example.com/hero-1280.jpg",
+      width: 1280,
+      height: 720,
+      mime-type: "image/jpeg"
+    },
+    {
+      url: "https://cdn.example.com/hero-640.avif",
+      width: 640,
+      height: 360,
+      mime-type: "image/avif"
+    },
+    {
+      url: "https://cdn.example.com/hero-640.jpg",
+      width: 640,
+      height: 360,
+      mime-type: "image/jpeg"
+    }
+  ]
+} alt = "Hero cover" }}

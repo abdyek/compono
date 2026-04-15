@@ -1,0 +1,13 @@
+{{ IMAGE media = {
+  url: "https://cdn.example.com/photo.jpg",
+  width: 1600,
+  height: 900,
+  mime-type: "image/jpeg",
+  variants: [
+    {
+      url: "https://cdn.example.com/photo-640.webp",
+      height: 360,
+      mime-type: "image/webp"
+    }
+  ]
+} alt = "Photo" }}

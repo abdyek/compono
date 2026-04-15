@@ -1,0 +1,11 @@
+{{ IMAGE media = {
+  url: "https://cdn.example.com/first.png",
+  width: 64,
+  height: 64,
+  mime-type: "image/png"
+} alt = "First icon" }} {{ IMAGE media = {
+  url: "https://cdn.example.com/second.png",
+  width: 64,
+  height: 64,
+  mime-type: "image/png"
+} alt = "Second icon" }}

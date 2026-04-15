@@ -1,0 +1,1 @@
+{{ IMAGE media = context(image/media) alt = context(image/alt) }}
