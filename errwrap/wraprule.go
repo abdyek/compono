@@ -30,8 +30,8 @@ type wrapRule struct {
 	block      func(ctx *wrapContext, node ast.Node) bool
 }
 
-func wrapRules() []wrapRule {
-	return []wrapRule{
+func diagnosticAnalyzers() []diagnosticAnalyzer {
+	return []diagnosticAnalyzer{
 		infiniteBlockCompCallByItself(),
 		infiniteInlineCompCallByItself(),
 		infiniteCompCallByChain(),
@@ -49,10 +49,7 @@ func wrapRules() []wrapRule {
 		unknownWebGridItemComponent(),
 		wrongArgType(),
 		paramRefInRootContent(),
-		missingContextRef(),
-		contextRefInvalidUsage(),
-		contextRefUnknownRecordKey(),
-		contextRefArrayIndexOutOfRange(),
+		contextRefAnalyzer{},
 		undefinedParamRef(),
 		notCompParamCompCall(),
 		undefinedParamCompCall(),
@@ -238,58 +235,6 @@ func undefinedParamRef() wrapRule {
 	}
 }
 
-func missingContextRef() wrapRule {
-	return wrapRule{
-		conditions: []func(*wrapContext, ast.Node) bool{
-			isRuleName("context-ref"),
-			isDirectContextRef(),
-			contextRefMissingKey(),
-		},
-		title:   staticTitle("Unknown key"),
-		message: missingContextRefMsg,
-		block:   neverBlock,
-	}
-}
-
-func contextRefInvalidUsage() wrapRule {
-	return wrapRule{
-		conditions: []func(*wrapContext, ast.Node) bool{
-			isRuleName("context-ref"),
-			isDirectContextRef(),
-			contextRefHasDirectInvalidUsage(),
-		},
-		title:   staticTitle("Invalid parameter usage"),
-		message: contextRefInvalidUsageMsg,
-		block:   neverBlock,
-	}
-}
-
-func contextRefUnknownRecordKey() wrapRule {
-	return wrapRule{
-		conditions: []func(*wrapContext, ast.Node) bool{
-			isRuleName("context-ref"),
-			isDirectContextRef(),
-			contextRefHasUnknownRecordKey(),
-		},
-		title:   staticTitle("Unknown record key"),
-		message: contextRefUnknownRecordKeyMsg,
-		block:   neverBlock,
-	}
-}
-
-func contextRefArrayIndexOutOfRange() wrapRule {
-	return wrapRule{
-		conditions: []func(*wrapContext, ast.Node) bool{
-			isRuleName("context-ref"),
-			isDirectContextRef(),
-			contextRefHasArrayIndexOutOfRange(),
-		},
-		title:   staticTitle("Array index out of range"),
-		message: staticTitle("The index used for this context value is out of range."),
-		block:   neverBlock,
-	}
-}
-
 func undefinedParamCompCall() wrapRule {
 	return wrapRule{
 		conditions: []func(*wrapContext, ast.Node) bool{
@@ -302,24 +247,6 @@ func undefinedParamCompCall() wrapRule {
 		message: undefinedParamCompCallAsUnknownMsg,
 		block:   blockForParamRef,
 	}
-}
-
-func missingContextRefMsg(ctx *wrapContext, node ast.Node) string {
-	resolved, _ := resolveContextRefValueDetailed(ctx.root, node)
-	return "The key **" + resolved.MissingContextKey + "** is not injected."
-}
-
-func contextRefInvalidUsageMsg(ctx *wrapContext, node ast.Node) string {
-	resolved, _ := resolveContextRefValueDetailed(ctx.root, node)
-	if resolved.Type == "array" {
-		return "The context value is an array and cannot be rendered directly."
-	}
-	return "The context value is a record and cannot be rendered directly."
-}
-
-func contextRefUnknownRecordKeyMsg(ctx *wrapContext, node ast.Node) string {
-	_, accessErr := resolveContextRefValueDetailed(ctx.root, node)
-	return "The key **" + accessErr.Key + "** is not defined in this record."
 }
 
 func notCompParamCompCall() wrapRule {
@@ -2015,69 +1942,4 @@ func findCompDef(root ast.Node, compCallNode ast.Node, name string) ast.Node {
 	}
 
 	return nil
-}
-
-func isDirectContextRef() func(*wrapContext, ast.Node) bool {
-	return func(_ *wrapContext, node ast.Node) bool {
-		if !ast.IsRuleName(node, "context-ref") {
-			return false
-		}
-
-		return ast.FindNode(ast.GetAncestors(node), func(anc ast.Node) bool {
-			return ast.IsRuleNameOneOf(anc, []string{
-				"comp-param-type",
-				"comp-call-arg-type",
-				"comp-array-param-value-type",
-				"comp-call-array-arg-value-type",
-				"comp-record-param-value-type",
-				"comp-call-record-arg-value-type",
-				"context-value-type",
-			})
-		}) == nil
-	}
-}
-
-func contextRefMissingKey() func(*wrapContext, ast.Node) bool {
-	return func(ctx *wrapContext, node ast.Node) bool {
-		resolved, _ := resolveContextRefValueDetailed(ctx.root, node)
-		return resolved.MissingContextKey != ""
-	}
-}
-
-func contextRefHasDirectInvalidUsage() func(*wrapContext, ast.Node) bool {
-	return func(ctx *wrapContext, node ast.Node) bool {
-		resolved, accessErr := resolveContextRefValueDetailed(ctx.root, node)
-		if accessErr.Kind != "" {
-			return false
-		}
-		return len(ast.GetContextAccessors(node)) == 0 && ast.IsRuleName(node, "context-ref") && (resolved.Type == "array" || resolved.Type == "record")
-	}
-}
-
-func contextRefHasUnknownRecordKey() func(*wrapContext, ast.Node) bool {
-	return func(ctx *wrapContext, node ast.Node) bool {
-		_, accessErr := resolveContextRefValueDetailed(ctx.root, node)
-		return accessErr.Kind == "unknown_record_key"
-	}
-}
-
-func contextRefHasArrayIndexOutOfRange() func(*wrapContext, ast.Node) bool {
-	return func(ctx *wrapContext, node ast.Node) bool {
-		_, accessErr := resolveContextRefValueDetailed(ctx.root, node)
-		return accessErr.Kind == "array_index_out_of_range"
-	}
-}
-
-func resolveContextRefValueDetailed(root ast.Node, node ast.Node) (ast.ResolvedValue, ast.AccessError) {
-	key := ast.GetContextKey(node)
-	if key == "" {
-		return ast.ResolvedValue{}, ast.AccessError{}
-	}
-
-	resolved := ast.ResolveContextValue(root, key)
-	if resolved.MissingContextKey != "" {
-		return resolved, ast.AccessError{}
-	}
-
-	return ast.ApplyAccessorsDetailed(resolved, ast.GetContextAccessors(node))
 }
