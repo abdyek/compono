@@ -27,8 +27,8 @@ type webGridError struct {
 	message string
 }
 
-func invalidWebGrid() wrapRule {
-	return wrapRule{
+func invalidWebGrid() conditionAnalyzer {
+	return conditionAnalyzer{
 		conditions: []func(*wrapContext, ast.Node) bool{
 			isRuleNameOneOf("block-comp-call", "inline-comp-call"),
 			not(isInsideCompDef()),
@@ -44,8 +44,8 @@ func invalidWebGrid() wrapRule {
 	}
 }
 
-func unknownWebGridItemComponent() wrapRule {
-	return wrapRule{
+func unknownWebGridItemComponent() conditionAnalyzer {
+	return conditionAnalyzer{
 		conditions: []func(*wrapContext, ast.Node) bool{
 			isRuleNameOneOf("block-comp-call", "inline-comp-call"),
 			not(isInsideCompDef()),
