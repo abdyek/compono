@@ -21,8 +21,8 @@ type imageError struct {
 	message string
 }
 
-func wrongImageArgType() wrapRule {
-	return wrapRule{
+func wrongImageArgType() conditionAnalyzer {
+	return conditionAnalyzer{
 		conditions: []func(*wrapContext, ast.Node) bool{
 			isRuleNameOneOf("block-comp-call", "inline-comp-call"),
 			isImageBuiltinComponent(),
@@ -34,8 +34,8 @@ func wrongImageArgType() wrapRule {
 	}
 }
 
-func invalidImage() wrapRule {
-	return wrapRule{
+func invalidImage() conditionAnalyzer {
+	return conditionAnalyzer{
 		conditions: []func(*wrapContext, ast.Node) bool{
 			isRuleNameOneOf("block-comp-call", "inline-comp-call"),
 			not(isInsideCompDef()),

@@ -13,12 +13,12 @@ type ErrorWrapper interface {
 
 func DefaultErrorWrapper() ErrorWrapper {
 	return &errorWrapper{
-		wrapRules: wrapRules(),
+		analyzers: diagnosticAnalyzers(),
 	}
 }
 
 type errorWrapper struct {
-	wrapRules []wrapRule
+	analyzers []diagnosticAnalyzer
 }
 
 func (ew *errorWrapper) Wrap(root ast.Node) {
@@ -47,14 +47,12 @@ func (ew *errorWrapper) scanAndWrap(ctx *wrapContext, node ast.Node) {
 }
 
 func (ew *errorWrapper) wrap(ctx *wrapContext, node ast.Node) (wrapped bool) {
-Outer:
-	for _, wr := range ew.wrapRules {
-		for _, cond := range wr.conditions {
-			if !cond(ctx, node) {
-				continue Outer
-			}
+	for _, analyzer := range ew.analyzers {
+		diag, ok := analyzer.Diagnose(ctx, node)
+		if !ok {
+			continue
 		}
-		ew.wrapWithErr(node, wr.title(ctx, node), wr.message(ctx, node), wr.block(ctx, node))
+		ew.wrapWithErr(node, diag.title, diag.message, diag.block)
 		return true
 	}
 
