@@ -278,7 +278,7 @@ func getImageInconsistentAspectRatioError(media ast.ResolvedValue) imageError {
 			continue
 		}
 
-		if mediaWidth*variantHeight != variantWidth*mediaHeight {
+		if !imagePreservesAspectRatio(mediaWidth, mediaHeight, variantWidth, variantHeight) {
 			return imageError{
 				title:   "Inconsistent aspect ratio",
 				message: "All variants must preserve the aspect ratio of the main media.",
@@ -287,6 +287,26 @@ func getImageInconsistentAspectRatioError(media ast.ResolvedValue) imageError {
 	}
 
 	return imageError{}
+}
+
+func imagePreservesAspectRatio(mediaWidth, mediaHeight, variantWidth, variantHeight int) bool {
+	expectedHeightNumerator := variantWidth * mediaHeight
+	expectedHeightFloor := expectedHeightNumerator / mediaWidth
+	expectedHeightCeil := divideAndCeil(expectedHeightNumerator, mediaWidth)
+
+	if variantHeight == expectedHeightFloor || variantHeight == expectedHeightCeil {
+		return true
+	}
+
+	expectedWidthNumerator := variantHeight * mediaWidth
+	expectedWidthFloor := expectedWidthNumerator / mediaHeight
+	expectedWidthCeil := divideAndCeil(expectedWidthNumerator, mediaHeight)
+
+	return variantWidth == expectedWidthFloor || variantWidth == expectedWidthCeil
+}
+
+func divideAndCeil(numerator, denominator int) int {
+	return (numerator + denominator - 1) / denominator
 }
 
 func imageVariants(media ast.ResolvedValue) []ast.ResolvedValue {
