@@ -31,7 +31,7 @@ func ResolveCompCallArgValue(root Node, compCallArg Node, invokerAncestors []Nod
 
 func ResolveParamFromAncestors(root Node, paramName string, accessors []ValueAccessor, invokerAncestors []Node) ResolvedValue {
 	for _, anc := range invokerAncestors {
-		if !IsRuleNameOneOf(anc, []string{"block-comp-call", "inline-comp-call"}) {
+		if !IsRuleNameOneOf(anc, []string{"block-comp-call", "inline-comp-call", "param-ref"}) {
 			continue
 		}
 
@@ -46,8 +46,10 @@ func ResolveParamFromAncestors(root Node, paramName string, accessors []ValueAcc
 			}
 		}
 
-		if resolved := ResolveParamDefaultFromCompCall(root, anc, paramName); !resolved.IsZero() {
-			return ApplyAccessors(resolved, accessors)
+		if IsRuleNameOneOf(anc, []string{"block-comp-call", "inline-comp-call"}) {
+			if resolved := ResolveParamDefaultFromCompCall(root, anc, paramName); !resolved.IsZero() {
+				return ApplyAccessors(resolved, accessors)
+			}
 		}
 	}
 

@@ -5,6 +5,7 @@ import (
 
 	"github.com/umono-cms/compono/ast"
 	"github.com/umono-cms/compono/builtin"
+	"github.com/umono-cms/compono/rule"
 	"github.com/umono-cms/compono/util"
 )
 
@@ -19,6 +20,11 @@ var imageSupportedMimeTypes = []string{
 type imageError struct {
 	title   string
 	message string
+}
+
+type imageComponentTarget struct {
+	name  string
+	scope ast.Node
 }
 
 func wrongImageArgType() conditionAnalyzer {
@@ -73,23 +79,23 @@ func getImageError(ctx *wrapContext, node ast.Node) imageError {
 		return imageError{}
 	}
 
-	return walkImageCallTree(ctx, node, func(target ast.Node) imageError {
-		return getImageErrorForCompCalls(ctx, node, target)
+	return walkImageCallTree(ctx, node, func(target ast.Node, invokerAncestors []ast.Node) imageError {
+		return getImageErrorForCompCalls(ctx, target, invokerAncestors)
 	})
 }
 
-func walkImageCallTree(ctx *wrapContext, ownerCompCall ast.Node, visit func(ast.Node) imageError) imageError {
+func walkImageCallTree(ctx *wrapContext, ownerCompCall ast.Node, visit func(ast.Node, []ast.Node) imageError) imageError {
 	seen := map[ast.Node]bool{}
 
-	var walk func(ast.Node) imageError
-	walk = func(current ast.Node) imageError {
+	var walk func(ast.Node, []ast.Node) imageError
+	walk = func(current ast.Node, invokerAncestors []ast.Node) imageError {
 		if seen[current] {
 			return imageError{}
 		}
 		seen[current] = true
 
 		if getCompCallNameStr(current) == "IMAGE" {
-			if err := visit(current); err.title != "" {
+			if err := visit(current, invokerAncestors); err.title != "" {
 				return err
 			}
 		}
@@ -112,7 +118,7 @@ func walkImageCallTree(ctx *wrapContext, ownerCompCall ast.Node, visit func(ast.
 		for _, nested := range ast.FilterNodesInTree(compDefContent, func(child ast.Node) bool {
 			return ast.IsRuleNameOneOf(child, []string{"block-comp-call", "inline-comp-call"})
 		}) {
-			if err := walk(nested); err.title != "" {
+			if err := walk(nested, append([]ast.Node{current}, invokerAncestors...)); err.title != "" {
 				return err
 			}
 		}
@@ -120,11 +126,10 @@ func walkImageCallTree(ctx *wrapContext, ownerCompCall ast.Node, visit func(ast.
 		return imageError{}
 	}
 
-	_ = ownerCompCall
-	return walk(ownerCompCall)
+	return walk(ownerCompCall, ast.GetAncestors(ownerCompCall))
 }
 
-func getImageErrorForCompCalls(ctx *wrapContext, ownerCompCall ast.Node, targetCompCall ast.Node) imageError {
+func getImageErrorForCompCalls(ctx *wrapContext, targetCompCall ast.Node, invokerAncestors []ast.Node) imageError {
 	if getCompCallNameStr(targetCompCall) != "IMAGE" {
 		return imageError{}
 	}
@@ -134,7 +139,20 @@ func getImageErrorForCompCalls(ctx *wrapContext, ownerCompCall ast.Node, targetC
 		return imageError{}
 	}
 
-	media := resolveImageArg(ctx, ownerCompCall, targetCompCall, "media")
+	media := resolveImageArg(ctx, targetCompCall, invokerAncestors, "media")
+	if key := imageMissingContextKey(media); key != "" {
+		return imageError{
+			title:   "Unknown key",
+			message: "The key **" + key + "** is not injected.",
+		}
+	}
+	if key := imageMissingContextKey(resolveImageArg(ctx, targetCompCall, invokerAncestors, "alt")); key != "" {
+		return imageError{
+			title:   "Unknown key",
+			message: "The key **" + key + "** is not injected.",
+		}
+	}
+
 	if !imageMediaMatchesSchema(media) {
 		return imageError{
 			title:   "Invalid built-in arguments",
@@ -158,16 +176,10 @@ func getImageErrorForCompCalls(ctx *wrapContext, ownerCompCall ast.Node, targetC
 	return imageError{}
 }
 
-func resolveImageArg(ctx *wrapContext, ownerCompCall ast.Node, targetCompCall ast.Node, name string) ast.ResolvedValue {
+func resolveImageArg(ctx *wrapContext, targetCompCall ast.Node, invokerAncestors []ast.Node, name string) ast.ResolvedValue {
 	arg := ast.GetCompCallArgByParamName(ast.GetCompCallArgsFromCompCall(targetCompCall), name)
 	if arg != nil {
-		invokerAncestors := ast.GetAncestors(ownerCompCall)
-		currentCompCall := ownerCompCall
-		if ownerCompCall != targetCompCall {
-			invokerAncestors = append([]ast.Node{targetCompCall, ownerCompCall}, invokerAncestors...)
-			currentCompCall = targetCompCall
-		}
-		return ast.ResolveCompCallArgValue(ctx.root, arg, invokerAncestors, currentCompCall)
+		return ast.ResolveCompCallArgValue(ctx.root, arg, invokerAncestors, targetCompCall)
 	}
 
 	return ast.ResolveParamDefaultFromCompCall(ctx.root, targetCompCall, name)
@@ -337,4 +349,139 @@ func imageRecordIntField(record ast.ResolvedValue, key string) (int, bool) {
 	}
 
 	return value, true
+}
+
+func imageMissingContextKey(value ast.ResolvedValue) string {
+	if value.MissingContextKey != "" {
+		return value.MissingContextKey
+	}
+	for _, item := range value.Items {
+		if key := imageMissingContextKey(item); key != "" {
+			return key
+		}
+	}
+	for _, field := range value.Fields {
+		if key := imageMissingContextKey(field); key != "" {
+			return key
+		}
+	}
+	return ""
+}
+
+func imageErrorForComponentTarget(ctx *wrapContext, caller ast.Node, target imageComponentTarget, parentInvokers []ast.Node, seen map[string]bool) imageError {
+	if target.name == "" {
+		return imageError{}
+	}
+
+	signature := target.name
+	if target.scope != nil {
+		signature += "\x00" + target.scope.Rule().Name() + "\x00" + string(target.scope.Raw())
+	}
+	if seen[signature] {
+		return imageError{}
+	}
+	seen[signature] = true
+	defer delete(seen, signature)
+
+	syntheticCall := createSyntheticCompCall(caller, target.name)
+	invokerAncestors := imageComponentInvokerAncestors(caller, syntheticCall, parentInvokers)
+
+	if target.name == "IMAGE" {
+		return getImageErrorForCompCalls(ctx, syntheticCall, invokerAncestors)
+	}
+
+	compDef := findWebGridItemComponentDef(ctx.root, caller, target.name, target.scope)
+	if compDef == nil || ast.IsRuleName(compDef, "builtin-comp") {
+		return imageError{}
+	}
+
+	content := getCompDefContent(compDef)
+	if content == nil {
+		return imageError{}
+	}
+
+	for _, nested := range ast.FilterNodesInTree(content, func(node ast.Node) bool {
+		if ast.IsRuleNameOneOf(node, []string{"block-comp-call", "inline-comp-call"}) {
+			return true
+		}
+		return ast.IsRuleName(node, "param-ref") && hasCompCallArgsNode(node)
+	}) {
+		if ast.IsRuleName(nested, "param-ref") {
+			nextTarget := resolveParamRefComponentTarget(ctx, nested, invokerAncestors)
+			if nextTarget.name == "" {
+				continue
+			}
+			if err := imageErrorForComponentTarget(ctx, nested, nextTarget, append([]ast.Node{nested}, invokerAncestors...), seen); err.title != "" {
+				return err
+			}
+			continue
+		}
+
+		nestedName := getCompCallNameStr(nested)
+		if nestedName == "" {
+			continue
+		}
+		if nestedName == "IMAGE" {
+			if err := getImageErrorForCompCalls(ctx, nested, invokerAncestors); err.title != "" {
+				return err
+			}
+			continue
+		}
+		if err := imageErrorForComponentTarget(ctx, nested, imageComponentTarget{
+			name:  nestedName,
+			scope: ast.GetLocalCompSourceFromNode(nested, ctx.root),
+		}, append([]ast.Node{nested}, invokerAncestors...), seen); err.title != "" {
+			return err
+		}
+	}
+
+	return imageError{}
+}
+
+func imageComponentInvokerAncestors(caller ast.Node, syntheticCall ast.Node, parentInvokers []ast.Node) []ast.Node {
+	if len(parentInvokers) == 0 || parentInvokers[0] != caller {
+		return append([]ast.Node{syntheticCall}, parentInvokers...)
+	}
+
+	if ast.IsRuleName(caller, "param-ref") {
+		return append([]ast.Node{caller, syntheticCall}, parentInvokers[1:]...)
+	}
+
+	return parentInvokers
+}
+
+func resolveParamRefComponentTarget(ctx *wrapContext, paramRef ast.Node, invokerAncestors []ast.Node) imageComponentTarget {
+	paramName := getParamRefNameStr(paramRef)
+	if paramName == "" {
+		return imageComponentTarget{}
+	}
+
+	resolved := ast.ResolveParamFromAncestors(ctx.root, paramName, ast.GetParamRefAccessors(paramRef), invokerAncestors)
+	if resolved.IsZero() {
+		if compDef := findEnclosingCompDef(paramRef); compDef != nil {
+			resolved = ast.ApplyAccessors(ast.ResolveCompParamDefaultFromCompDef(ctx.root, compDef, paramName), ast.GetParamRefAccessors(paramRef))
+		}
+	}
+	if resolved.Type != "comp" || resolved.Raw == "" {
+		return imageComponentTarget{}
+	}
+
+	return imageComponentTarget{
+		name:  resolved.Raw,
+		scope: resolved.Scope,
+	}
+}
+
+func createSyntheticCompCall(parent ast.Node, name string) ast.Node {
+	compCall := ast.DefaultEmptyNode()
+	compCall.SetRule(rule.NewDynamic("block-comp-call"))
+	compCall.SetParent(parent)
+
+	compCallName := ast.DefaultEmptyNode()
+	compCallName.SetRule(rule.NewDynamic("comp-call-name"))
+	compCallName.SetParent(compCall)
+	compCallName.SetRaw([]byte(name))
+
+	compCall.SetChildren([]ast.Node{compCallName})
+	return compCall
 }

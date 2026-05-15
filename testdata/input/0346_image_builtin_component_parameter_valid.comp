@@ -1,0 +1,9 @@
+{{ RENDER_IMAGE renderer = IMAGE media = {
+  url: "https://cdn.example.com/component-param.png",
+  width: 512,
+  height: 512,
+  mime-type: "image/png"
+} alt = "Component parameter image" }}
+
+~ RENDER_IMAGE renderer = IMAGE media = {} alt = ""
+{{ renderer media = media alt = alt }}

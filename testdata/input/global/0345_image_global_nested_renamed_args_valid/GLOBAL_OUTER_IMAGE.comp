@@ -1,0 +1,2 @@
+media = {} alt = ""
+{{ GLOBAL_INNER_IMAGE photo = media label = alt }}

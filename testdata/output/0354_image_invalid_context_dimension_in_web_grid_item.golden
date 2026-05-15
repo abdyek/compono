@@ -1,0 +1,1 @@
+<compono-error-block><div slot="title">Invalid dimension</div><div slot="description">The value of <strong>width</strong> must be greater than 0.</div></compono-error-block>

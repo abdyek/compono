@@ -1,0 +1,20 @@
+{{ GLOBAL_OUTER_IMAGE media = {
+  url: "https://cdn.example.com/global-nested.jpg",
+  width: 1200,
+  height: 675,
+  mime-type: "image/jpeg",
+  variants: [
+    {
+      url: "https://cdn.example.com/global-nested-800.avif",
+      width: 800,
+      height: 450,
+      mime-type: "image/avif"
+    },
+    {
+      url: "https://cdn.example.com/global-nested-800.webp",
+      width: 800,
+      height: 450,
+      mime-type: "image/webp"
+    }
+  ]
+} alt = "Global nested image" }}

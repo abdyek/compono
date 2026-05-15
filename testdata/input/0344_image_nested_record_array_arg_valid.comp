@@ -1,0 +1,24 @@
+{{ OUTER_IMAGE gallery = {
+  items: [
+    {
+      url: "https://cdn.example.com/nested-gallery.jpg",
+      width: 1600,
+      height: 900,
+      mime-type: "image/jpeg",
+      variants: [
+        {
+          url: "https://cdn.example.com/nested-gallery-640.webp",
+          width: 640,
+          height: 360,
+          mime-type: "image/webp"
+        }
+      ]
+    }
+  ]
+} alt = "Nested gallery image" }}
+
+~ OUTER_IMAGE gallery = { items: [] } alt = ""
+{{ INNER_IMAGE photo = gallery.items[0] label = alt }}
+
+~ INNER_IMAGE photo = {} label = ""
+{{ IMAGE media = photo alt = label }}

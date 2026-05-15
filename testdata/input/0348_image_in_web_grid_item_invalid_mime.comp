@@ -1,0 +1,18 @@
+{{ WEB_GRID
+  items = [
+    { component: BROKEN_HERO, grid-area: "hero" }
+  ]
+  grid-template-columns = ["1fr"]
+  grid-template-rows = ["1fr"]
+  grid-template-areas = [
+    ["hero"]
+  ]
+}}
+
+~ BROKEN_HERO
+{{ IMAGE media = {
+  url: "https://cdn.example.com/broken-hero.svg",
+  width: 800,
+  height: 450,
+  mime-type: "image/svg+xml"
+} alt = "Broken hero" }}
