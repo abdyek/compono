@@ -1,0 +1,7 @@
+{{ CONTEXT_OUTER_IMAGE media = context(image/media) alt = context(image/alt) }}
+
+~ CONTEXT_OUTER_IMAGE media = {} alt = ""
+{{ CONTEXT_INNER_IMAGE photo = media label = alt }}
+
+~ CONTEXT_INNER_IMAGE photo = {} label = ""
+{{ IMAGE media = photo alt = label }}

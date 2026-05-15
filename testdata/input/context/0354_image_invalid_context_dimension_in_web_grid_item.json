@@ -1,0 +1,8 @@
+{
+  "image/media": {
+    "url": "https://cdn.example.com/context-invalid-dimension.jpg",
+    "width": 0,
+    "height": 900,
+    "mime-type": "image/jpeg"
+  }
+}

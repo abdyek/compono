@@ -1,0 +1,32 @@
+{{ PAGE card = IMAGE_CARD }}
+
+~ PAGE card = IMAGE_CARD
+{{ WEB_GRID
+  items = [
+    { component: CARD_SLOT, grid-area: "card" }
+  ]
+  grid-template-columns = ["1fr"]
+  grid-template-rows = ["1fr"]
+  grid-template-areas = [
+    ["card"]
+  ]
+}}
+
+~ CARD_SLOT card = IMAGE_CARD
+{{ card media = {
+  url: "https://cdn.example.com/grid-card.jpg",
+  width: 1600,
+  height: 900,
+  mime-type: "image/jpeg",
+  variants: [
+    {
+      url: "https://cdn.example.com/grid-card-640.webp",
+      width: 640,
+      height: 360,
+      mime-type: "image/webp"
+    }
+  ]
+} alt = "Grid card image" }}
+
+~ IMAGE_CARD media = {} alt = ""
+{{ IMAGE media = media alt = alt }}

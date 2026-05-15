@@ -1,0 +1,32 @@
+{{ WEB_GRID
+  items = [
+    { component: DUPLICATE_HERO, grid-area: "hero" }
+  ]
+  grid-template-columns = ["1fr"]
+  grid-template-rows = ["1fr"]
+  grid-template-areas = [
+    ["hero"]
+  ]
+}}
+
+~ DUPLICATE_HERO
+{{ IMAGE media = {
+  url: "https://cdn.example.com/duplicate-hero.jpg",
+  width: 1600,
+  height: 900,
+  mime-type: "image/jpeg",
+  variants: [
+    {
+      url: "https://cdn.example.com/duplicate-hero-a.webp",
+      width: 640,
+      height: 360,
+      mime-type: "image/webp"
+    },
+    {
+      url: "https://cdn.example.com/duplicate-hero-b.webp",
+      width: 640,
+      height: 360,
+      mime-type: "image/webp"
+    }
+  ]
+} alt = "Duplicate hero" }}

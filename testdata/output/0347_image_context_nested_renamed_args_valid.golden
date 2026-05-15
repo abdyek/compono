@@ -1,0 +1,1 @@
+<picture><source type="image/webp" srcset="https://cdn.example.com/context-nested-800.webp 800w"><img src="https://cdn.example.com/context-nested.jpg" alt="Context nested image" width="1600" height="900"></picture>

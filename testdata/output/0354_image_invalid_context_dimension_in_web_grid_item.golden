@@ -1,0 +1,1 @@
+<compono-web-grid data-grid-template-columns="1fr" data-grid-template-rows="1fr" data-grid-template-areas='[["hero"]]'><compono-web-grid-item data-grid-area="hero"><compono-error-block><div slot="title">Invalid dimension</div><div slot="description">The value of <strong>width</strong> must be greater than 0.</div></compono-error-block></compono-web-grid-item></compono-web-grid>

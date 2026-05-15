@@ -1,0 +1,17 @@
+{
+  "image/media": {
+    "url": "https://cdn.example.com/context-nested.jpg",
+    "width": 1600,
+    "height": 900,
+    "mime-type": "image/jpeg",
+    "variants": [
+      {
+        "url": "https://cdn.example.com/context-nested-800.webp",
+        "width": 800,
+        "height": 450,
+        "mime-type": "image/webp"
+      }
+    ]
+  },
+  "image/alt": "Context nested image"
+}

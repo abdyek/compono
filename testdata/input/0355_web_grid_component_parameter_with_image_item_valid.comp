@@ -1,0 +1,29 @@
+{{ PAGE layout = WEB_GRID }}
+
+~ PAGE layout = WEB_GRID
+{{ layout
+  items = [
+    { component: HERO, grid-area: "hero" }
+  ]
+  grid-template-columns = ["1fr"]
+  grid-template-rows = ["1fr"]
+  grid-template-areas = [
+    ["hero"]
+  ]
+}}
+
+~ HERO
+{{ IMAGE media = {
+  url: "https://cdn.example.com/layout-param-hero.jpg",
+  width: 1024,
+  height: 768,
+  mime-type: "image/jpeg",
+  variants: [
+    {
+      url: "https://cdn.example.com/layout-param-hero-512.webp",
+      width: 512,
+      height: 384,
+      mime-type: "image/webp"
+    }
+  ]
+} alt = "Layout parameter hero" }}
