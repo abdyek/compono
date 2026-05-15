@@ -176,6 +176,9 @@ func getWebGridErrorForCompCalls(ctx *wrapContext, ownerCompCall ast.Node, targe
 			return err
 		}
 	}
+	if err := getWebGridItemImageError(ctx, ownerCompCall, targetCompCall, items); err.title != "" {
+		return err
+	}
 	if err := getWebGridBreakpointError(targetCompCall); err.title != "" {
 		return err
 	}
@@ -203,6 +206,38 @@ func getWebGridErrorForCompCalls(ctx *wrapContext, ownerCompCall ast.Node, targe
 	if err := getWebGridUnusedAreaError(items, templates); err.title != "" {
 		return err
 	}
+	return webGridError{}
+}
+
+func getWebGridItemImageError(ctx *wrapContext, ownerCompCall ast.Node, targetCompCall ast.Node, items ast.ResolvedValue) webGridError {
+	if items.Type != "array" {
+		return webGridError{}
+	}
+
+	for _, item := range items.Items {
+		if item.Type != "record" {
+			continue
+		}
+
+		component, ok := item.Fields["component"]
+		if !ok || component.Type != "comp" || component.Raw == "" {
+			continue
+		}
+
+		err := imageErrorForComponentTarget(ctx, targetCompCall, imageComponentTarget{
+			name:  component.Raw,
+			scope: component.Scope,
+		}, ast.GetAncestors(ownerCompCall), map[string]bool{})
+		if err.title == "" {
+			continue
+		}
+
+		return webGridError{
+			title:   err.title,
+			message: err.message,
+		}
+	}
+
 	return webGridError{}
 }
 

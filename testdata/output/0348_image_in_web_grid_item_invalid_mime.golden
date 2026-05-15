@@ -1,1 +1,1 @@
-<compono-web-grid data-grid-template-columns="1fr" data-grid-template-rows="1fr" data-grid-template-areas='[["hero"]]'><compono-web-grid-item data-grid-area="hero"><compono-error-block><div slot="title">Unsupported mime-type</div><div slot="description">The mime-type <strong>image/svg+xml</strong> is unsupported.</div></compono-error-block></compono-web-grid-item></compono-web-grid>
+<compono-error-block><div slot="title">Unsupported mime-type</div><div slot="description">The mime-type <strong>image/svg+xml</strong> is unsupported.</div></compono-error-block>
