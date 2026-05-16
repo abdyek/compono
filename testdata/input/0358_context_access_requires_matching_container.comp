@@ -1,0 +1,3 @@
+{{ context(app/version)[0] }}
+
+{{ context(stats/numbers).title }}

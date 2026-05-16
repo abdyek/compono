@@ -32,12 +32,12 @@ func (ew *errorWrapper) Wrap(root ast.Node) {
 }
 
 func (ew *errorWrapper) scanAndWrap(ctx *wrapContext, node ast.Node) {
-	if replacement, ok := ctx.callReplacements[node]; ok {
-		ew.replaceNode(node, replacement)
+	if ew.wrap(ctx, node) {
 		return
 	}
 
-	if ew.wrap(ctx, node) {
+	if replacement, ok := ctx.callReplacements[node]; ok {
+		ew.replaceNode(node, replacement)
 		return
 	}
 
@@ -200,9 +200,9 @@ func (ew *errorWrapper) getCallReplacements(root ast.Node) map[ast.Node]ast.Node
 func (ew *errorWrapper) getReplacementForCompCall(root ast.Node, compCall ast.Node) ast.Node {
 	if missingKey := ew.getMissingContextKeyForCompCall(root, compCall, ast.GetAncestors(compCall), compCall, map[ast.Node]bool{}); missingKey != "" {
 		if ast.IsRuleName(compCall, "block-comp-call") {
-			return ew.createBlockError(compCall, "Unknown key", "The key **"+missingKey+"** is not injected.")
+			return ew.createBlockError(compCall, "Unknown key", unknownContextKeyMsg(missingKey))
 		}
-		return ew.createInlineError(compCall, "Unknown key", "The key **"+missingKey+"** is not injected.")
+		return ew.createInlineError(compCall, "Unknown key", unknownContextKeyMsg(missingKey))
 	}
 
 	compDef := findCompDef(root, compCall, getCompCallNameStr(compCall))
@@ -347,7 +347,12 @@ func (ew *errorWrapper) getParagraphReplacement(compDef ast.Node, p ast.Node, va
 	hasSoftBreak := ast.FindNodeByRuleName(pContent.Children(), "soft-break") != nil
 
 	for _, child := range pContent.Children() {
-		if !ast.IsRuleName(child, "param-ref") || hasCompCallArgsNode(child) || !canRenderParamRefAsValue(compDef, child) {
+		if !ast.IsRuleName(child, "param-ref") || hasCompCallArgsNode(child) {
+			continue
+		}
+
+		accessors := ast.GetParamRefAccessors(child)
+		if len(accessors) == 0 && !canRenderParamRefAsValue(compDef, child) {
 			continue
 		}
 
@@ -357,32 +362,41 @@ func (ew *errorWrapper) getParagraphReplacement(compDef ast.Node, p ast.Node, va
 			continue
 		}
 
-		accessors := ast.GetParamRefAccessors(child)
 		indexed, accessErr := ast.ApplyAccessorsDetailed(resolved, accessors)
-		if len(accessors) > 0 && indexed.IsZero() && accessErr.Kind == "array_index_out_of_range" {
-			if hasSoftBreak && isStandaloneParamRefOnLineInParagraph(child, pContent) {
-				return buildParagraphErrorNode(ew.createInlineError(child, "Array index out of range", "The index used for parameter **"+paramName+"** is out of range."))
-			}
-			return cloneParagraphWithReplacement(p, child, ew.createInlineError(child, "Array index out of range", "The index used for parameter **"+paramName+"** is out of range."))
+		if len(accessors) > 0 && indexed.IsZero() && accessErr.Kind == ast.AccessErrorArrayIndexOutOfRange {
+			return paragraphWithParamError(ew, p, pContent, child, hasSoftBreak, "Array index out of range", paramArrayIndexOutOfRangeMsg(paramName))
+		}
+
+		if accessErr.Kind == ast.AccessErrorInvalidIndexAccess {
+			return paragraphWithParamError(ew, p, pContent, child, hasSoftBreak, "Invalid parameter access", invalidParamIndexAccessMsg(paramName))
+		}
+
+		if accessErr.Kind == ast.AccessErrorInvalidKeyAccess {
+			return paragraphWithParamError(ew, p, pContent, child, hasSoftBreak, "Invalid parameter access", invalidParamKeyAccessMsg(paramName))
 		}
 
 		if len(accessors) == 0 && indexed.Type == "array" {
-			return cloneParagraphWithReplacement(p, child, ew.createInlineError(child, "Invalid parameter usage", "The parameter **"+paramName+"** is an array and cannot be rendered directly."))
+			return cloneParagraphWithReplacement(p, child, ew.createInlineError(child, "Invalid parameter usage", directParamArrayUsageMsg(paramName)))
 		}
 
 		if len(accessors) == 0 && indexed.Type == "record" {
-			return cloneParagraphWithReplacement(p, child, ew.createInlineError(child, "Invalid parameter usage", "The parameter **"+paramName+"** is a record and cannot be rendered directly."))
+			return cloneParagraphWithReplacement(p, child, ew.createInlineError(child, "Invalid parameter usage", directParamRecordUsageMsg(paramName)))
 		}
 
-		if accessErr.Kind == "unknown_record_key" {
-			if hasSoftBreak && isStandaloneParamRefOnLineInParagraph(child, pContent) {
-				return buildParagraphErrorNode(ew.createInlineError(child, "Unknown record key", "The key **"+accessErr.Key+"** is not defined in this record."))
-			}
-			return cloneParagraphWithReplacement(p, child, ew.createInlineError(child, "Unknown record key", "The key **"+accessErr.Key+"** is not defined in this record."))
+		if accessErr.Kind == ast.AccessErrorUnknownRecordKey {
+			return paragraphWithParamError(ew, p, pContent, child, hasSoftBreak, "Unknown record key", unknownRecordKeyMsg(accessErr.Key))
 		}
 	}
 
 	return nil
+}
+
+func paragraphWithParamError(ew *errorWrapper, p ast.Node, pContent ast.Node, paramRef ast.Node, hasSoftBreak bool, title string, msg string) ast.Node {
+	errNode := ew.createInlineError(paramRef, title, msg)
+	if hasSoftBreak && isStandaloneParamRefOnLineInParagraph(paramRef, pContent) {
+		return buildParagraphErrorNode(errNode)
+	}
+	return cloneParagraphWithReplacement(p, paramRef, errNode)
 }
 
 func canRenderParamRefAsValue(compDef ast.Node, paramRef ast.Node) bool {

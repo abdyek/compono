@@ -1,0 +1,23 @@
+{{ INDEX_STRING }}
+{{ INDEX_INTEGER }}
+{{ INDEX_BOOL }}
+{{ INDEX_COMPONENT }}
+{{ INDEX_RECORD }}
+
+~ INDEX_STRING value = "Hello"
+{{ value[0] }}
+
+~ INDEX_INTEGER value = 42
+{{ value[0] }}
+
+~ INDEX_BOOL value = true
+{{ value[0] }}
+
+~ INDEX_COMPONENT value = INLINE_LABEL
+{{ value[0] }}
+
+~ INDEX_RECORD value = { title: "Title" }
+{{ value[0] }}
+
+~ INLINE_LABEL
+Label

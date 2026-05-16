@@ -1,0 +1,23 @@
+{{ KEY_STRING }}
+{{ KEY_INTEGER }}
+{{ KEY_BOOL }}
+{{ KEY_COMPONENT }}
+{{ KEY_ARRAY }}
+
+~ KEY_STRING value = "Hello"
+{{ value.title }}
+
+~ KEY_INTEGER value = 42
+{{ value.title }}
+
+~ KEY_BOOL value = true
+{{ value.title }}
+
+~ KEY_COMPONENT value = INLINE_LABEL
+{{ value.title }}
+
+~ KEY_ARRAY value = ["Title"]
+{{ value.title }}
+
+~ INLINE_LABEL
+Label

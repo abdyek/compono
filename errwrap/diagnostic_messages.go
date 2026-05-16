@@ -133,3 +133,43 @@ func notCompParamCompCallMsg(_ *wrapContext, node ast.Node) string {
 	name := getParamCompCallNameStr(node)
 	return "The parameter **" + name + "** is not component parameter"
 }
+
+func unknownContextKeyMsg(key string) string {
+	return "The key **" + key + "** is not injected."
+}
+
+func unknownRecordKeyMsg(key string) string {
+	return "The key **" + key + "** is not defined in this record."
+}
+
+func paramArrayIndexOutOfRangeMsg(paramName string) string {
+	return "The index used for parameter **" + paramName + "** is out of range."
+}
+
+func contextArrayIndexOutOfRangeMsg() string {
+	return "The index used for this context value is out of range."
+}
+
+func invalidParamIndexAccessMsg(paramName string) string {
+	return "The parameter **" + paramName + "** is not an array and cannot be indexed."
+}
+
+func invalidParamKeyAccessMsg(paramName string) string {
+	return "The parameter **" + paramName + "** is not a record and cannot be accessed by key."
+}
+
+func invalidContextIndexAccessMsg(key string) string {
+	return "The context value **" + key + "** is not an array and cannot be indexed."
+}
+
+func invalidContextKeyAccessMsg(key string) string {
+	return "The context value **" + key + "** is not a record and cannot be accessed by key."
+}
+
+func directParamArrayUsageMsg(paramName string) string {
+	return "The parameter **" + paramName + "** is an array and cannot be rendered directly."
+}
+
+func directParamRecordUsageMsg(paramName string) string {
+	return "The parameter **" + paramName + "** is a record and cannot be rendered directly."
+}

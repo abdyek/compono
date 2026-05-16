@@ -13,7 +13,7 @@ func (contextRefAnalyzer) Diagnose(ctx *wrapContext, node ast.Node) (diagnostic,
 	if resolved.MissingContextKey != "" {
 		return diagnostic{
 			title:   "Unknown key",
-			message: "The key **" + resolved.MissingContextKey + "** is not injected.",
+			message: unknownContextKeyMsg(resolved.MissingContextKey),
 			block:   false,
 		}, true
 	}
@@ -26,18 +26,34 @@ func (contextRefAnalyzer) Diagnose(ctx *wrapContext, node ast.Node) (diagnostic,
 		}, true
 	}
 
-	if accessErr.Kind == "unknown_record_key" {
+	if accessErr.Kind == ast.AccessErrorUnknownRecordKey {
 		return diagnostic{
 			title:   "Unknown record key",
-			message: "The key **" + accessErr.Key + "** is not defined in this record.",
+			message: unknownRecordKeyMsg(accessErr.Key),
 			block:   false,
 		}, true
 	}
 
-	if accessErr.Kind == "array_index_out_of_range" {
+	if accessErr.Kind == ast.AccessErrorArrayIndexOutOfRange {
 		return diagnostic{
 			title:   "Array index out of range",
-			message: "The index used for this context value is out of range.",
+			message: contextArrayIndexOutOfRangeMsg(),
+			block:   false,
+		}, true
+	}
+
+	if accessErr.Kind == ast.AccessErrorInvalidIndexAccess {
+		return diagnostic{
+			title:   "Invalid context access",
+			message: invalidContextIndexAccessMsg(ast.GetContextKey(node)),
+			block:   false,
+		}, true
+	}
+
+	if accessErr.Kind == ast.AccessErrorInvalidKeyAccess {
+		return diagnostic{
+			title:   "Invalid context access",
+			message: invalidContextKeyAccessMsg(ast.GetContextKey(node)),
 			block:   false,
 		}, true
 	}

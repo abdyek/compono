@@ -15,8 +15,17 @@ func (rv ResolvedValue) IsZero() bool {
 	return rv.Type == "" && rv.Raw == "" && len(rv.Items) == 0 && len(rv.Fields) == 0 && rv.Scope == nil && rv.MissingContextKey == ""
 }
 
+type AccessErrorKind string
+
+const (
+	AccessErrorUnknownRecordKey     AccessErrorKind = "unknown_record_key"
+	AccessErrorArrayIndexOutOfRange AccessErrorKind = "array_index_out_of_range"
+	AccessErrorInvalidKeyAccess     AccessErrorKind = "invalid_key_access"
+	AccessErrorInvalidIndexAccess   AccessErrorKind = "invalid_index_access"
+)
+
 type AccessError struct {
-	Kind string
+	Kind AccessErrorKind
 	Key  string
 }
 
@@ -259,20 +268,27 @@ func ApplyAccessorsDetailed(value ResolvedValue, accessors []ValueAccessor) (Res
 		switch accessor.Kind {
 		case "key":
 			if current.Type != "record" {
-				return ResolvedValue{}, AccessError{}
+				return ResolvedValue{}, AccessError{
+					Kind: AccessErrorInvalidKeyAccess,
+				}
 			}
 			next, ok := current.Fields[accessor.Key]
 			if !ok {
 				return ResolvedValue{}, AccessError{
-					Kind: "unknown_record_key",
+					Kind: AccessErrorUnknownRecordKey,
 					Key:  accessor.Key,
 				}
 			}
 			current = next
 		case "index":
-			if current.Type != "array" || accessor.Index < 0 || accessor.Index >= len(current.Items) {
+			if current.Type != "array" {
 				return ResolvedValue{}, AccessError{
-					Kind: "array_index_out_of_range",
+					Kind: AccessErrorInvalidIndexAccess,
+				}
+			}
+			if accessor.Index < 0 || accessor.Index >= len(current.Items) {
+				return ResolvedValue{}, AccessError{
+					Kind: AccessErrorArrayIndexOutOfRange,
 				}
 			}
 			current = current.Items[accessor.Index]
