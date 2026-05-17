@@ -325,6 +325,66 @@ Output:
 `WEB_GRID` also supports responsive breakpoint variants for the grid template parameters:
 `sm-grid-template-columns`, `md-grid-template-columns`, `lg-grid-template-columns`, `xl-grid-template-columns`, `xxl-grid-template-columns`, and the corresponding `*-grid-template-rows` / `*-grid-template-areas` parameters.
 
+### NAVIGATION
+
+Creates a platform navigation tree from an `items` array. In the HTML renderer, it outputs a `<compono-navigation>` wrapper containing a semantic `nav` list. Compono does not define the custom element; that belongs to the application or runtime using the generated output.
+
+Basic usage:
+
+```
+{{ NAVIGATION
+  items = [
+    { label: "Home", target: "/" },
+    { label: "About", target: "/about" },
+    { label: "Contact", target: "/contact" }
+  ]
+}}
+```
+
+Output:
+```html
+<compono-navigation><nav><ul><li><a href="/">Home</a></li><li><a href="/about">About</a></li><li><a href="/contact">Contact</a></li></ul></nav></compono-navigation>
+```
+
+Items can contain nested `children` arrays:
+
+```
+{{ NAVIGATION
+  items = [
+    { label: "Home", target: "/" },
+    {
+      label: "Docs",
+      target: "/docs",
+      children: [
+        { label: "Guide", target: "/docs/guide" },
+        {
+          label: "API",
+          target: "/docs/api",
+          children: [
+            { label: "Components", target: "/docs/api/components" }
+          ]
+        }
+      ]
+    }
+  ]
+}}
+```
+
+Output:
+```html
+<compono-navigation><nav><ul><li><a href="/">Home</a></li><li><a href="/docs">Docs</a><ul><li><a href="/docs/guide">Guide</a></li><li><a href="/docs/api">API</a><ul><li><a href="/docs/api/components">Components</a></li></ul></li></ul></li></ul></nav></compono-navigation>
+```
+
+#### NAVIGATION Parameters
+
+- `items` is an array of navigation item records.
+- each item must include:
+  - `label`: string rendered as the visible link text.
+  - `target`: string rendered as the link `href`.
+  - optional `children`: array of navigation item records.
+
+`NAVIGATION` is a block built-in component. It can receive `items` from a parameter or `context(key)`, and label/target values are HTML escaped by the HTML renderer.
+
 ## Parameters
 
 Components can accept parameters. Each parameter must have a **default value** defined in the component definition.

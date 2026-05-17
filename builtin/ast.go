@@ -84,6 +84,11 @@ func makeSchemaValueNode(parent ast.Node, schema ValueSchema, value any) ast.Nod
 		return makeArrayNode(parent, typed, value)
 	case *RecordSchema:
 		return makeRecordNode(parent, typed, value)
+	case *LazySchema:
+		if typed == nil || typed.Resolver == nil {
+			return nil
+		}
+		return makeSchemaValueNode(parent, typed.Resolver(), value)
 	default:
 		return nil
 	}

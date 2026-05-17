@@ -40,6 +40,21 @@ type ValueSchema interface {
 	Kind() ValueKind
 }
 
+type LazySchema struct {
+	Resolver func() ValueSchema
+}
+
+func (s *LazySchema) Kind() ValueKind {
+	if s == nil || s.Resolver == nil {
+		return 0
+	}
+	resolved := s.Resolver()
+	if resolved == nil {
+		return 0
+	}
+	return resolved.Kind()
+}
+
 type ScalarSchema struct {
 	valueKind     ValueKind
 	AllowedValues []any
@@ -243,4 +258,8 @@ func Field(name string, schema ValueSchema) RecordField {
 		Name:   name,
 		Schema: schema,
 	}
+}
+
+func Lazy(resolve func() ValueSchema) *LazySchema {
+	return &LazySchema{Resolver: resolve}
 }

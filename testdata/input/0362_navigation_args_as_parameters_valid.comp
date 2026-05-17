@@ -1,0 +1,9 @@
+{{ NAV_WRAPPER
+  nav-items = [
+    { label: "Home", target: "/" },
+    { label: "Blog", target: "/blog" }
+  ]
+}}
+
+~ NAV_WRAPPER nav-items = []
+{{ NAVIGATION items = nav-items }}

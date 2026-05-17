@@ -1,0 +1,19 @@
+{{ NAVIGATION
+  items = [
+    { label: "Home", target: "/" },
+    {
+      label: "Docs",
+      target: "/docs",
+      children: [
+        { label: "Guide", target: "/docs/guide" },
+        {
+          label: "API",
+          target: "/docs/api",
+          children: [
+            { label: "Components", target: "/docs/api/components" }
+          ]
+        }
+      ]
+    }
+  ]
+}}

@@ -4,6 +4,7 @@ import (
 	"strings"
 
 	"github.com/umono-cms/compono/ast"
+	"github.com/umono-cms/compono/builtin"
 )
 
 type compParamInfo struct {
@@ -168,6 +169,15 @@ func isInlineParamRefNode(node ast.Node) bool {
 }
 
 func isBlockComponent(compDef ast.Node) bool {
+	if ast.IsRuleName(compDef, "builtin-comp") {
+		nameNode := ast.FindNodeByRuleName(compDef.Children(), "builtin-comp-name")
+		if nameNode == nil {
+			return false
+		}
+		definition, ok := builtin.FindDefinition(strings.TrimSpace(string(nameNode.Raw())))
+		return ok && !definition.InlineRenderable
+	}
+
 	compDefContent := getCompDefContent(compDef)
 	if compDefContent == nil {
 		return false

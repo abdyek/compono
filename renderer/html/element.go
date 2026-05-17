@@ -178,6 +178,7 @@ func isBlockLikeRendered(rendered string) bool {
 		strings.HasPrefix(rendered, "<img ") ||
 		strings.HasPrefix(rendered, "<picture>") ||
 		strings.HasPrefix(rendered, "<compono-web-grid ") ||
+		strings.HasPrefix(rendered, "<compono-navigation>") ||
 		strings.HasPrefix(rendered, "<compono-error-block>")
 }
 

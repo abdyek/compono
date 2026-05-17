@@ -1,0 +1,7 @@
+{{ NAVIGATION
+  items = [
+    { label: "Home", target: "/" },
+    { label: "About", target: "/about" },
+    { label: "Contact", target: "/contact" }
+  ]
+}}
