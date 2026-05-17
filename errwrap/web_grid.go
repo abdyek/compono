@@ -160,9 +160,6 @@ func getWebGridErrorForCompCalls(ctx *wrapContext, ownerCompCall ast.Node, targe
 	if err := getWebGridItemsRecordError(items); err.title != "" {
 		return err
 	}
-	if err := getWebGridEmptyItemsError(items); err.title != "" {
-		return err
-	}
 	if err := getWebGridUniqueAreasError(items); err.title != "" {
 		return err
 	}
@@ -183,11 +180,12 @@ func getWebGridErrorForCompCalls(ctx *wrapContext, ownerCompCall ast.Node, targe
 		return err
 	}
 
+	if diagnostic := firstBuiltinSchemaMismatchDiagnostic(getBuiltinSchemaMismatchesForCompCall(ctx, ownerCompCall, targetCompCall)); diagnostic.Title != "" {
+		return webGridError{}
+	}
+
 	templates := resolveWebGridTemplates(ctx, ownerCompCall, targetCompCall)
 
-	if err := getWebGridEmptyTemplateError(templates); err.title != "" {
-		return err
-	}
 	if err := getWebGridUnsupportedSizeError(templates); err.title != "" {
 		return err
 	}
@@ -312,16 +310,6 @@ func getWebGridItemsRecordError(items ast.ResolvedValue) webGridError {
 	return webGridError{}
 }
 
-func getWebGridEmptyItemsError(items ast.ResolvedValue) webGridError {
-	if items.Type == "array" && len(items.Items) == 0 {
-		return webGridError{
-			title:   "Empty items",
-			message: "The parameter **items** cannot be an empty array.",
-		}
-	}
-	return webGridError{}
-}
-
 func getWebGridUniqueAreasError(items ast.ResolvedValue) webGridError {
 	seen := map[string]bool{}
 	for _, area := range getWebGridItemAreas(items) {
@@ -428,48 +416,6 @@ func getWebGridBreakpointError(node ast.Node) webGridError {
 		return webGridError{
 			title:   "Missing breakpoint grid template parameters",
 			message: "The breakpoint **" + breakpoint + "** must define **grid-template-columns**, **grid-template-rows**, and **grid-template-areas** together.",
-		}
-	}
-
-	return webGridError{}
-}
-
-func getWebGridEmptyTemplateError(templates []webGridTemplate) webGridError {
-	for _, template := range templates {
-		if !template.explicit {
-			continue
-		}
-		columnsName := webGridTemplateParamName(template.breakpoint, "grid-template-columns")
-		if template.columns.Type == "array" && len(template.columns.Items) == 0 {
-			return webGridError{
-				title:   "Empty grid template columns",
-				message: "The parameter **" + columnsName + "** cannot be an empty array.",
-			}
-		}
-
-		rowsName := webGridTemplateParamName(template.breakpoint, "grid-template-rows")
-		if template.rows.Type == "array" && len(template.rows.Items) == 0 {
-			return webGridError{
-				title:   "Empty grid template rows",
-				message: "The parameter **" + rowsName + "** cannot be an empty array.",
-			}
-		}
-
-		areasName := webGridTemplateParamName(template.breakpoint, "grid-template-areas")
-		if template.areas.Type == "array" && len(template.areas.Items) == 0 {
-			return webGridError{
-				title:   "Empty grid template area",
-				message: "The parameter **" + areasName + "** cannot be empty.",
-			}
-		}
-
-		for _, row := range template.areas.Items {
-			if row.Type == "array" && len(row.Items) == 0 {
-				return webGridError{
-					title:   "Empty grid template area",
-					message: "The parameter **" + areasName + "** cannot be empty.",
-				}
-			}
 		}
 	}
 

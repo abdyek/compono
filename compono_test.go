@@ -158,6 +158,34 @@ func (s *componoTestSuite) TestConvertWithContextErrUnsupportedKeyNotation() {
 	assert.Contains(s.T(), compErr.Message, `invalid compono struct tag "invalid_key"`)
 }
 
+func (s *componoTestSuite) TestNavigationRequiresItems() {
+	compono := New()
+
+	var buf bytes.Buffer
+	err := compono.Convert([]byte(`{{ NAVIGATION }}`), &buf)
+	require.NoError(s.T(), err)
+
+	assert.Equal(
+		s.T(),
+		`<compono-error-block><div slot="title">Invalid built-in arguments</div><div slot="description">The parameter <strong>items</strong> does not match the schema of the built-in component <strong>NAVIGATION</strong>.</div></compono-error-block>`,
+		buf.String(),
+	)
+}
+
+func (s *componoTestSuite) TestNavigationRejectsEmptyItems() {
+	compono := New()
+
+	var buf bytes.Buffer
+	err := compono.Convert([]byte(`{{ NAVIGATION items = [] }}`), &buf)
+	require.NoError(s.T(), err)
+
+	assert.Equal(
+		s.T(),
+		`<compono-error-block><div slot="title">Invalid built-in arguments</div><div slot="description">The parameter <strong>items</strong> does not match the schema of the built-in component <strong>NAVIGATION</strong>.</div></compono-error-block>`,
+		buf.String(),
+	)
+}
+
 func TestComponoTestSuite(t *testing.T) {
 	suite.Run(t, new(componoTestSuite))
 }

@@ -4,7 +4,6 @@ import (
 	"strconv"
 
 	"github.com/umono-cms/compono/ast"
-	"github.com/umono-cms/compono/builtin"
 	"github.com/umono-cms/compono/rule"
 	"github.com/umono-cms/compono/util"
 )
@@ -140,23 +139,16 @@ func getImageErrorForCompCalls(ctx *wrapContext, targetCompCall ast.Node, invoke
 	}
 
 	media := resolveImageArg(ctx, targetCompCall, invokerAncestors, "media")
-	if key := imageMissingContextKey(media); key != "" {
+	if key := resolvedValueMissingContextKey(media); key != "" {
 		return imageError{
 			title:   "Unknown key",
 			message: "The key **" + key + "** is not injected.",
 		}
 	}
-	if key := imageMissingContextKey(resolveImageArg(ctx, targetCompCall, invokerAncestors, "alt")); key != "" {
+	if key := resolvedValueMissingContextKey(resolveImageArg(ctx, targetCompCall, invokerAncestors, "alt")); key != "" {
 		return imageError{
 			title:   "Unknown key",
 			message: "The key **" + key + "** is not injected.",
-		}
-	}
-
-	if !imageMediaMatchesSchema(media) {
-		return imageError{
-			title:   "Invalid built-in arguments",
-			message: "The parameter **media** does not match the schema of the built-in component **IMAGE**.",
 		}
 	}
 
@@ -183,22 +175,6 @@ func resolveImageArg(ctx *wrapContext, targetCompCall ast.Node, invokerAncestors
 	}
 
 	return ast.ResolveParamDefaultFromCompCall(ctx.root, targetCompCall, name)
-}
-
-func imageMediaMatchesSchema(media ast.ResolvedValue) bool {
-	definition, ok := builtin.FindDefinition("IMAGE")
-	if !ok {
-		return false
-	}
-
-	for _, param := range definition.Params {
-		if param.Name != "media" {
-			continue
-		}
-		return builtin.MatchesResolvedValue(param.Schema, media)
-	}
-
-	return false
 }
 
 func getImageUnsupportedMimeTypeError(media ast.ResolvedValue) imageError {
@@ -351,23 +327,6 @@ func imageRecordIntField(record ast.ResolvedValue, key string) (int, bool) {
 	return value, true
 }
 
-func imageMissingContextKey(value ast.ResolvedValue) string {
-	if value.MissingContextKey != "" {
-		return value.MissingContextKey
-	}
-	for _, item := range value.Items {
-		if key := imageMissingContextKey(item); key != "" {
-			return key
-		}
-	}
-	for _, field := range value.Fields {
-		if key := imageMissingContextKey(field); key != "" {
-			return key
-		}
-	}
-	return ""
-}
-
 func imageErrorForComponentTarget(ctx *wrapContext, caller ast.Node, target imageComponentTarget, parentInvokers []ast.Node, seen map[string]bool) imageError {
 	if target.name == "" {
 		return imageError{}
@@ -387,6 +346,12 @@ func imageErrorForComponentTarget(ctx *wrapContext, caller ast.Node, target imag
 	invokerAncestors := imageComponentInvokerAncestors(caller, syntheticCall, parentInvokers)
 
 	if target.name == "IMAGE" {
+		if len(getBuiltinSchemaMismatchArgNamesForCompCall(ctx, syntheticCall, syntheticCall)) > 0 {
+			return imageError{
+				title:   "Invalid built-in arguments",
+				message: invalidBuiltinCompCallSchemaMsg(ctx, syntheticCall),
+			}
+		}
 		return getImageErrorForCompCalls(ctx, syntheticCall, invokerAncestors)
 	}
 

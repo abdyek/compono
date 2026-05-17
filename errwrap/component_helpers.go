@@ -229,6 +229,23 @@ func findCompDef(root ast.Node, compCallNode ast.Node, name string) ast.Node {
 	return nil
 }
 
+func resolvedValueMissingContextKey(value ast.ResolvedValue) string {
+	if value.MissingContextKey != "" {
+		return value.MissingContextKey
+	}
+	for _, item := range value.Items {
+		if key := resolvedValueMissingContextKey(item); key != "" {
+			return key
+		}
+	}
+	for _, field := range value.Fields {
+		if key := resolvedValueMissingContextKey(field); key != "" {
+			return key
+		}
+	}
+	return ""
+}
+
 func resolveCompArgValues(ctx *wrapContext, compCall ast.Node) map[string]string {
 	compCallName := getCompCallNameStr(compCall)
 	if compCallName == "" {
