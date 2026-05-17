@@ -167,10 +167,17 @@ type Definition struct {
 	InlineRenderable bool
 }
 
+type ValidationDiagnostic struct {
+	Title   string
+	Message string
+}
+
 type Param struct {
 	Name         string
 	Schema       ValueSchema
 	DefaultValue any
+	IsRequired   bool
+	Diagnostic   func(name string, value ast.ResolvedValue) (ValidationDiagnostic, bool)
 	Description  string
 }
 

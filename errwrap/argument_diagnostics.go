@@ -16,7 +16,7 @@ func invalidBuiltinCompCallSchema() conditionAnalyzer {
 			isKnownComponent(),
 			hasBuiltinSchemaMismatches(),
 		},
-		title:   staticTitle("Invalid built-in arguments"),
+		title:   invalidBuiltinCompCallSchemaTitle,
 		message: invalidBuiltinCompCallSchemaMsg,
 		block:   blockFromRuleName,
 	}
@@ -160,6 +160,20 @@ func getBuiltinSchemaMismatchTargetName(ctx *wrapContext, compCall ast.Node) str
 }
 
 func getBuiltinSchemaMismatchArgNamesForCompCall(ctx *wrapContext, ownerCompCall ast.Node, targetCompCall ast.Node) []string {
+	mismatches := getBuiltinSchemaMismatchesForCompCall(ctx, ownerCompCall, targetCompCall)
+	names := make([]string, 0, len(mismatches))
+	for _, mismatch := range mismatches {
+		names = appendUniqueStrings(names, mismatch.name)
+	}
+	return names
+}
+
+type builtinSchemaMismatch struct {
+	name       string
+	diagnostic builtin.ValidationDiagnostic
+}
+
+func getBuiltinSchemaMismatchesForCompCall(ctx *wrapContext, ownerCompCall ast.Node, targetCompCall ast.Node) []builtinSchemaMismatch {
 	compName := getCompCallNameStr(targetCompCall)
 	if compName == "" {
 		return nil
@@ -175,39 +189,144 @@ func getBuiltinSchemaMismatchArgNamesForCompCall(ctx *wrapContext, ownerCompCall
 		return nil
 	}
 
-	paramSchemaByName := make(map[string]builtin.ValueSchema, len(definition.Params))
+	paramByName := make(map[string]builtin.Param, len(definition.Params))
 	for _, param := range definition.Params {
-		paramSchemaByName[param.Name] = param.Schema
+		paramByName[param.Name] = param
 	}
 
-	mismatches := []string{}
+	invokerAncestors := ast.GetAncestors(ownerCompCall)
+	currentCompCall := ownerCompCall
+	if ownerCompCall != targetCompCall {
+		invokerAncestors = append([]ast.Node{targetCompCall, ownerCompCall}, invokerAncestors...)
+		currentCompCall = targetCompCall
+	}
+
+	mismatches := []builtinSchemaMismatch{}
+	seenArgs := map[string]bool{}
 	for _, arg := range ast.GetCompCallArgsFromCompCall(targetCompCall) {
 		if !ast.IsRuleName(arg, "comp-call-arg") {
 			continue
 		}
 
 		argName := ast.GetArgNameFromCompCallArg(arg)
-		schema, ok := paramSchemaByName[argName]
+		param, ok := paramByName[argName]
 		if !ok {
 			continue
 		}
-
-		invokerAncestors := ast.GetAncestors(ownerCompCall)
-		currentCompCall := ownerCompCall
-		if ownerCompCall != targetCompCall {
-			invokerAncestors = append([]ast.Node{targetCompCall, ownerCompCall}, invokerAncestors...)
-			currentCompCall = targetCompCall
-		}
+		seenArgs[argName] = true
 
 		resolved := ast.ResolveCompCallArgValue(ctx.root, arg, invokerAncestors, currentCompCall)
-		if resolved.IsZero() || builtin.MatchesResolvedValue(schema, resolved) {
+		if resolved.IsZero() || resolvedValueMissingContextKey(resolved) != "" || builtin.MatchesResolvedValue(param.Schema, resolved) {
 			continue
 		}
 
-		mismatches = appendUniqueStrings(mismatches, argName)
+		mismatches = appendBuiltinSchemaMismatch(mismatches, builtinSchemaMismatch{
+			name:       argName,
+			diagnostic: builtinParamDiagnostic(param, resolved),
+		})
+	}
+
+	for _, param := range definition.Params {
+		if !param.IsRequired || seenArgs[param.Name] {
+			continue
+		}
+
+		resolved := ast.ResolveParamDefaultFromCompCall(ctx.root, targetCompCall, param.Name)
+		if resolved.IsZero() || resolvedValueMissingContextKey(resolved) != "" || builtin.MatchesResolvedValue(param.Schema, resolved) {
+			continue
+		}
+
+		mismatches = appendBuiltinSchemaMismatch(mismatches, builtinSchemaMismatch{
+			name:       param.Name,
+			diagnostic: builtinParamDiagnostic(param, resolved),
+		})
 	}
 
 	return mismatches
+}
+
+func appendBuiltinSchemaMismatch(values []builtinSchemaMismatch, next builtinSchemaMismatch) []builtinSchemaMismatch {
+	for _, value := range values {
+		if value.name == next.name {
+			return values
+		}
+	}
+	return append(values, next)
+}
+
+func builtinParamDiagnostic(param builtin.Param, value ast.ResolvedValue) builtin.ValidationDiagnostic {
+	if param.Diagnostic == nil {
+		return builtin.ValidationDiagnostic{}
+	}
+	diagnostic, ok := param.Diagnostic(param.Name, value)
+	if !ok {
+		return builtin.ValidationDiagnostic{}
+	}
+	return diagnostic
+}
+
+func getBuiltinSchemaMismatchDiagnostic(ctx *wrapContext, compCall ast.Node) builtin.ValidationDiagnostic {
+	if diagnostic := firstBuiltinSchemaMismatchDiagnostic(getBuiltinSchemaMismatchesForCompCall(ctx, compCall, compCall)); diagnostic.Title != "" {
+		return diagnostic
+	}
+
+	compCallName := getCompCallNameStr(compCall)
+	if compCallName == "" {
+		return builtin.ValidationDiagnostic{}
+	}
+
+	compDef := findCompDef(ctx.root, compCall, compCallName)
+	if compDef == nil {
+		return builtin.ValidationDiagnostic{}
+	}
+
+	compDefContent := getCompDefContent(compDef)
+	if compDefContent == nil {
+		return builtin.ValidationDiagnostic{}
+	}
+
+	resolvedCompArgs := resolveCompArgValues(ctx, compCall)
+	if len(resolvedCompArgs) > 0 {
+		paramCompCalls := ast.FilterNodesInTree(compDefContent, func(node ast.Node) bool {
+			return isCompParamRefInCompDef(compDef, node) && hasCompCallArgsNode(node)
+		})
+
+		for _, paramCompCall := range paramCompCalls {
+			_, targetCompDef := resolveParamCompCallTarget(ctx, compCall, paramCompCall, resolvedCompArgs)
+			if targetCompDef == nil || !ast.IsRuleName(targetCompDef, "builtin-comp") {
+				continue
+			}
+			if diagnostic := firstBuiltinSchemaMismatchDiagnostic(getBuiltinSchemaMismatchesForCompCall(ctx, compCall, paramCompCall)); diagnostic.Title != "" {
+				return diagnostic
+			}
+		}
+	}
+
+	nestedCompCalls := ast.FilterNodesInTree(compDefContent, func(node ast.Node) bool {
+		return ast.IsRuleNameOneOf(node, []string{"block-comp-call", "inline-comp-call"})
+	})
+
+	for _, nestedCompCall := range nestedCompCalls {
+		nestedName := getCompCallNameStr(nestedCompCall)
+		nestedDef := findCompDef(ctx.root, nestedCompCall, nestedName)
+		if nestedName == "" || nestedDef == nil || !ast.IsRuleName(nestedDef, "builtin-comp") {
+			continue
+		}
+		if diagnostic := firstBuiltinSchemaMismatchDiagnostic(getBuiltinSchemaMismatchesForCompCall(ctx, compCall, nestedCompCall)); diagnostic.Title != "" {
+			return diagnostic
+		}
+	}
+
+	return builtin.ValidationDiagnostic{}
+}
+
+func firstBuiltinSchemaMismatchDiagnostic(mismatches []builtinSchemaMismatch) builtin.ValidationDiagnostic {
+	for _, mismatch := range mismatches {
+		if mismatch.diagnostic.Title != "" {
+			return mismatch.diagnostic
+		}
+	}
+	return builtin.ValidationDiagnostic{}
 }
 
 func getWrongTypeArgNames(ctx *wrapContext, compCall ast.Node) []string {

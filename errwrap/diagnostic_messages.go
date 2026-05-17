@@ -98,7 +98,18 @@ func wrongArgTypeMsg(ctx *wrapContext, node ast.Node) string {
 	return "The parameters **" + strings.Join(wrongTypeArgNames, "**, **") + "** have the wrong type."
 }
 
+func invalidBuiltinCompCallSchemaTitle(ctx *wrapContext, node ast.Node) string {
+	if diagnostic := getBuiltinSchemaMismatchDiagnostic(ctx, node); diagnostic.Title != "" {
+		return diagnostic.Title
+	}
+	return "Invalid built-in arguments"
+}
+
 func invalidBuiltinCompCallSchemaMsg(ctx *wrapContext, node ast.Node) string {
+	if diagnostic := getBuiltinSchemaMismatchDiagnostic(ctx, node); diagnostic.Message != "" {
+		return diagnostic.Message
+	}
+
 	mismatchedArgNames := getBuiltinSchemaMismatchArgNames(ctx, node)
 	compName := getBuiltinSchemaMismatchTargetName(ctx, node)
 	if compName == "" {
