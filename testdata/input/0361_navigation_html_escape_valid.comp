@@ -1,0 +1,6 @@
+{{ NAVIGATION
+  items = [
+    { label: "<Home & Start>", target: "/?q=<home>&sort='asc'" },
+    { label: "Docs 'Guide'", target: "/docs?section=api&lang=go" }
+  ]
+}}

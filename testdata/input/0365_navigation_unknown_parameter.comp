@@ -1,0 +1,6 @@
+{{ NAVIGATION
+  items = [
+    { label: "Home", target: "/" }
+  ]
+  orientation = "horizontal"
+}}

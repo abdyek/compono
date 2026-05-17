@@ -1,0 +1,22 @@
+{
+  "site/navigation": [
+    {
+      "label": "Home",
+      "target": "/"
+    },
+    {
+      "label": "Products",
+      "target": "/products",
+      "children": [
+        {
+          "label": "CMS",
+          "target": "/products/cms"
+        },
+        {
+          "label": "SSG",
+          "target": "/products/ssg"
+        }
+      ]
+    }
+  ]
+}

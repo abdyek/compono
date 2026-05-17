@@ -1,0 +1,1 @@
+Welcome: {{ NAVIGATION items = [{ label: "Home", target: "/" }] }}

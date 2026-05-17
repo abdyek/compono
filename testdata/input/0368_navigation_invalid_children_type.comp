@@ -1,0 +1,5 @@
+{{ NAVIGATION
+  items = [
+    { label: "Docs", target: "/docs", children: "Guide" }
+  ]
+}}
