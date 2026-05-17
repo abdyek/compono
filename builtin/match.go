@@ -24,6 +24,11 @@ func MatchesResolvedValue(schema ValueSchema, value ast.ResolvedValue) bool {
 		return matchesArraySchema(typed, value)
 	case *RecordSchema:
 		return matchesRecordSchema(typed, value)
+	case *LazySchema:
+		if typed == nil || typed.Resolver == nil {
+			return false
+		}
+		return MatchesResolvedValue(typed.Resolver(), value)
 	default:
 		return false
 	}

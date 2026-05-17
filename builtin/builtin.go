@@ -148,6 +148,16 @@ func BuiltinComponents() []Definition {
 				},
 			},
 		},
+		{
+			Name: "NAVIGATION",
+			Params: []Param{
+				{
+					Name:         "items",
+					Schema:       ArrayOf(navigationItemSchema()),
+					DefaultValue: []any{},
+				},
+			},
+		},
 	}
 }
 
@@ -188,5 +198,13 @@ func webGridItemSchema() ValueSchema {
 			}
 			return false
 		})).Required(),
+	).DisallowUnknownKeys()
+}
+
+func navigationItemSchema() ValueSchema {
+	return Record(
+		Field("label", String()).Required(),
+		Field("target", String()).Required(),
+		Field("children", ArrayOf(Lazy(navigationItemSchema))),
 	).DisallowUnknownKeys()
 }

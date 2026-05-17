@@ -48,6 +48,7 @@ func NewRenderer(log logger.Logger) *renderer {
 		newLink(r),
 		newImage(r),
 		newWebGrid(r),
+		newNavigation(r),
 	}
 
 	for _, bc := range builtinComps {
