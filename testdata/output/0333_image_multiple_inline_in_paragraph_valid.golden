@@ -1,1 +1,1 @@
-<p><img src="https://cdn.example.com/first.png" alt="First icon" width="64" height="64"> <img src="https://cdn.example.com/second.png" alt="Second icon" width="64" height="64"></p>
+<p><compono-image><img src="https://cdn.example.com/first.png" alt="First icon" width="64" height="64"></compono-image> <compono-image><img src="https://cdn.example.com/second.png" alt="Second icon" width="64" height="64"></compono-image></p>

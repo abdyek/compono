@@ -1,1 +1,1 @@
-<img src="https://cdn.example.com/global-cover.jpg" alt="Global cover" width="1200" height="630">
+<compono-image><img src="https://cdn.example.com/global-cover.jpg" alt="Global cover" width="1200" height="630"></compono-image>

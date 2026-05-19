@@ -1,1 +1,1 @@
-<picture><source type="image/webp" srcset="https://cdn.example.com/nested-gallery-640.webp 640w"><img src="https://cdn.example.com/nested-gallery.jpg" alt="Nested gallery image" width="1600" height="900"></picture>
+<compono-image><picture><source type="image/webp" srcset="https://cdn.example.com/nested-gallery-640.webp 640w"><img src="https://cdn.example.com/nested-gallery.jpg" alt="Nested gallery image" width="1600" height="900"></picture></compono-image>
