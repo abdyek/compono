@@ -1,1 +1,1 @@
-<img src="https://cdn.example.com/poster.webp" alt="Poster" width="1200" height="1600">
+<compono-image><img src="https://cdn.example.com/poster.webp" alt="Poster" width="1200" height="1600"></compono-image>

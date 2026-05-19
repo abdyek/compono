@@ -1,1 +1,1 @@
-<picture><source type="image/webp" srcset="https://cdn.example.com/inherited-640.webp 640w"><img src="https://cdn.example.com/inherited.jpg" alt="Inherited hero" width="1600" height="900"></picture>
+<compono-image><picture><source type="image/webp" srcset="https://cdn.example.com/inherited-640.webp 640w"><img src="https://cdn.example.com/inherited.jpg" alt="Inherited hero" width="1600" height="900"></picture></compono-image>
