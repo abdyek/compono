@@ -45,7 +45,7 @@ func (img *image) Render(invoker renderableNode, node ast.Node) string {
 
 	variants := img.variants(media)
 	if len(variants) == 0 {
-		return renderedImg
+		return img.wrap(renderedImg)
 	}
 
 	grouped := map[string][]imageVariant{}
@@ -72,7 +72,11 @@ func (img *image) Render(invoker renderableNode, node ast.Node) string {
 		sources = append(sources, `<source type="`+html.EscapeString(mimeType)+`" srcset="`+strings.Join(srcsetParts, ", ")+`">`)
 	}
 
-	return `<picture>` + strings.Join(sources, "") + renderedImg + `</picture>`
+	return img.wrap(`<picture>` + strings.Join(sources, "") + renderedImg + `</picture>`)
+}
+
+func (_ *image) wrap(rendered string) string {
+	return `<compono-image>` + rendered + `</compono-image>`
 }
 
 func (img *image) resolveArg(invoker renderableNode, compCall ast.Node, name string) ast.ResolvedValue {
