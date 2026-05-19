@@ -161,7 +161,7 @@ Output:
 
 ### IMAGE
 
-Creates a semantic image output from a `media` record and optional responsive variants.
+Creates a semantic web image output from a `media` record and optional responsive variants.
 
 Basic usage:
 
@@ -214,10 +214,10 @@ Basic usage:
 
 Output:
 ```html
-<picture><source type="image/avif" srcset="https://cdn.example.com/my-photo-640.avif 640w, https://cdn.example.com/my-photo-1280.avif 1280w, https://cdn.example.com/my-photo-1600.avif 1600w"><source type="image/webp" srcset="https://cdn.example.com/my-photo-640.webp 640w, https://cdn.example.com/my-photo-1280.webp 1280w, https://cdn.example.com/my-photo-1600.webp 1600w"><img src="https://cdn.example.com/my-photo.jpg" alt="My photo" width="1600" height="900"></picture>
+<compono-image><picture><source type="image/avif" srcset="https://cdn.example.com/my-photo-640.avif 640w, https://cdn.example.com/my-photo-1280.avif 1280w, https://cdn.example.com/my-photo-1600.avif 1600w"><source type="image/webp" srcset="https://cdn.example.com/my-photo-640.webp 640w, https://cdn.example.com/my-photo-1280.webp 1280w, https://cdn.example.com/my-photo-1600.webp 1600w"><img src="https://cdn.example.com/my-photo.jpg" alt="My photo" width="1600" height="900"></picture></compono-image>
 ```
 
-Without variants, `IMAGE` renders a plain `img` element:
+Without variants, `IMAGE` renders a plain `img` element inside the `compono-image` custom element:
 
 ```
 {{ IMAGE media = {
@@ -230,7 +230,7 @@ Without variants, `IMAGE` renders a plain `img` element:
 
 Output:
 ```html
-<img src="https://cdn.example.com/avatar.png" alt="Profile avatar" width="512" height="512">
+<compono-image><img src="https://cdn.example.com/avatar.png" alt="Profile avatar" width="512" height="512"></compono-image>
 ```
 
 `IMAGE` can be used inline or as a block component depending on where it is called:
@@ -272,9 +272,10 @@ Supported mime types:
 #### IMAGE Behavior
 
 - `media` is always the fallback image source.
+- HTML output is always wrapped with the `compono-image` custom element.
 - variants are grouped by first-seen `mime-type`, preserving the original group order.
 - within each mime type group, `srcset` entries are sorted by ascending width.
-- an empty `variants` array is valid and renders only the fallback `img`.
+- an empty `variants` array is valid and renders only the fallback `img` inside `compono-image`.
 - all widths and heights must be greater than `0`.
 - all variants must preserve the same aspect ratio as the main `media`.
 - duplicate `mime-type` + `width` pairs are invalid.
