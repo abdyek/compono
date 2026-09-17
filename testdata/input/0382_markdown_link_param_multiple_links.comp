@@ -1,0 +1,4 @@
+{{ COMP first-label = "Google" first-target = "https://google.com" second-label = "GitHub" second-target = "https://github.com" }}
+
+~ COMP first-label = "" first-target = "" second-label = "" second-target = ""
+[{{ first-label }}]({{ first-target }}) and [{{ second-label }}]({{ second-target }}) are popular.

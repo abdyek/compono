@@ -1,0 +1,4 @@
+{{ COMP labels = ["Docs"] targets = ["/docs"] }}
+
+~ COMP labels = [] targets = []
+[{{ labels[0] }}]({{ targets[0] }})

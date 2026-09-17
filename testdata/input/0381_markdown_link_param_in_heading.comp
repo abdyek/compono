@@ -1,0 +1,5 @@
+{{ COMP label = "Umono" target = "https://umono.io" }}
+
+~ COMP label = "" target = ""
+# Visit [{{ label }}]({{ target }})
+## Visit [{{ label }}]({{ target }})

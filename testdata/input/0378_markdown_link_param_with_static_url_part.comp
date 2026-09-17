@@ -1,0 +1,4 @@
+{{ COMP base = "https://umono.io" slug = "getting-started" }}
+
+~ COMP base = "" slug = ""
+[Docs]({{ base }}/docs/{{ slug }})

@@ -1,0 +1,1 @@
+<h1>Visit <compono-error-inline><span slot="title">Invalid parameter usage</span><span slot="description">Parameters cannot be used in the root context.</span></compono-error-inline></h1>

@@ -1,0 +1,4 @@
+{{ DOC_LINK }}
+
+~ DOC_LINK label = context(link/label) target = context(link/target)
+[{{ label }}]({{ target }})

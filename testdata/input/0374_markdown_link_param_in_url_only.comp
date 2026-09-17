@@ -1,0 +1,4 @@
+{{ COMP target = "https://umono.io" }}
+
+~ COMP target = ""
+[Umono]({{ target }})

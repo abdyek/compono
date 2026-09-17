@@ -1,0 +1,4 @@
+{{ COMP count = 12 target = "/docs" }}
+
+~ COMP count = 0 target = ""
+[{{ count }} docs]({{ target }})

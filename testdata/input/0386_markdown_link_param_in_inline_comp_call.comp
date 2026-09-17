@@ -1,0 +1,4 @@
+Go to {{ DOC_LINK label = "Docs" target = "/docs" }} now.
+
+~ DOC_LINK label = "" target = ""
+[{{ label }}]({{ target }})
