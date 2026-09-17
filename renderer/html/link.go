@@ -39,7 +39,7 @@ func (l *linkElement) Render() string {
 	}
 
 	if linkURL != nil {
-		url = html.EscapeString(strings.TrimSpace(string(linkURL.Raw())))
+		url = l.renderURL(linkURL)
 	}
 
 	output := `<compono-link><a href="` + url + `">` + text + `</a></compono-link>`
@@ -55,6 +55,14 @@ func (l *linkElement) Render() string {
 	}
 
 	return l.renderer.applyHooks(output, hook.KindMarkdown, "link", params)
+}
+
+func (l *linkElement) renderURL(linkURL ast.Node) string {
+	if !linkURL.HasChildren() {
+		return html.EscapeString(strings.TrimSpace(string(linkURL.Raw())))
+	}
+
+	return strings.TrimSpace(l.renderer.renderChildren(l, linkURL.Children()))
 }
 
 type linkTextElement struct {

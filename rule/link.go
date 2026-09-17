@@ -13,27 +13,8 @@ func (_ *link) Name() string {
 }
 
 func (_ *link) Selectors() []selector.Selector {
-	seSelector, _ := selector.NewStartEnd(`\[`, `\)`)
 	return []selector.Selector{
-		selector.NewFilter(seSelector, func(source []byte, index [][2]int) [][2]int {
-			filtered := [][2]int{}
-			for _, ind := range index {
-				content := source[ind[0]:ind[1]]
-				hasClosingBracket := false
-				parenStart := -1
-				for i := 0; i < len(content); i++ {
-					if content[i] == ']' && i+1 < len(content) && content[i+1] == '(' {
-						hasClosingBracket = true
-						parenStart = i + 1
-						break
-					}
-				}
-				if hasClosingBracket && parenStart > 0 {
-					filtered = append(filtered, ind)
-				}
-			}
-			return filtered
-		}),
+		selector.NewMarkdownLink(selector.MarkdownLinkWhole),
 	}
 }
 
@@ -56,7 +37,7 @@ func (_ *linkText) Name() string {
 
 func (_ *linkText) Selectors() []selector.Selector {
 	return []selector.Selector{
-		selector.NewStartEndInner(`\[`, `\]`),
+		selector.NewMarkdownLink(selector.MarkdownLinkText),
 	}
 }
 
@@ -66,6 +47,7 @@ func (_ *linkText) Rules() []Rule {
 		newEm(),
 		newInlineCode(),
 		newContextRef(),
+		newParamRef(),
 		newPlain(),
 	}
 }
@@ -82,10 +64,14 @@ func (_ *linkURL) Name() string {
 
 func (_ *linkURL) Selectors() []selector.Selector {
 	return []selector.Selector{
-		selector.NewStartEndInner(`\]\(`, `\)`),
+		selector.NewMarkdownLink(selector.MarkdownLinkURL),
 	}
 }
 
 func (_ *linkURL) Rules() []Rule {
-	return []Rule{}
+	return []Rule{
+		newContextRef(),
+		newParamRef(),
+		newPlain(),
+	}
 }

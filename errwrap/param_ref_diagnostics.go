@@ -30,6 +30,32 @@ func undefinedParamRef() conditionAnalyzer {
 	}
 }
 
+func paramRefInLinkInRootContent() conditionAnalyzer {
+	return conditionAnalyzer{
+		conditions: []func(*wrapContext, ast.Node) bool{
+			isRuleName("link"),
+			isInsideRootContent(),
+			hasParamRefInLink(),
+		},
+		title:   staticTitle("Invalid parameter usage"),
+		message: paramRefInRootMsg,
+		block:   neverBlock,
+	}
+}
+
+func undefinedParamRefInLink() conditionAnalyzer {
+	return conditionAnalyzer{
+		conditions: []func(*wrapContext, ast.Node) bool{
+			isRuleName("link"),
+			not(isInsideRootContent()),
+			hasUndefinedParamRefInLink(),
+		},
+		title:   staticTitle("Unknown parameter"),
+		message: undefinedParamRefsInLinkMsg,
+		block:   neverBlock,
+	}
+}
+
 func undefinedParamCompCall() conditionAnalyzer {
 	return conditionAnalyzer{
 		conditions: []func(*wrapContext, ast.Node) bool{
@@ -119,4 +145,40 @@ func isUndefinedParamCompCall() func(*wrapContext, ast.Node) bool {
 
 		return !util.InSliceString(paramName, definedParams)
 	}
+}
+
+func hasParamRefInLink() func(*wrapContext, ast.Node) bool {
+	return func(_ *wrapContext, link ast.Node) bool {
+		return len(getParamRefsInLink(link)) > 0
+	}
+}
+
+func hasUndefinedParamRefInLink() func(*wrapContext, ast.Node) bool {
+	return func(ctx *wrapContext, link ast.Node) bool {
+		return len(getUndefinedParamRefNamesInLink(ctx, link)) > 0
+	}
+}
+
+func getParamRefsInLink(link ast.Node) []ast.Node {
+	return ast.FilterNodesInTree(link, func(node ast.Node) bool {
+		return ast.IsRuleName(node, "param-ref")
+	})
+}
+
+func getUndefinedParamRefNamesInLink(ctx *wrapContext, link ast.Node) []string {
+	names := []string{}
+	isUndefined := isUndefinedParamRef()
+
+	for _, paramRef := range getParamRefsInLink(link) {
+		refName := getParamRefNameStr(paramRef)
+		if refName == "" || util.InSliceString(refName, names) {
+			continue
+		}
+		if !isUndefined(ctx, paramRef) {
+			continue
+		}
+		names = append(names, refName)
+	}
+
+	return names
 }
