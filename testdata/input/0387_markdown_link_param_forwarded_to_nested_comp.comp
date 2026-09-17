@@ -1,0 +1,7 @@
+{{ OUTER label = "Docs" target = "/docs" }}
+
+~ OUTER label = "" target = ""
+{{ INNER label = label target = target }}
+
+~ INNER label = "" target = ""
+[{{ label }}]({{ target }})

@@ -36,8 +36,10 @@ func diagnosticAnalyzers() []diagnosticAnalyzer {
 		unknownWebGridItemComponent(),
 		wrongArgType(),
 		paramRefInRootContent(),
+		paramRefInLinkInRootContent(),
 		contextRefAnalyzer{},
 		undefinedParamRef(),
+		undefinedParamRefInLink(),
 		notCompParamCompCall(),
 		undefinedParamCompCall(),
 	}

@@ -1,0 +1,4 @@
+{{ COMP link = { label: "Docs", target: "/docs" } }}
+
+~ COMP link = {}
+[{{ link.label }}]({{ link.target }})

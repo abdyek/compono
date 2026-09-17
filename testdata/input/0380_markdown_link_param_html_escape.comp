@@ -1,0 +1,4 @@
+{{ COMP label = "<b>Click</b> & 'go'" target = "/search?q=a&b=c" }}
+
+~ COMP label = "" target = ""
+[{{ label }}]({{ target }})

@@ -1,0 +1,4 @@
+{{ COMP }}
+
+~ COMP label = "Docs" target = "/docs"
+[{{ label }}]({{ target }})

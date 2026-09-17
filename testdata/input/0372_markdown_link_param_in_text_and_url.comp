@@ -1,0 +1,4 @@
+{{ COMP label = "label" target = "/target" }}
+
+~ COMP label = "" target = ""
+[{{ label }}]({{ target }})
