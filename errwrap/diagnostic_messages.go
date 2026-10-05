@@ -144,6 +144,15 @@ func undefinedParamRefsInLinkMsg(ctx *wrapContext, node ast.Node) string {
 	return "The parameters **" + strings.Join(refNames, "**, **") + "** are not defined for this component."
 }
 
+func undefinedParamArgRefsMsg(_ *wrapContext, node ast.Node) string {
+	refNames := getUndefinedParamArgRefNames(node)
+	if len(refNames) == 1 {
+		return "The parameter **" + refNames[0] + "** is not defined for this component."
+	}
+
+	return "The parameters **" + strings.Join(refNames, "**, **") + "** are not defined for this component."
+}
+
 func undefinedParamCompCallAsUnknownMsg(_ *wrapContext, node ast.Node) string {
 	name := getParamCompCallNameStr(node)
 	return "The parameter **" + name + "** is not defined for this component."

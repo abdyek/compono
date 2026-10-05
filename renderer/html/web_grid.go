@@ -69,18 +69,19 @@ func (wg *webGrid) Render(invoker renderableNode, node ast.Node) string {
 			continue
 		}
 
-		renderedItems = append(renderedItems, `<compono-web-grid-item data-grid-area="`+html.EscapeString(area.Raw)+`">`+wg.renderComponent(invoker, node, component.Raw, component.Scope)+`</compono-web-grid-item>`)
+		renderedItems = append(renderedItems, `<compono-web-grid-item data-grid-area="`+html.EscapeString(area.Raw)+`">`+wg.renderComponent(invoker, node, component)+`</compono-web-grid-item>`)
 	}
 
 	return `<compono-web-grid ` + strings.Join(attrs, " ") + `>` + strings.Join(renderedItems, "") + `</compono-web-grid>`
 }
 
-func (wg *webGrid) renderComponent(invoker renderableNode, parent ast.Node, name string, scope ast.Node) string {
-	renderCtx := newPassthroughRenderable(parent, invoker)
+func (wg *webGrid) renderComponent(invoker renderableNode, parent ast.Node, component ast.ResolvedValue) string {
+	name := component.Raw
+	renderCtx := newPassthroughRenderable(ast.NewCompValueFrame(component, parent), invoker)
 
-	localCompDefSrc := scope
+	localCompDefSrc := component.Scope
 	if localCompDefSrc == nil {
-		localCompDefSrc = localCompSourceFromNode(parent, wg.renderer.root)
+		localCompDefSrc = ast.GetLocalCompSourceFromNode(parent, wg.renderer.root)
 	}
 
 	localCompDef := wg.renderer.findLocalCompDef(localCompDefSrc, name)
@@ -129,7 +130,10 @@ func (wg *webGrid) renderComponent(invoker renderableNode, parent ast.Node, name
 func (wg *webGrid) resolveArg(invoker renderableNode, compCall ast.Node, name string) ast.ResolvedValue {
 	arg := ast.GetCompCallArgByParamName(ast.GetCompCallArgsFromCompCall(compCall), name)
 	if arg != nil {
-		invokerAncestors := append([]ast.Node{compCall}, webGridInvokerAncestors(invoker)...)
+		invokerAncestors := webGridInvokerAncestors(invoker)
+		if len(invokerAncestors) == 0 || invokerAncestors[0] != compCall {
+			invokerAncestors = append([]ast.Node{compCall}, invokerAncestors...)
+		}
 		return ast.ResolveCompCallArgValue(wg.renderer.root, arg, invokerAncestors, compCall)
 	}
 	return ast.ResolveParamDefaultFromCompCall(wg.renderer.root, compCall, name)

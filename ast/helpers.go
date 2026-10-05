@@ -445,6 +445,31 @@ func FindCompDef(root Node, compCallNode Node, name string) Node {
 	return nil
 }
 
+// FindCompDefInScope finds the component a value refers to. Local components are
+// looked up in the scope the value was written in, falling back to the locals of
+// the global component the node belongs to.
+func FindCompDefInScope(root Node, scope Node, node Node, name string) Node {
+	if scope == nil {
+		scope = GetLocalCompSourceFromNode(node, root)
+	}
+
+	if localCompDef := FindLocalCompDef(scope, name); localCompDef != nil {
+		return localCompDef
+	}
+
+	if currentSrc := GetLocalCompSourceFromNode(node, root); currentSrc != scope {
+		if localCompDef := FindLocalCompDef(currentSrc, name); localCompDef != nil {
+			return localCompDef
+		}
+	}
+
+	if globalCompDef := FindGlobalCompDef(root, name); globalCompDef != nil {
+		return globalCompDef
+	}
+
+	return FindBuiltinCompDef(root, name)
+}
+
 func GetLocalCompSourceFromNode(node Node, root Node) Node {
 	if node == nil {
 		return root

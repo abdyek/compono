@@ -42,5 +42,6 @@ func diagnosticAnalyzers() []diagnosticAnalyzer {
 		undefinedParamRefInLink(),
 		notCompParamCompCall(),
 		undefinedParamCompCall(),
+		undefinedParamArgRefInParamCompCall(),
 	}
 }

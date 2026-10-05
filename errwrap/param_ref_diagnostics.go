@@ -70,6 +70,22 @@ func undefinedParamCompCall() conditionAnalyzer {
 	}
 }
 
+func undefinedParamArgRefInParamCompCall() conditionAnalyzer {
+	return conditionAnalyzer{
+		conditions: []func(*wrapContext, ast.Node) bool{
+			isRuleName("param-ref"),
+			hasCompCallArgs(),
+			not(isInsideRootContent()),
+			func(_ *wrapContext, node ast.Node) bool {
+				return len(getUndefinedParamArgRefNames(node)) > 0
+			},
+		},
+		title:   staticTitle("Unknown parameter"),
+		message: undefinedParamArgRefsMsg,
+		block:   blockForParamRef,
+	}
+}
+
 func notCompParamCompCall() conditionAnalyzer {
 	return conditionAnalyzer{
 		conditions: []func(*wrapContext, ast.Node) bool{
@@ -101,32 +117,38 @@ func isUndefinedParamRef() func(*wrapContext, ast.Node) bool {
 			return false
 		}
 
-		ancestors := ast.GetAncestors(paramRef)
-		globalCompDef := ast.FindNode(ancestors, func(anc ast.Node) bool {
-			return ast.IsRuleName(anc, "global-comp-def")
-		})
-		localCompDef := ast.FindNode(ancestors, func(anc ast.Node) bool {
-			return ast.IsRuleName(anc, "local-comp-def")
-		})
-
-		if globalCompDef == nil && localCompDef == nil {
+		compDef := findEnclosingCompDef(paramRef)
+		if compDef == nil {
 			return false
 		}
 
-		if globalCompDef != nil && localCompDef == nil {
-			return !util.InSliceString(refName, getCompDefParamNames(globalCompDef))
-		}
-
-		if globalCompDef == nil && localCompDef != nil {
-			return !util.InSliceString(refName, getCompDefParamNames(localCompDef))
-		}
-
-		if util.InSliceString(refName, getCompDefParamNames(localCompDef)) {
-			return false
-		}
-
-		return !util.InSliceString(refName, getCompDefParamNames(globalCompDef))
+		return !util.InSliceString(refName, getCompDefParamNames(compDef))
 	}
+}
+
+// getUndefinedParamArgRefNames returns the parameters referenced by the argument
+// values of a call that are not defined by the component the call is written in.
+func getUndefinedParamArgRefNames(call ast.Node) []string {
+	compDef := findEnclosingCompDef(call)
+	if compDef == nil {
+		return nil
+	}
+
+	definedParams := getCompDefParamNames(compDef)
+	names := []string{}
+	for _, arg := range ast.GetCompCallArgsFromCompCall(call) {
+		for _, paramArg := range ast.FilterNodesInTree(arg, func(node ast.Node) bool {
+			return ast.IsRuleName(node, "comp-call-param-arg")
+		}) {
+			refName, _ := ast.GetValuePathFromRaw(string(paramArg.Raw()))
+			if refName == "" || util.InSliceString(refName, definedParams) {
+				continue
+			}
+			names = appendUniqueStrings(names, refName)
+		}
+	}
+
+	return names
 }
 
 func isUndefinedParamCompCall() func(*wrapContext, ast.Node) bool {
