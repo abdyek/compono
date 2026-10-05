@@ -1,6 +1,7 @@
 package html
 
 import (
+	"html"
 	"regexp"
 	"strings"
 
@@ -30,8 +31,8 @@ func (e *err) Render() string {
 	title := ast.FindNodeByRuleName(e.Node().Children(), "error-title")
 	message := ast.FindNodeByRuleName(e.Node().Children(), "error-message")
 
-	titleStr := strings.TrimSpace(string(title.Raw()))
-	messageStr := strings.TrimSpace(string(message.Raw()))
+	titleStr := html.EscapeString(strings.TrimSpace(string(title.Raw())))
+	messageStr := html.EscapeString(strings.TrimSpace(string(message.Raw())))
 
 	// TODO: This is an ugly hack
 	re := regexp.MustCompile(`\*\*([^*]+)\*\*`)
@@ -45,17 +46,28 @@ func (e *err) Render() string {
 }
 
 func (e *err) blockError(title, msg string) string {
-	return `<compono-error-block><div slot="title">` +
+	return `<compono-error-block><template shadowrootmode="closed">` +
+		e.stylesheetLink() +
+		`<div class="title">` +
 		title +
-		`</div><div slot="description">` +
+		`</div><div class="description">` +
 		msg +
-		`</div></compono-error-block>`
+		`</div></template></compono-error-block>`
 }
 
 func (e *err) inlineError(title, msg string) string {
-	return `<compono-error-inline><span slot="title">` +
+	return `<compono-error-inline><template shadowrootmode="closed">` +
+		e.stylesheetLink() +
+		`<span class="title">` +
 		title +
-		`</span><span slot="description">` +
+		`</span><span class="description">` +
 		msg +
-		`</span></compono-error-inline>`
+		`</span></template></compono-error-inline>`
+}
+
+func (e *err) stylesheetLink() string {
+	if e.renderer.errorStylesheet == "" {
+		return ""
+	}
+	return `<link rel="stylesheet" href="` + html.EscapeString(e.renderer.errorStylesheet) + `">`
 }

@@ -191,7 +191,7 @@ func shouldOverridePreviousParagraph(rendered string) bool {
 	if !strings.HasPrefix(rendered, "<compono-error-block>") {
 		return false
 	}
-	return strings.Contains(rendered, "<div slot=\"title\">Invalid component usage</div>")
+	return strings.Contains(rendered, "<div class=\"title\">Invalid component usage</div>")
 }
 
 func renderParagraphWithBlockErrors(nvec *nonVoidElementContent) string {

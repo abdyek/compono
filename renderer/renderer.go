@@ -17,6 +17,10 @@ type HookSetter interface {
 	SetRendererHooks([]hook.RendererHookFunc)
 }
 
+type ErrorStylesheetSetter interface {
+	SetErrorStylesheet(string)
+}
+
 func DefaultRenderer(log logger.Logger) Renderer {
 	return html.NewRenderer(log)
 }
