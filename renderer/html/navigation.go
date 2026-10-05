@@ -31,11 +31,7 @@ func (nav *navigation) Render(invoker renderableNode, node ast.Node) string {
 }
 
 func (nav *navigation) resolveArg(invoker renderableNode, compCall ast.Node, name string) ast.ResolvedValue {
-	arg := ast.GetCompCallArgByParamName(ast.GetCompCallArgsFromCompCall(compCall), name)
-	if arg != nil {
-		return ast.ResolveCompCallArgValue(nav.renderer.root, arg, getAncestorsByInvoker(invoker), compCall)
-	}
-	return ast.ResolveParamDefaultFromCompCall(nav.renderer.root, compCall, name)
+	return resolveBuiltinParam(nav.renderer, invoker, compCall, name)
 }
 
 func (nav *navigation) renderItems(value ast.ResolvedValue) string {

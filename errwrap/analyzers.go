@@ -8,6 +8,7 @@ type wrapContext struct {
 	compCallCycleCache map[ast.Node]bool
 	paramCycleClosers  map[ast.Node]string
 	callReplacements   map[ast.Node]ast.Node
+	bindingIssues      map[ast.Node]diagnostic
 }
 
 type conditionAnalyzer struct {
@@ -35,6 +36,7 @@ func diagnosticAnalyzers() []diagnosticAnalyzer {
 		invalidBuiltinCompCallSchema(),
 		unknownWebGridItemComponent(),
 		wrongArgType(),
+		boundArgumentAnalyzer{},
 		paramRefInRootContent(),
 		paramRefInLinkInRootContent(),
 		contextRefAnalyzer{},
@@ -43,5 +45,6 @@ func diagnosticAnalyzers() []diagnosticAnalyzer {
 		notCompParamCompCall(),
 		undefinedParamCompCall(),
 		undefinedParamArgRefInParamCompCall(),
+		wrongBoundArgTypeInParamCompCall(),
 	}
 }

@@ -76,14 +76,36 @@ func undefinedParamArgRefInParamCompCall() conditionAnalyzer {
 			isRuleName("param-ref"),
 			hasCompCallArgs(),
 			not(isInsideRootContent()),
-			func(_ *wrapContext, node ast.Node) bool {
-				return len(getUndefinedParamArgRefNames(node)) > 0
+			func(ctx *wrapContext, node ast.Node) bool {
+				return len(getUndefinedParamCompCallArgNames(ctx, node)) > 0
 			},
 		},
 		title:   staticTitle("Unknown parameter"),
 		message: undefinedParamArgRefsMsg,
 		block:   blockForParamRef,
 	}
+}
+
+func wrongBoundArgTypeInParamCompCall() conditionAnalyzer {
+	return conditionAnalyzer{
+		conditions: []func(*wrapContext, ast.Node) bool{
+			isRuleName("param-ref"),
+			hasCompCallArgs(),
+			not(isInsideRootContent()),
+			func(ctx *wrapContext, node ast.Node) bool {
+				return len(getWrongTypeBoundArgNames(ctx.root, node)) > 0
+			},
+		},
+		title: staticTitle("Wrong argument type"),
+		message: func(ctx *wrapContext, node ast.Node) string {
+			return wrongArgTypeNamesMsg(getWrongTypeBoundArgNames(ctx.root, node))
+		},
+		block: blockForParamRef,
+	}
+}
+
+func getUndefinedParamCompCallArgNames(ctx *wrapContext, node ast.Node) []string {
+	return appendUniqueStrings(getUndefinedParamArgRefNames(node), getUndefinedBoundArgNames(ctx.root, node)...)
 }
 
 func notCompParamCompCall() conditionAnalyzer {

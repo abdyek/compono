@@ -86,7 +86,10 @@ func undefinedParamMsg(ctx *wrapContext, node ast.Node) string {
 }
 
 func wrongArgTypeMsg(ctx *wrapContext, node ast.Node) string {
-	wrongTypeArgNames := getWrongTypeArgNames(ctx, node)
+	return wrongArgTypeNamesMsg(getWrongTypeArgNames(ctx, node))
+}
+
+func wrongArgTypeNamesMsg(wrongTypeArgNames []string) string {
 	if len(wrongTypeArgNames) == 0 {
 		return "One or more arguments have the wrong type for this component."
 	}
@@ -144,8 +147,8 @@ func undefinedParamRefsInLinkMsg(ctx *wrapContext, node ast.Node) string {
 	return "The parameters **" + strings.Join(refNames, "**, **") + "** are not defined for this component."
 }
 
-func undefinedParamArgRefsMsg(_ *wrapContext, node ast.Node) string {
-	refNames := getUndefinedParamArgRefNames(node)
+func undefinedParamArgRefsMsg(ctx *wrapContext, node ast.Node) string {
+	refNames := getUndefinedParamCompCallArgNames(ctx, node)
 	if len(refNames) == 1 {
 		return "The parameter **" + refNames[0] + "** is not defined for this component."
 	}

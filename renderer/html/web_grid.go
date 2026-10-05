@@ -6,7 +6,7 @@ import (
 	"strings"
 
 	"github.com/umono-cms/compono/ast"
-	"github.com/umono-cms/compono/rule"
+	"github.com/umono-cms/compono/renderer/hook"
 )
 
 // Deprecated: WEB_GRID is deprecated and will be removed in v1.
@@ -41,7 +41,7 @@ func (wg *webGrid) Render(invoker renderableNode, node ast.Node) string {
 		columnsName := breakpoint + "-grid-template-columns"
 		rowsName := breakpoint + "-grid-template-rows"
 		areasName := breakpoint + "-grid-template-areas"
-		if !wg.hasExplicitArg(node, columnsName) {
+		if !wg.hasExplicitArg(invoker, node, columnsName) {
 			continue
 		}
 
@@ -110,33 +110,16 @@ func (wg *webGrid) renderComponent(invoker renderableNode, parent ast.Node, comp
 		return wg.renderer.renderChildren(renderCtx, globalCompDefContent.Children())
 	}
 
-	compCall := ast.DefaultEmptyNode()
-	compCall.SetRule(rule.NewDynamic("block-comp-call"))
-	compCall.SetParent(parent)
-
-	compCallName := ast.DefaultEmptyNode()
-	compCallName.SetRule(rule.NewDynamic("comp-call-name"))
-	compCallName.SetParent(compCall)
-	compCallName.SetRaw([]byte(name))
-
-	compCall.SetChildren([]ast.Node{compCallName})
-	re := wg.renderer.findRenderable(renderCtx, compCall)
-	if re == nil {
+	builtinComp := wg.renderer.findBuiltinComp(name)
+	if builtinComp == nil {
 		return ""
 	}
-	return renderNode(re, renderCtx, compCall)
+	output := builtinComp.Render(invoker, renderCtx.Node())
+	return wg.renderer.applyHooks(output, hook.KindBuiltin, name, wg.renderer.extractBuiltinParams(invoker, renderCtx.Node()))
 }
 
 func (wg *webGrid) resolveArg(invoker renderableNode, compCall ast.Node, name string) ast.ResolvedValue {
-	arg := ast.GetCompCallArgByParamName(ast.GetCompCallArgsFromCompCall(compCall), name)
-	if arg != nil {
-		invokerAncestors := webGridInvokerAncestors(invoker)
-		if len(invokerAncestors) == 0 || invokerAncestors[0] != compCall {
-			invokerAncestors = append([]ast.Node{compCall}, invokerAncestors...)
-		}
-		return ast.ResolveCompCallArgValue(wg.renderer.root, arg, invokerAncestors, compCall)
-	}
-	return ast.ResolveParamDefaultFromCompCall(wg.renderer.root, compCall, name)
+	return resolveBuiltinParam(wg.renderer, invoker, compCall, name)
 }
 
 func (wg *webGrid) joinScalarArray(invoker renderableNode, compCall ast.Node, name string) string {
@@ -166,13 +149,7 @@ func (wg *webGrid) mustJSON(value any) string {
 	return string(raw)
 }
 
-func (wg *webGrid) hasExplicitArg(compCall ast.Node, name string) bool {
-	return ast.GetCompCallArgByParamName(ast.GetCompCallArgsFromCompCall(compCall), name) != nil
-}
-
-func webGridInvokerAncestors(invoker renderableNode) []ast.Node {
-	if invoker == nil {
-		return nil
-	}
-	return append([]ast.Node{invoker.Node()}, webGridInvokerAncestors(invoker.Invoker())...)
+func (wg *webGrid) hasExplicitArg(invoker renderableNode, compCall ast.Node, name string) bool {
+	_, ok := resolveBuiltinArg(wg.renderer, invoker, compCall, name)
+	return ok
 }

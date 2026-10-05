@@ -249,6 +249,9 @@ func (ew *errorWrapper) getMissingContextKeyForCompCall(root ast.Node, compCall 
 		if key := ast.ResolveCompCallArgValue(root, arg, invokerAncestors, currentCompCall).MissingContextKey; key != "" {
 			return key
 		}
+		if key := getMissingContextKeyInBoundArgs(root, arg); key != "" {
+			return key
+		}
 	}
 
 	content := getCompDefContent(compDef)
@@ -280,6 +283,21 @@ func (ew *errorWrapper) getMissingContextKeyForCompCall(root ast.Node, compCall 
 		}
 	}
 
+	return ""
+}
+
+func getMissingContextKeyInBoundArgs(root ast.Node, arg ast.Node) string {
+	for _, boundArgs := range ast.FilterNodesInTree(arg, func(node ast.Node) bool {
+		return ast.IsRuleName(node, "comp-bound-args")
+	}) {
+		for _, contextArg := range ast.FilterNodesInTree(boundArgs, func(node ast.Node) bool {
+			return ast.IsRuleName(node, "comp-call-context-arg")
+		}) {
+			if key := ast.ResolveContextReferenceValue(root, contextArg).MissingContextKey; key != "" {
+				return key
+			}
+		}
+	}
 	return ""
 }
 

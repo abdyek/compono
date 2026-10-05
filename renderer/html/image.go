@@ -80,11 +80,7 @@ func (_ *image) wrap(rendered string) string {
 }
 
 func (img *image) resolveArg(invoker renderableNode, compCall ast.Node, name string) ast.ResolvedValue {
-	arg := ast.GetCompCallArgByParamName(ast.GetCompCallArgsFromCompCall(compCall), name)
-	if arg != nil {
-		return ast.ResolveCompCallArgValue(img.renderer.root, arg, getAncestorsByInvoker(invoker), compCall)
-	}
-	return ast.ResolveParamDefaultFromCompCall(img.renderer.root, compCall, name)
+	return resolveBuiltinParam(img.renderer, invoker, compCall, name)
 }
 
 func (img *image) recordField(record ast.ResolvedValue, key string) string {

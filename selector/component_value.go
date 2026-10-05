@@ -295,6 +295,58 @@ func (rl *recordLiteral) Select(source []byte, without ...[2]int) [][2]int {
 	return [][2]int{{start, end}}
 }
 
+type componentReference struct{}
+
+// NewComponentReference selects the whole source when it is a component value:
+// a component name optionally followed by bound arguments.
+func NewComponentReference() Selector {
+	return &componentReference{}
+}
+
+func (_ *componentReference) Name() string {
+	return "component_reference"
+}
+
+func (_ *componentReference) Select(source []byte, without ...[2]int) [][2]int {
+	start := skipComponentSpaces(source, 0)
+	if start >= len(source) || source[start] < 'A' || source[start] > 'Z' {
+		return [][2]int{}
+	}
+
+	end, ok := scanComponentReference(source, start)
+	if !ok || skipComponentSpaces(source, end) != len(source) {
+		return [][2]int{}
+	}
+
+	return [][2]int{{start, end}}
+}
+
+type boundArgs struct{}
+
+// NewBoundArgs selects the parenthesized bound arguments of a component value.
+func NewBoundArgs() Selector {
+	return &boundArgs{}
+}
+
+func (_ *boundArgs) Name() string {
+	return "bound_args"
+}
+
+func (_ *boundArgs) Select(source []byte, without ...[2]int) [][2]int {
+	start := skipComponentSpaces(source, 0)
+	nameEnd, ok := scanComponentName(source, start)
+	if !ok {
+		return [][2]int{}
+	}
+
+	end, ok := scanBoundArgs(source, nameEnd)
+	if !ok {
+		return [][2]int{}
+	}
+
+	return [][2]int{{nameEnd, end}}
+}
+
 type paramRefIndexes struct{}
 
 func NewParamRefIndexes() Selector {
@@ -438,7 +490,7 @@ func scanComponentValue(source []byte, offset int, allowParamRef bool) (int, boo
 	case hasComponentKeywordAt(source, offset, "false"):
 		return offset + len("false"), true
 	case source[offset] >= 'A' && source[offset] <= 'Z':
-		return scanComponentName(source, offset)
+		return scanComponentReference(source, offset)
 	case allowParamRef && source[offset] >= 'a' && source[offset] <= 'z':
 		return scanParamReferenceValue(source, offset)
 	default:
@@ -567,6 +619,59 @@ func scanComponentName(source []byte, offset int) (int, bool) {
 	}
 
 	return offset, offset > start
+}
+
+// scanComponentReference scans a component value: a component name optionally
+// followed by bound arguments, e.g. MAIN_MENU(menu = menu). The parenthesis
+// must follow the name directly and cannot be empty.
+func scanComponentReference(source []byte, offset int) (int, bool) {
+	nameEnd, ok := scanComponentName(source, offset)
+	if !ok {
+		return 0, false
+	}
+
+	if nameEnd >= len(source) || source[nameEnd] != '(' {
+		return nameEnd, true
+	}
+
+	return scanBoundArgs(source, nameEnd)
+}
+
+func scanBoundArgs(source []byte, offset int) (int, bool) {
+	if offset >= len(source) || source[offset] != '(' {
+		return 0, false
+	}
+
+	offset++
+	argCount := 0
+	for {
+		offset = skipComponentSpaces(source, offset)
+		if offset >= len(source) {
+			return 0, false
+		}
+
+		if source[offset] == ')' {
+			return offset + 1, argCount > 0
+		}
+
+		nameEnd, ok := scanComponentParamName(source, offset)
+		if !ok {
+			return 0, false
+		}
+		offset = skipComponentSpaces(source, nameEnd)
+		if offset >= len(source) || source[offset] != '=' {
+			return 0, false
+		}
+
+		offset++
+		offset = skipComponentSpaces(source, offset)
+		valueEnd, ok := scanComponentValue(source, offset, true)
+		if !ok {
+			return 0, false
+		}
+		offset = valueEnd
+		argCount++
+	}
 }
 
 func scanParamReferenceValue(source []byte, offset int) (int, bool) {
