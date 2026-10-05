@@ -1,0 +1,13 @@
+{{ OUTER name = "Yunus" }}
+
+~ OUTER name = ""
+{{ A c = B(inner = C(who = name)) }}
+
+~ A c = NO_MATTER
+{{ c }}
+
+~ B inner = NO_MATTER
+{{ inner }}
+
+~ C who = ""
+Hello *{{ who }}*!

@@ -1,0 +1,7 @@
+{{ OUTER title = "From caller" }}
+
+~ OUTER title = "" content = CARD(title = title)
+{{ content }}
+
+~ CARD title = ""
+# {{ title }}

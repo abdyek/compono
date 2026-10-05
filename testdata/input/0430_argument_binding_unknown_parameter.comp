@@ -1,0 +1,7 @@
+{{ WRAP content = CARD(titel = "Typo") }}
+
+~ WRAP content = NO_MATTER
+{{ content }}
+
+~ CARD title = ""
+# {{ title }}

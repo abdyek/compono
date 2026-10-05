@@ -1,0 +1,11 @@
+{{ PAGE text = "Visit" url = "https://example.com" }}
+
+~ PAGE text = "" url = ""
+{{ WRAP content = LINK(text = text url = url new-tab = true) }}
+Inline: {{ INLINE_WRAP content = LINK(text = text url = url) }}
+
+~ WRAP content = NO_MATTER
+{{ content }}
+
+~ INLINE_WRAP content = NO_MATTER
+[{{ content }}]

@@ -1,0 +1,11 @@
+{{ SITE_NAV menu-title = "Main" }}
+
+~ SITE_NAV menu-title = ""
+{{ WRAP content = MENU(title = menu-title) }}
+
+~ WRAP content = NO_MATTER
+{{ content }}
+
+~ MENU title = "" note = "default note"
+# {{ title }}
+{{ note }}

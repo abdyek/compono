@@ -1,0 +1,7 @@
+{{ WRAP content = X() }}
+
+~ WRAP content = NO_MATTER
+{{ content }}
+
+~ X a = 0
+{{ a }}

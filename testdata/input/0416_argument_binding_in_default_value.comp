@@ -1,0 +1,9 @@
+{{ OUTER }}
+
+~ OUTER c = CARD(title = "Default bound")
+{{ c }}
+{{ c body = "From caller" }}
+
+~ CARD title = "" body = "Body"
+## {{ title }}
+{{ body }}

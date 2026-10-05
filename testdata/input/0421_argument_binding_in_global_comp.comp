@@ -1,0 +1,4 @@
+{{ LAYOUT title = "Home" content = BODY(heading = "Welcome") }}
+
+~ BODY heading = ""
+## {{ heading }}

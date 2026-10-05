@@ -1,0 +1,10 @@
+{{ OUTER title = "Hi" }}
+
+~ OUTER title = ""
+{{ WRAP content = CARD(title = subtitle) }}
+
+~ WRAP content = NO_MATTER
+{{ content }}
+
+~ CARD title = ""
+# {{ title }}

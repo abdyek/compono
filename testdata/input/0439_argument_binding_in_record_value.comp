@@ -1,0 +1,10 @@
+{{ OUTER name = "Yunus" }}
+
+~ OUTER name = ""
+{{ SHOW config = { greeting: GREETING(name = name) } }}
+
+~ SHOW config = {}
+{{ config.greeting }}
+
+~ GREETING name = ""
+Hello *{{ name }}*!
