@@ -460,6 +460,75 @@ Here:
 
 ---
 
+### Argument Binding
+
+When a component is passed as a value, it is not known who renders it and with which arguments. Arguments can be bound to a component value in parentheses:
+
+```
+{{ SITE_NAV menu-title = "Main Menu" }}
+
+~ SITE_NAV menu-title = ""
+{{ WRAPPER content = MENU(title = menu-title) }}
+
+~ WRAPPER content = NO_MATTER
+{{ content }}
+
+~ MENU title = ""
+## {{ title }}
+```
+
+Output:
+
+```html
+<h2>Main Menu</h2>
+```
+
+- The parentheses hold an argument list, just like a component call. Arguments are separated by spaces and can span multiple lines: `CARD(title = "Hello" tags = ["a", "b"])`.
+- Values can be anything a call argument can be: literals, parameter references (including accessors such as `item.children`), `context(key)`, arrays, records and components.
+- The name and the parenthesis must be adjacent and the parentheses cannot be empty. `CARD (title = "Hello")` and `CARD()` are not argument binding. Write only the name when no argument is bound.
+- A bound value is resolved where it is written. In `MENU(title = menu-title)`, `menu-title` is the parameter of `SITE_NAV`, no matter where `MENU` is rendered.
+- A bound component can be used anywhere a component value can: as a call argument, a default value, an array item or a record value. Bindings can be nested: `CARD(footer = FOOTER(text = "Bye"))`.
+- Built-in components can be bound too: `content = LINK(text = text url = url)`.
+- When a bound component is rendered, the bound arguments and the arguments given by the caller are used together. Parameters that are neither bound nor given use their default values.
+
+```
+{{ PAGE }}
+
+~ PAGE card = CARD(title = "Bound title")
+{{ card body = "Given by the caller" }}
+
+~ CARD title = "" body = ""
+## {{ title }}
+{{ body }}
+```
+
+Output:
+
+```html
+<h2>Bound title</h2><p>Given by the caller</p>
+```
+
+#### Argument Binding Errors
+
+- Binding a parameter that the component does not define renders `Unknown parameter`.
+- Binding a value of the wrong type renders `Wrong argument type`.
+- Required arguments of a bound built-in component are validated with the bound and the given arguments together.
+- Giving an argument to a parameter that is already bound renders `Duplicate argument` with the message `The parameter **[name]** of component **[component]** is already bound.` There is no precedence rule between a bound and a given argument.
+
+```
+{{ WRAPPER content = CARD(title = "Bound") }}
+
+~ WRAPPER content = NO_MATTER
+{{ content title = "Given" }}
+
+~ CARD title = ""
+# {{ title }}
+```
+
+Errors are shown on the call the bound component value is written in. For a value bound in a default value, they are shown on the call that uses the default value.
+
+---
+
 ### Parameter Visibility
 
 A component only sees the parameters it defines. There is no parameter inheritance:
