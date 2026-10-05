@@ -1,0 +1,7 @@
+{{ LOCAL_DEF }}
+
+{{ LINK text="hi" url="https://example.com" }}
+
+~ LOCAL_DEF
+
+I am local
