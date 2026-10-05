@@ -288,66 +288,6 @@ When validation fails, Compono renders an error placeholder instead of silently 
 - `Duplicate variant`
 - `Inconsistent aspect ratio`
 
-### NAVIGATION
-
-Creates a platform navigation tree from an `items` array. In the HTML renderer, it outputs a semantic `nav` list.
-
-Basic usage:
-
-```
-{{ NAVIGATION
-  items = [
-    { label: "Home", target: "/" },
-    { label: "About", target: "/about" },
-    { label: "Contact", target: "/contact" }
-  ]
-}}
-```
-
-Output:
-```html
-<nav><ul><li><a href="/">Home</a></li><li><a href="/about">About</a></li><li><a href="/contact">Contact</a></li></ul></nav>
-```
-
-Items can contain nested `children` arrays:
-
-```
-{{ NAVIGATION
-  items = [
-    { label: "Home", target: "/" },
-    {
-      label: "Docs",
-      target: "/docs",
-      children: [
-        { label: "Guide", target: "/docs/guide" },
-        {
-          label: "API",
-          target: "/docs/api",
-          children: [
-            { label: "Components", target: "/docs/api/components" }
-          ]
-        }
-      ]
-    }
-  ]
-}}
-```
-
-Output:
-```html
-<nav><ul><li><a href="/">Home</a></li><li><a href="/docs">Docs</a><ul><li><a href="/docs/guide">Guide</a></li><li><a href="/docs/api">API</a><ul><li><a href="/docs/api/components">Components</a></li></ul></li></ul></li></ul></nav>
-```
-
-#### NAVIGATION Parameters
-
-- `items` is an array of navigation item records.
-- each item must include:
-  - `label`: string rendered as the visible link text.
-  - `target`: string rendered as the link `href`.
-  - optional `children`: array of navigation item records.
-
-`NAVIGATION` is a block built-in component. It can receive `items` from a parameter or `context(key)`, and label/target values are HTML escaped by the HTML renderer.
-
 ### Removed Built-in Components
 
 #### WEB_GRID
@@ -355,6 +295,12 @@ Output:
 `WEB_GRID` was removed in v0.7. It described a grid layout through parameters such as columns, rows, areas and breakpoints. That is presentation, not meaning. Compono only carries semantic content, and layout belongs to the stylesheet of whoever renders the output. Keeping it would also have frozen its output DOM as part of a stable contract.
 
 A `WEB_GRID` call now renders an `Unknown component` error. Local or global components named `WEB_GRID` are not affected and work as regular components.
+
+#### NAVIGATION
+
+`NAVIGATION` was removed in v0.7. It bundled a whole menu concept (`<nav>`, `<ul>`, `<li>` and `<a>`) into one built-in. It always produced an unordered list, so ordered navigations like breadcrumbs could not be expressed, and it could not carry attributes such as `aria-current` or `aria-label`. Its item records also used `label`/`target` instead of Compono's `text`/`url` naming.
+
+A `NAVIGATION` call now renders an `Unknown component` error. Local or global components named `NAVIGATION` are not affected and work as regular components.
 
 ## Parameters
 
@@ -756,7 +702,7 @@ err := c.Convert(
 Every hook receives a `hook.RendererHookContext`:
 
 - `Kind`: where the output came from. `hook.KindMarkdown` is used for markdown elements, and `hook.KindBuiltin` is used for built-in components.
-- `Name`: the rendered element or component name. Markdown names include `h1`, `h2`, `h3`, `h4`, `h5`, `h6`, `p`, `em`, `strong`, `link`, `inline-code`, and `code-block`. Built-in names use the component name, such as `LINK`, `IMAGE`, or `NAVIGATION`.
+- `Name`: the rendered element or component name. Markdown names include `h1`, `h2`, `h3`, `h4`, `h5`, `h6`, `p`, `em`, `strong`, `link`, `inline-code`, and `code-block`. Built-in names use the component name, such as `LINK` or `IMAGE`.
 - `Params`: raw resolved data for that rendered unit. Markdown elements expose values such as `content`, `text`, `url`, and `lang`. Built-in components expose successfully resolved arguments and defaults, including values coming from `context(key)`.
 - `Output`: the current HTML output. Returning `ctx.Output` leaves it unchanged; returning another string replaces it.
 

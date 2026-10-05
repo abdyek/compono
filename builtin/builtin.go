@@ -40,17 +40,6 @@ func BuiltinComponents() []Definition {
 			},
 			InlineRenderable: true,
 		},
-		{
-			Name: "NAVIGATION",
-			Params: []Param{
-				{
-					Name:         "items",
-					Schema:       ArrayOf(navigationItemSchema()).Min(1),
-					DefaultValue: []any{},
-					IsRequired:   true,
-				},
-			},
-		},
 	}
 }
 
@@ -70,13 +59,5 @@ func imageVariantSchema() ValueSchema {
 		Field("width", Integer()).Required(),
 		Field("height", Integer()).Required(),
 		Field("mime-type", String()).Required(),
-	).DisallowUnknownKeys()
-}
-
-func navigationItemSchema() ValueSchema {
-	return Record(
-		Field("label", String()).Required(),
-		Field("target", String()).Required(),
-		Field("children", ArrayOf(Lazy(navigationItemSchema))),
 	).DisallowUnknownKeys()
 }
