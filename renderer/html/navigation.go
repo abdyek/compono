@@ -27,7 +27,7 @@ func (_ *navigation) Name() string {
 
 func (nav *navigation) Render(invoker renderableNode, node ast.Node) string {
 	items := nav.resolveArg(invoker, node, "items")
-	return `<compono-navigation><nav>` + nav.renderItems(items) + `</nav></compono-navigation>`
+	return `<nav>` + nav.renderItems(items) + `</nav>`
 }
 
 func (nav *navigation) resolveArg(invoker renderableNode, compCall ast.Node, name string) ast.ResolvedValue {

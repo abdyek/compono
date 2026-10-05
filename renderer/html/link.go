@@ -42,7 +42,7 @@ func (l *linkElement) Render() string {
 		url = l.renderURL(linkURL)
 	}
 
-	output := `<compono-link><a href="` + url + `">` + text + `</a></compono-link>`
+	output := `<a href="` + url + `">` + text + `</a>`
 
 	params := hook.Params{}
 	if linkText != nil {
