@@ -1,7 +1,6 @@
 package errwrap
 
 import (
-	"sort"
 	"strings"
 
 	"github.com/umono-cms/compono/ast"
@@ -82,7 +81,6 @@ func walkBindingFrames(ctx *wrapContext, chain []ast.Node) {
 
 	if ast.IsRuleName(compDef, "builtin-comp") {
 		checkBoundBuiltinFrame(ctx, frame, after, compDef)
-		walkBuiltinCompValues(ctx, frame, chain, compDef)
 		return
 	}
 
@@ -110,41 +108,6 @@ func walkBindingFrames(ctx *wrapContext, chain []ast.Node) {
 	}
 }
 
-// walkBuiltinCompValues follows the component values a built-in renders, such
-// as the item components of WEB_GRID.
-func walkBuiltinCompValues(ctx *wrapContext, frame ast.Node, chain []ast.Node, compDef ast.Node) {
-	for _, compParam := range ast.GetCompParamsFromCompDef(compDef) {
-		value := ast.ResolveFrameParam(ctx.root, frame, ast.GetParamNameFromCompParam(compParam), chain[1:])
-		for _, compValue := range collectCompValues(value) {
-			walkBindingFrames(ctx, append([]ast.Node{ast.NewCompValueFrame(compValue, frame)}, chain...))
-		}
-	}
-}
-
-func collectCompValues(value ast.ResolvedValue) []ast.ResolvedValue {
-	if value.Type == "comp" {
-		return []ast.ResolvedValue{value}
-	}
-
-	result := []ast.ResolvedValue{}
-	for _, item := range value.Items {
-		result = append(result, collectCompValues(item)...)
-	}
-	for _, key := range sortedFieldKeys(value.Fields) {
-		result = append(result, collectCompValues(value.Fields[key])...)
-	}
-	return result
-}
-
-func sortedFieldKeys(fields map[string]ast.ResolvedValue) []string {
-	keys := make([]string, 0, len(fields))
-	for key := range fields {
-		keys = append(keys, key)
-	}
-	sort.Strings(keys)
-	return keys
-}
-
 func checkDuplicateArgs(ctx *wrapContext, paramCompCall ast.Node, value ast.ResolvedValue) {
 	if value.Bound == nil {
 		return
@@ -167,7 +130,7 @@ func checkDuplicateArgs(ctx *wrapContext, paramCompCall ast.Node, value ast.Reso
 // checkBoundBuiltinFrame validates a bound built-in. Bound arguments and the
 // arguments given by the caller are validated together.
 func checkBoundBuiltinFrame(ctx *wrapContext, frame ast.Node, after []ast.Node, compDef ast.Node) {
-	if !ast.IsRuleNameOneOf(frame, []string{"param-ref", "comp-value-frame"}) {
+	if !ast.IsRuleName(frame, "param-ref") {
 		return
 	}
 

@@ -549,46 +549,6 @@ func (s *componoTestSuite) TestRendererHookParamsForAllBuiltinComponents() {
 	}
 	assert.True(s.T(), foundImage, "expected hook call for IMAGE builtin")
 
-	webGridSource := `{{ WEB_GRID
-  items = [
-    { component: MY_COMP, grid-area: "header" }
-  ]
-  grid-template-columns = ["1fr"]
-  grid-template-rows = ["min-content"]
-  grid-template-areas = [
-    ["header"]
-  ]
-}}
-
-~ MY_COMP
-# Header`
-
-	buf.Reset()
-	err = c.Convert([]byte(webGridSource), &buf, WithRendererHook(hookFn))
-	require.NoError(s.T(), err)
-
-	foundWebGrid := false
-	for _, call := range calls {
-		if call.Kind == hook.KindBuiltin && call.Name == "WEB_GRID" {
-			foundWebGrid = true
-			items := requireHookArray(s.T(), call.Params, "items")
-			item, ok := items.Record(0)
-			require.True(s.T(), ok)
-			assert.Equal(s.T(), "MY_COMP", requireHookRecordString(s.T(), item, "component"))
-			assert.Equal(s.T(), "header", requireHookRecordString(s.T(), item, "grid-area"))
-
-			columns := requireHookArray(s.T(), call.Params, "grid-template-columns")
-			rows := requireHookArray(s.T(), call.Params, "grid-template-rows")
-			areas := requireHookArray(s.T(), call.Params, "grid-template-areas")
-			areaRow, ok := areas.Array(0)
-			require.True(s.T(), ok)
-			assert.Equal(s.T(), "1fr", requireHookArrayString(s.T(), columns, 0))
-			assert.Equal(s.T(), "min-content", requireHookArrayString(s.T(), rows, 0))
-			assert.Equal(s.T(), "header", requireHookArrayString(s.T(), areaRow, 0))
-		}
-	}
-	assert.True(s.T(), foundWebGrid, "expected hook call for WEB_GRID builtin")
-
 	navSource := `{{ NAVIGATION items = [
   { label: "Home", target: "/" },
   { label: "About", target: "/about" }
@@ -709,14 +669,6 @@ func requireHookRecord(t *testing.T, params hook.Params, name string) hook.Recor
 
 	value, ok := params.Record(name)
 	require.True(t, ok, "expected hook param %q to be a record", name)
-	return value
-}
-
-func requireHookArrayString(t *testing.T, array hook.Array, index int) string {
-	t.Helper()
-
-	value, ok := array.String(index)
-	require.True(t, ok, "expected hook array item %d to be a string", index)
 	return value
 }
 

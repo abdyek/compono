@@ -1,1 +1,1 @@
-<compono-error-block><div slot="title">Unsupported mime-type</div><div slot="description">The mime-type <strong>image/svg+xml</strong> is unsupported.</div></compono-error-block>
+<compono-error-block><div slot="title">Unknown component</div><div slot="description">The component <strong>WEB_GRID</strong> is not defined or not registered.</div></compono-error-block>

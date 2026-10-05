@@ -21,10 +21,6 @@ type baseRenderable struct {
 	node    ast.Node
 }
 
-type passthroughRenderable struct {
-	baseRenderable
-}
-
 func (br *baseRenderable) Invoker() renderableNode {
 	return br.invoker
 }
@@ -39,25 +35,6 @@ func (br *baseRenderable) Node() ast.Node {
 
 func (br *baseRenderable) SetNode(node ast.Node) {
 	br.node = node
-}
-
-func (*passthroughRenderable) New() renderableNode {
-	return &passthroughRenderable{}
-}
-
-func (*passthroughRenderable) Condition(renderableNode, ast.Node) bool {
-	return false
-}
-
-func (*passthroughRenderable) Render() string {
-	return ""
-}
-
-func newPassthroughRenderable(node ast.Node, invoker renderableNode) renderableNode {
-	pr := &passthroughRenderable{}
-	pr.SetNode(node)
-	pr.SetInvoker(invoker)
-	return pr
 }
 
 func renderNode(rn renderableNode, invoker renderableNode, node ast.Node) string {

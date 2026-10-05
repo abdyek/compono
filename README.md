@@ -288,46 +288,6 @@ When validation fails, Compono renders an error placeholder instead of silently 
 - `Duplicate variant`
 - `Inconsistent aspect ratio`
 
-### WEB_GRID
-
-> **Deprecated:** `WEB_GRID` is deprecated and will be removed in v1. Compono will now only carry semantic content. Built-in components that tell the presentation layer what to do will no longer be added to Compono.
-
-Creates a web grid wrapper from component items and grid template definitions:
-
-```
-{{ WEB_GRID
-  items = [
-    { component: HEADER, grid-area: "header" },
-    { component: CONTENT, grid-area: "content" },
-    { component: FOOTER, grid-area: "footer" }
-  ]
-  grid-template-columns = ["1fr"]
-  grid-template-rows = ["min-content", "1fr", "min-content"]
-  grid-template-areas = [
-    ["header"],
-    ["content"],
-    ["footer"]
-  ]
-}}
-
-~ HEADER
-# Header
-
-~ CONTENT
-Main content.
-
-~ FOOTER
-Footer
-```
-
-Output:
-```html
-<compono-web-grid data-grid-template-columns="1fr" data-grid-template-rows="min-content 1fr min-content" data-grid-template-areas='[["header"],["content"],["footer"]]'><compono-web-grid-item data-grid-area="header"><h1>Header</h1></compono-web-grid-item><compono-web-grid-item data-grid-area="content"><p>Main content.</p></compono-web-grid-item><compono-web-grid-item data-grid-area="footer"><p>Footer</p></compono-web-grid-item></compono-web-grid>
-```
-
-`WEB_GRID` also supports responsive breakpoint variants for the grid template parameters:
-`sm-grid-template-columns`, `md-grid-template-columns`, `lg-grid-template-columns`, `xl-grid-template-columns`, `xxl-grid-template-columns`, and the corresponding `*-grid-template-rows` / `*-grid-template-areas` parameters.
-
 ### NAVIGATION
 
 Creates a platform navigation tree from an `items` array. In the HTML renderer, it outputs a `<compono-navigation>` wrapper containing a semantic `nav` list. Compono does not define the custom element; that belongs to the application or runtime using the generated output.
@@ -387,6 +347,14 @@ Output:
   - optional `children`: array of navigation item records.
 
 `NAVIGATION` is a block built-in component. It can receive `items` from a parameter or `context(key)`, and label/target values are HTML escaped by the HTML renderer.
+
+### Removed Built-in Components
+
+#### WEB_GRID
+
+`WEB_GRID` was removed in v0.7. It described a grid layout through parameters such as columns, rows, areas and breakpoints. That is presentation, not meaning. Compono only carries semantic content, and layout belongs to the stylesheet of whoever renders the output. Keeping it would also have frozen its output DOM as part of a stable contract.
+
+A `WEB_GRID` call now renders an `Unknown component` error. Local or global components named `WEB_GRID` are not affected and work as regular components.
 
 ## Parameters
 
@@ -788,7 +756,7 @@ err := c.Convert(
 Every hook receives a `hook.RendererHookContext`:
 
 - `Kind`: where the output came from. `hook.KindMarkdown` is used for markdown elements, and `hook.KindBuiltin` is used for built-in components.
-- `Name`: the rendered element or component name. Markdown names include `h1`, `h2`, `h3`, `h4`, `h5`, `h6`, `p`, `em`, `strong`, `link`, `inline-code`, and `code-block`. Built-in names use the component name, such as `LINK`, `IMAGE`, `WEB_GRID`, or `NAVIGATION`.
+- `Name`: the rendered element or component name. Markdown names include `h1`, `h2`, `h3`, `h4`, `h5`, `h6`, `p`, `em`, `strong`, `link`, `inline-code`, and `code-block`. Built-in names use the component name, such as `LINK`, `IMAGE`, or `NAVIGATION`.
 - `Params`: raw resolved data for that rendered unit. Markdown elements expose values such as `content`, `text`, `url`, and `lang`. Built-in components expose successfully resolved arguments and defaults, including values coming from `context(key)`.
 - `Output`: the current HTML output. Returning `ctx.Output` leaves it unchanged; returning another string replaces it.
 
