@@ -460,17 +460,45 @@ Here:
 
 ---
 
-### Global Parameter Visibility in Local Components
+### Parameter Visibility
 
-When a **global component** defines parameters, those parameters are **visible to local components inside it**.
+A component only sees the parameters it defines. There is no parameter inheritance:
+
+- a local component of a global component does not see the parameters of that global component
+- a component does not see the parameters of the component calling it
+
+Every value a component needs is passed to it as an argument. Referencing a parameter that is not defined by the component renders an `Unknown parameter` error.
+
+```
+{{ OUTER title = "Hello" }}
+
+~ OUTER title = ""
+{{ INNER }}
+
+~ INNER
+# {{ title }}
+// Unknown parameter: INNER does not define title
+```
+
+Pass the value explicitly instead:
+
+```
+~ OUTER title = ""
+{{ INNER title = title }}
+
+~ INNER title = ""
+# {{ title }}
+```
+
+The same applies to global components:
 
 ```
 c.RegisterGlobalComponent("PROFILE_PAGE", []byte(`
 name="Guest"
 
-{{ PROFILE_CARD }}
+{{ PROFILE_CARD name = name }}
 
-~ PROFILE_CARD
+~ PROFILE_CARD name = ""
 ## {{ name }}
 Welcome to the profile page.
 `))
@@ -488,8 +516,6 @@ Output:
 <h2>Yunus</h2>
 <p>Welcome to the profile page.</p>
 ```
-
-The local component `PROFILE_CARD` can directly access the global parameter `name`.
 
 ---
 
