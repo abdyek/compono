@@ -1,1 +1,1 @@
-<compono-web-grid data-grid-template-columns="1fr" data-grid-template-rows="1fr" data-grid-template-areas='[["hero"]]'><compono-web-grid-item data-grid-area="hero"><h1>Own default</h1></compono-web-grid-item></compono-web-grid>
+<compono-error-block><div slot="title">Unknown component</div><div slot="description">The component <strong>WEB_GRID</strong> is not defined or not registered.</div></compono-error-block>
