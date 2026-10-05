@@ -1,1 +1,1 @@
-<p>call self<br>inline <compono-error-inline><span slot="title">Infinite component call</span><span slot="description">The call to component <strong>COMP</strong> creates an infinite loop and was skipped.</span></compono-error-inline></p>
+<p>call self<br>inline <compono-error-inline><template shadowrootmode="closed"><span class="title">Infinite component call</span><span class="description">The call to component <strong>COMP</strong> creates an infinite loop and was skipped.</span></template></compono-error-inline></p>

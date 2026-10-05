@@ -1,1 +1,1 @@
-<p>I am the root content.</p><p><compono-error-inline><span slot="title">Invalid parameter usage</span><span slot="description">Parameters cannot be used in the root context.</span></compono-error-inline></p>
+<p>I am the root content.</p><p><compono-error-inline><template shadowrootmode="closed"><span class="title">Invalid parameter usage</span><span class="description">Parameters cannot be used in the root context.</span></template></compono-error-inline></p>

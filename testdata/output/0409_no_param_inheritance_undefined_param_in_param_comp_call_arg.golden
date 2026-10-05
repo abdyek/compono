@@ -1,1 +1,1 @@
-<compono-error-block><div slot="title">Unknown parameter</div><div slot="description">The parameter <strong>missing</strong> is not defined for this component.</div></compono-error-block>
+<compono-error-block><template shadowrootmode="closed"><div class="title">Unknown parameter</div><div class="description">The parameter <strong>missing</strong> is not defined for this component.</div></template></compono-error-block>

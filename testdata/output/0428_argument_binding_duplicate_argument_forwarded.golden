@@ -1,1 +1,1 @@
-<compono-error-block><div slot="title">Duplicate argument</div><div slot="description">The parameter <strong>title</strong> of component <strong>CARD</strong> is already bound.</div></compono-error-block>
+<compono-error-block><template shadowrootmode="closed"><div class="title">Duplicate argument</div><div class="description">The parameter <strong>title</strong> of component <strong>CARD</strong> is already bound.</div></template></compono-error-block>

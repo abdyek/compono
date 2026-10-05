@@ -1,1 +1,1 @@
-<p><compono-error-inline><span slot="title">Unknown parameter</span><span slot="description">The parameter <strong>target</strong> is not defined for this component.</span></compono-error-inline></p>
+<p><compono-error-inline><template shadowrootmode="closed"><span class="title">Unknown parameter</span><span class="description">The parameter <strong>target</strong> is not defined for this component.</span></template></compono-error-inline></p>

@@ -1,1 +1,1 @@
-<p>Hello <compono-error-inline><span slot="title">Invalid component usage</span><span slot="description">The component <strong>BLOCK_COMP</strong> is a block component and cannot be used inline.</span></compono-error-inline></p>
+<p>Hello <compono-error-inline><template shadowrootmode="closed"><span class="title">Invalid component usage</span><span class="description">The component <strong>BLOCK_COMP</strong> is a block component and cannot be used inline.</span></template></compono-error-inline></p>
