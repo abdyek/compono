@@ -330,7 +330,7 @@ func isCompTargetInInvokerChain(r *renderer, rn renderableNode, targetName strin
 			continue
 		}
 
-		if !ast.IsRuleNameOneOf(anc, []string{"param-ref", "comp-value-frame"}) {
+		if !ast.IsRuleName(anc, "param-ref") {
 			continue
 		}
 

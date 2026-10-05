@@ -49,7 +49,6 @@ func NewRenderer(log logger.Logger) *renderer {
 	builtinComps := []builtinComponent{
 		newLink(r),
 		newImage(r),
-		newWebGrid(r),
 		newNavigation(r),
 	}
 

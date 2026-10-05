@@ -127,18 +127,15 @@ func ResolveFrameArg(root Node, frame Node, paramName string, invokerAncestors [
 		return ResolveCompCallArgValue(root, compCallArg, invokerAncestors, frame), true
 	}
 
-	if !IsRuleNameOneOf(frame, []string{"param-ref", "comp-value-frame"}) {
+	if !IsRuleName(frame, "param-ref") {
 		return ResolvedValue{}, false
 	}
 	return ResolveBoundArg(root, ResolveFrameCompValue(root, frame, invokerAncestors), paramName)
 }
 
-// ResolveFrameCompValue resolves the component value rendered by a param-ref or
-// comp-value-frame frame. invokerAncestors are the invoker ancestors after the frame.
+// ResolveFrameCompValue resolves the component value rendered by a param-ref
+// frame. invokerAncestors are the invoker ancestors after the frame.
 func ResolveFrameCompValue(root Node, frame Node, invokerAncestors []Node) ResolvedValue {
-	if value, ok := GetCompValueFromFrame(frame); ok {
-		return value
-	}
 	if IsRuleName(frame, "param-ref") {
 		return ResolveParamFromAncestors(root, GetParamRefName(frame), GetParamRefAccessors(frame), invokerAncestors)
 	}
@@ -147,7 +144,7 @@ func ResolveFrameCompValue(root Node, frame Node, invokerAncestors []Node) Resol
 
 // IsFrameNode reports whether the node renders the content of a component.
 func IsFrameNode(node Node) bool {
-	return IsRuleNameOneOf(node, []string{"block-comp-call", "inline-comp-call", "param-ref", "comp-value-frame"})
+	return IsRuleNameOneOf(node, []string{"block-comp-call", "inline-comp-call", "param-ref"})
 }
 
 // FindFrameCompDef returns the definition of the component rendered by the frame.
