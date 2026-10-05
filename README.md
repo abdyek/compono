@@ -156,7 +156,7 @@ Creates an anchor element with optional target blank:
 
 Output:
 ```html
-<compono-link><a href="https://example.com" target="_blank" rel="noopener noreferrer">Visit us</a></compono-link>
+<a href="https://example.com" target="_blank" rel="noopener noreferrer">Visit us</a>
 ```
 
 ### IMAGE
@@ -214,10 +214,10 @@ Basic usage:
 
 Output:
 ```html
-<compono-image><picture><source type="image/avif" srcset="https://cdn.example.com/my-photo-640.avif 640w, https://cdn.example.com/my-photo-1280.avif 1280w, https://cdn.example.com/my-photo-1600.avif 1600w"><source type="image/webp" srcset="https://cdn.example.com/my-photo-640.webp 640w, https://cdn.example.com/my-photo-1280.webp 1280w, https://cdn.example.com/my-photo-1600.webp 1600w"><img src="https://cdn.example.com/my-photo.jpg" alt="My photo" width="1600" height="900"></picture></compono-image>
+<picture><source type="image/avif" srcset="https://cdn.example.com/my-photo-640.avif 640w, https://cdn.example.com/my-photo-1280.avif 1280w, https://cdn.example.com/my-photo-1600.avif 1600w"><source type="image/webp" srcset="https://cdn.example.com/my-photo-640.webp 640w, https://cdn.example.com/my-photo-1280.webp 1280w, https://cdn.example.com/my-photo-1600.webp 1600w"><img src="https://cdn.example.com/my-photo.jpg" alt="My photo" width="1600" height="900"></picture>
 ```
 
-Without variants, `IMAGE` renders a plain `img` element inside the `compono-image` custom element:
+Without variants, `IMAGE` renders a plain `img` element:
 
 ```
 {{ IMAGE media = {
@@ -230,7 +230,7 @@ Without variants, `IMAGE` renders a plain `img` element inside the `compono-imag
 
 Output:
 ```html
-<compono-image><img src="https://cdn.example.com/avatar.png" alt="Profile avatar" width="512" height="512"></compono-image>
+<img src="https://cdn.example.com/avatar.png" alt="Profile avatar" width="512" height="512">
 ```
 
 `IMAGE` can be used inline or as a block component depending on where it is called:
@@ -272,10 +272,10 @@ Supported mime types:
 #### IMAGE Behavior
 
 - `media` is always the fallback image source.
-- HTML output is always wrapped with the `compono-image` custom element.
+- HTML output is a `picture` element when variants are given, otherwise a plain `img` element.
 - variants are grouped by first-seen `mime-type`, preserving the original group order.
 - within each mime type group, `srcset` entries are sorted by ascending width.
-- an empty `variants` array is valid and renders only the fallback `img` inside `compono-image`.
+- an empty `variants` array is valid and renders only the fallback `img`.
 - all widths and heights must be greater than `0`.
 - all variants must preserve the same aspect ratio as the main `media`.
 - duplicate `mime-type` + `width` pairs are invalid.
@@ -290,7 +290,7 @@ When validation fails, Compono renders an error placeholder instead of silently 
 
 ### NAVIGATION
 
-Creates a platform navigation tree from an `items` array. In the HTML renderer, it outputs a `<compono-navigation>` wrapper containing a semantic `nav` list. Compono does not define the custom element; that belongs to the application or runtime using the generated output.
+Creates a platform navigation tree from an `items` array. In the HTML renderer, it outputs a semantic `nav` list.
 
 Basic usage:
 
@@ -306,7 +306,7 @@ Basic usage:
 
 Output:
 ```html
-<compono-navigation><nav><ul><li><a href="/">Home</a></li><li><a href="/about">About</a></li><li><a href="/contact">Contact</a></li></ul></nav></compono-navigation>
+<nav><ul><li><a href="/">Home</a></li><li><a href="/about">About</a></li><li><a href="/contact">Contact</a></li></ul></nav>
 ```
 
 Items can contain nested `children` arrays:
@@ -335,7 +335,7 @@ Items can contain nested `children` arrays:
 
 Output:
 ```html
-<compono-navigation><nav><ul><li><a href="/">Home</a></li><li><a href="/docs">Docs</a><ul><li><a href="/docs/guide">Guide</a></li><li><a href="/docs/api">API</a><ul><li><a href="/docs/api/components">Components</a></li></ul></li></ul></li></ul></nav></compono-navigation>
+<nav><ul><li><a href="/">Home</a></li><li><a href="/docs">Docs</a><ul><li><a href="/docs/guide">Guide</a></li><li><a href="/docs/api">API</a><ul><li><a href="/docs/api/components">Components</a></li></ul></li></ul></li></ul></nav>
 ```
 
 #### NAVIGATION Parameters
@@ -736,7 +736,7 @@ markdownHook := func(ctx hook.RendererHookContext) string {
 builtinHook := func(ctx hook.RendererHookContext) string {
     if ctx.Kind == hook.KindBuiltin && ctx.Name == "LINK" {
         if url, ok := ctx.Params.String("url"); ok && strings.HasPrefix(url, "https://example.com") {
-            return strings.Replace(ctx.Output, "<compono-link>", `<compono-link data-internal="true">`, 1)
+            return strings.Replace(ctx.Output, "<a ", `<a data-internal="true" `, 1)
         }
     }
     return ctx.Output
@@ -775,7 +775,7 @@ imageHook := func(ctx hook.RendererHookContext) string {
 
     mimeType, _ := media.String("mime-type")
     if mimeType == "image/avif" {
-        return strings.Replace(ctx.Output, "<compono-image>", `<compono-image data-modern="true">`, 1)
+        return strings.Replace(ctx.Output, "<img ", `<img data-modern="true" `, 1)
     }
     return ctx.Output
 }
