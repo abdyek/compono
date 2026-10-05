@@ -1,0 +1,7 @@
+{{ WRAP content = CARD(title = context(site/name)) }}
+
+~ WRAP content = NO_MATTER
+{{ content }}
+
+~ CARD title = ""
+# {{ title }}

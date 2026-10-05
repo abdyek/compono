@@ -1,0 +1,7 @@
+{{ OUTER content = CARD }}
+
+~ OUTER content = NO_MATTER
+{{ content inner = CARD(titel = "x") }}
+
+~ CARD title = "" inner = NO_MATTER
+# {{ title }}

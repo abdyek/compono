@@ -80,6 +80,8 @@ func getUndefinedArgNames(ctx *wrapContext, compCall ast.Node) []string {
 		undefined = append(undefined, argName)
 	}
 
+	undefined = appendUniqueStrings(undefined, getUndefinedParamArgRefNames(compCall)...)
+	undefined = appendUniqueStrings(undefined, getUndefinedBoundArgNames(ctx.root, compCall)...)
 	undefined = appendUniqueStrings(undefined, getUndefinedArgNamesFromResolvedParamCompCalls(ctx, compCall)...)
 
 	return undefined
@@ -364,6 +366,7 @@ func getWrongTypeArgNames(ctx *wrapContext, compCall ast.Node) []string {
 		wrongTypeArgNames = append(wrongTypeArgNames, argNameStr)
 	}
 
+	wrongTypeArgNames = appendUniqueStrings(wrongTypeArgNames, getWrongTypeBoundArgNames(ctx.root, compCall)...)
 	wrongTypeArgNames = appendUniqueStrings(wrongTypeArgNames, getWrongTypeArgNamesFromResolvedParamCompCalls(ctx, compCall)...)
 	wrongTypeArgNames = appendUniqueStrings(wrongTypeArgNames, getWrongTypeArgNamesFromNestedCompCalls(ctx, compCall)...)
 

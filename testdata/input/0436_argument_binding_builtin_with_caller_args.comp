@@ -1,0 +1,7 @@
+{{ PAGE url = "https://example.com" }}
+
+~ PAGE url = ""
+{{ WRAP content = LINK(url = url) }}
+
+~ WRAP content = NO_MATTER
+{{ content text = "Go" }}

@@ -1,0 +1,7 @@
+{{ WRAP content = CARD(count = "three") }}
+
+~ WRAP content = NO_MATTER
+{{ content }}
+
+~ CARD count = 0
+# {{ count }}

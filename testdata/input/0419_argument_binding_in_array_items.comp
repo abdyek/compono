@@ -1,0 +1,8 @@
+{{ OUTER items = [CARD(title = "First"), CARD(title = "Second")] }}
+
+~ OUTER items = []
+{{ items[0] }}
+{{ items[1] }}
+
+~ CARD title = ""
+## {{ title }}

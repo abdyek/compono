@@ -1,0 +1,17 @@
+{{ OUTER title = "Multi" }}
+
+~ OUTER title = ""
+{{ WRAP
+  content = CARD(
+    title = title
+    tags = ["a", "b"]
+    meta = { author: "Yunus" }
+  )
+}}
+
+~ WRAP content = NO_MATTER
+{{ content }}
+
+~ CARD title = "" tags = [] meta = {}
+# {{ title }}
+{{ tags[1] }} - {{ meta.author }}

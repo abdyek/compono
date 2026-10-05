@@ -33,7 +33,7 @@ func (_ *link) Name() string {
 
 func (l *link) Render(invoker renderableNode, node ast.Node) string {
 	newTabStr := ""
-	newTab, ok := getBoolArgValue(invoker, node, "new-tab")
+	newTab, ok := getBoolArgValue(l.renderer, invoker, node, "new-tab")
 	if ok && newTab {
 		newTabStr = ` target="_blank" rel="noopener noreferrer"`
 	}
@@ -49,26 +49,16 @@ func getArgValueWithDefa(r *renderer, invoker renderableNode, compCall ast.Node,
 }
 
 func getArgValue(r *renderer, invoker renderableNode, compCall ast.Node, name string) (string, bool) {
-	compCallArg := ast.GetCompCallArgByParamName(ast.GetCompCallArgsFromCompCall(compCall), name)
-	if compCallArg == nil {
-		return "", false
-	}
-
-	resolved := ast.ResolveCompCallArgValue(r.root, compCallArg, getAncestorsByInvoker(invoker), compCall)
-	if resolved.IsZero() || resolved.Type == "array" || resolved.Type == "record" || resolved.MissingContextKey != "" {
+	resolved, ok := resolveBuiltinArg(r, invoker, compCall, name)
+	if !ok || resolved.IsZero() || resolved.Type == "array" || resolved.Type == "record" || resolved.MissingContextKey != "" {
 		return "", false
 	}
 
 	return html.EscapeString(strings.TrimSpace(resolved.Raw)), true
 }
 
-func getBoolArgValue(invoker renderableNode, callNode ast.Node, name string) (bool, bool) {
-	rnd, _ := invoker.(*compCall)
-	if rnd == nil {
-		return false, false
-	}
-
-	value, ok := getArgValue(rnd.renderer, invoker, callNode, name)
+func getBoolArgValue(r *renderer, invoker renderableNode, callNode ast.Node, name string) (bool, bool) {
+	value, ok := getArgValue(r, invoker, callNode, name)
 	if !ok {
 		return false, false
 	}

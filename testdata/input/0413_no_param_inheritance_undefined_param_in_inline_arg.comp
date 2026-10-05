@@ -1,0 +1,7 @@
+{{ OUTER }}
+
+~ OUTER
+Hello {{ INNER label = missing }}!
+
+~ INNER label = ""
+*{{ label }}*

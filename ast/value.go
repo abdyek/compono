@@ -9,6 +9,57 @@ type ResolvedValue struct {
 	Fields            map[string]ResolvedValue
 	Scope             Node
 	MissingContextKey string
+	Bound             *BoundArgs
+}
+
+// BoundArgs are the arguments bound to a component value, e.g. menu = menu in
+// MAIN_MENU(menu = menu). They are resolved lazily, in the frame they were
+// written in, no matter where the component value is rendered.
+type BoundArgs struct {
+	args             []Node
+	invokerAncestors []Node
+	current          Node
+}
+
+// Args returns the comp-call-arg nodes of the bound arguments.
+func (ba *BoundArgs) Args() []Node {
+	if ba == nil {
+		return nil
+	}
+	return ba.args
+}
+
+// Arg returns the bound argument with the given name.
+func (ba *BoundArgs) Arg(name string) Node {
+	return GetCompCallArgByParamName(ba.Args(), name)
+}
+
+// WrittenIn returns the call the bound component value is written in. For a value
+// bound in a default value, it is the call that used the default value.
+func (ba *BoundArgs) WrittenIn() Node {
+	if ba == nil || ba.current == nil {
+		return nil
+	}
+
+	if IsRuleNameOneOf(ba.current, []string{"block-comp-call", "inline-comp-call", "param-ref"}) {
+		return ba.current
+	}
+
+	for _, anc := range ba.invokerAncestors {
+		if IsRuleNameOneOf(anc, []string{"block-comp-call", "inline-comp-call", "param-ref"}) {
+			return anc
+		}
+	}
+	return nil
+}
+
+// ResolveBoundArg resolves the argument bound to a component value.
+func ResolveBoundArg(root Node, value ResolvedValue, name string) (ResolvedValue, bool) {
+	arg := value.Bound.Arg(name)
+	if arg == nil {
+		return ResolvedValue{}, false
+	}
+	return ResolveCompCallArgValue(root, arg, value.Bound.invokerAncestors, value.Bound.current), true
 }
 
 func (rv ResolvedValue) IsZero() bool {
@@ -38,31 +89,79 @@ func ResolveCompCallArgValue(root Node, compCallArg Node, invokerAncestors []Nod
 	return resolved
 }
 
+// ResolveParamFromAncestors resolves a parameter of the component rendered by
+// the nearest frame in invokerAncestors. There is no parameter inheritance:
+// the lookup never goes past that frame.
 func ResolveParamFromAncestors(root Node, paramName string, accessors []ValueAccessor, invokerAncestors []Node) ResolvedValue {
-	for _, anc := range invokerAncestors {
-		if !IsRuleNameOneOf(anc, []string{"block-comp-call", "inline-comp-call", "param-ref"}) {
+	for i, anc := range invokerAncestors {
+		if !IsFrameNode(anc) {
 			continue
 		}
-
-		compCallArgs := FindNodeByRuleName(anc.Children(), "comp-call-args")
-		if compCallArgs != nil {
-			compCallArg := FindNode(compCallArgs.Children(), func(cca Node) bool {
-				return GetArgNameFromCompCallArg(cca) == paramName
-			})
-
-			if compCallArg != nil {
-				return ApplyAccessors(ResolveCompCallArgValue(root, compCallArg, invokerAncestors, anc), accessors)
-			}
-		}
-
-		if IsRuleNameOneOf(anc, []string{"block-comp-call", "inline-comp-call"}) {
-			if resolved := ResolveParamDefaultFromCompCall(root, anc, paramName); !resolved.IsZero() {
-				return ApplyAccessors(resolved, accessors)
-			}
-		}
+		return ApplyAccessors(ResolveFrameParam(root, anc, paramName, invokerAncestors[i+1:]), accessors)
 	}
 
 	return ResolvedValue{}
+}
+
+// ResolveFrameParam resolves a parameter of the component rendered by the frame:
+// the argument given by the frame, the argument bound to the rendered component
+// value or the default value of the parameter. invokerAncestors are the invoker
+// ancestors after the frame.
+func ResolveFrameParam(root Node, frame Node, paramName string, invokerAncestors []Node) ResolvedValue {
+	if resolved, ok := ResolveFrameArg(root, frame, paramName, invokerAncestors); ok {
+		return resolved
+	}
+
+	compDef := FindFrameCompDef(root, frame, invokerAncestors)
+	if compDef == nil {
+		return ResolvedValue{}
+	}
+	return resolveCompParamDefault(root, compDef, paramName, append([]Node{frame}, invokerAncestors...))
+}
+
+// ResolveFrameArg resolves the argument given to the component rendered by the
+// frame, either by the frame itself or bound to the rendered component value.
+// invokerAncestors are the invoker ancestors after the frame.
+func ResolveFrameArg(root Node, frame Node, paramName string, invokerAncestors []Node) (ResolvedValue, bool) {
+	if compCallArg := GetCompCallArgByParamName(GetCompCallArgsFromCompCall(frame), paramName); compCallArg != nil {
+		return ResolveCompCallArgValue(root, compCallArg, invokerAncestors, frame), true
+	}
+
+	if !IsRuleNameOneOf(frame, []string{"param-ref", "comp-value-frame"}) {
+		return ResolvedValue{}, false
+	}
+	return ResolveBoundArg(root, ResolveFrameCompValue(root, frame, invokerAncestors), paramName)
+}
+
+// ResolveFrameCompValue resolves the component value rendered by a param-ref or
+// comp-value-frame frame. invokerAncestors are the invoker ancestors after the frame.
+func ResolveFrameCompValue(root Node, frame Node, invokerAncestors []Node) ResolvedValue {
+	if value, ok := GetCompValueFromFrame(frame); ok {
+		return value
+	}
+	if IsRuleName(frame, "param-ref") {
+		return ResolveParamFromAncestors(root, GetParamRefName(frame), GetParamRefAccessors(frame), invokerAncestors)
+	}
+	return ResolvedValue{}
+}
+
+// IsFrameNode reports whether the node renders the content of a component.
+func IsFrameNode(node Node) bool {
+	return IsRuleNameOneOf(node, []string{"block-comp-call", "inline-comp-call", "param-ref", "comp-value-frame"})
+}
+
+// FindFrameCompDef returns the definition of the component rendered by the frame.
+// invokerAncestors are the invoker ancestors after the frame.
+func FindFrameCompDef(root Node, frame Node, invokerAncestors []Node) Node {
+	if IsRuleNameOneOf(frame, []string{"block-comp-call", "inline-comp-call"}) {
+		return FindCompDef(root, frame, getCompCallName(frame))
+	}
+
+	value := ResolveFrameCompValue(root, frame, invokerAncestors)
+	if value.Type != "comp" || value.Raw == "" {
+		return nil
+	}
+	return FindCompDefInScope(root, value.Scope, frame, value.Raw)
 }
 
 func ResolveParamDefaultFromCompCall(root Node, compCallNode Node, paramName string) ResolvedValue {
@@ -75,6 +174,12 @@ func ResolveParamDefaultFromCompCall(root Node, compCallNode Node, paramName str
 }
 
 func ResolveCompParamDefaultFromCompDef(root Node, compDef Node, paramName string) ResolvedValue {
+	return resolveCompParamDefault(root, compDef, paramName, nil)
+}
+
+// resolveCompParamDefault resolves a default value in the given frame chain, so
+// that parameter references in its bound arguments refer to that frame.
+func resolveCompParamDefault(root Node, compDef Node, paramName string, invokerAncestors []Node) ResolvedValue {
 	compParam := FindNode(GetCompParamsFromCompDef(compDef), func(cp Node) bool {
 		return GetParamNameFromCompParam(cp) == paramName
 	})
@@ -82,7 +187,7 @@ func ResolveCompParamDefaultFromCompDef(root Node, compDef Node, paramName strin
 		return ResolvedValue{}
 	}
 
-	resolved := resolveValueNode(root, FindNodeByRuleName(compParam.Children(), "comp-param-type"), nil, compDef)
+	resolved := resolveValueNode(root, FindNodeByRuleName(compParam.Children(), "comp-param-type"), invokerAncestors, compDef)
 	if resolved.Scope == nil {
 		resolved.Scope = GetLocalCompSourceFromNode(compDef, root)
 	}
@@ -113,7 +218,9 @@ func resolveValueNode(root Node, node Node, invokerAncestors []Node, currentNode
 	switch node.Rule().Name() {
 	case "comp-context-param", "comp-call-context-arg", "context-ref":
 		return ResolveContextReferenceValue(root, node)
-	case "comp-string-param", "comp-integer-param", "comp-bool-param", "comp-comp-param":
+	case "comp-comp-param", "comp-call-comp-arg":
+		return resolveCompValue(root, node, invokerAncestors, currentNode)
+	case "comp-string-param", "comp-integer-param", "comp-bool-param":
 		value := FindNodeByRuleName(node.Children(), "comp-param-defa-value")
 		raw := strings.TrimSpace(string(node.Raw()))
 		if value != nil {
@@ -123,7 +230,7 @@ func resolveValueNode(root Node, node Node, invokerAncestors []Node, currentNode
 			Type: strings.TrimSuffix(strings.TrimPrefix(node.Rule().Name(), "comp-"), "-param"),
 			Raw:  raw,
 		}
-	case "comp-call-string-arg", "comp-call-integer-arg", "comp-call-bool-arg", "comp-call-comp-arg":
+	case "comp-call-string-arg", "comp-call-integer-arg", "comp-call-bool-arg":
 		value := FindNodeByRuleName(node.Children(), "comp-call-arg-value")
 		raw := strings.TrimSpace(string(node.Raw()))
 		if value != nil {
@@ -165,6 +272,34 @@ func resolveValueNode(root Node, node Node, invokerAncestors []Node, currentNode
 	}
 
 	return ResolvedValue{}
+}
+
+func resolveCompValue(root Node, node Node, invokerAncestors []Node, currentNode Node) ResolvedValue {
+	name := FindNode(node.Children(), func(child Node) bool {
+		return IsRuleNameOneOf(child, []string{"comp-param-defa-value", "comp-call-arg-value"})
+	})
+	raw := strings.TrimSpace(string(node.Raw()))
+	if name != nil {
+		raw = strings.TrimSpace(string(name.Raw()))
+	}
+
+	value := ResolvedValue{
+		Type:  "comp",
+		Raw:   raw,
+		Scope: GetLocalCompSourceFromNode(node, root),
+	}
+
+	if boundArgs := FindNodeByRuleName(node.Children(), "comp-bound-args"); boundArgs != nil {
+		value.Bound = &BoundArgs{
+			args: FilterNodes(boundArgs.Children(), func(child Node) bool {
+				return IsRuleName(child, "comp-call-arg")
+			}),
+			invokerAncestors: invokerAncestors,
+			current:          currentNode,
+		}
+	}
+
+	return value
 }
 
 func resolveArrayValues(node Node, valuesRuleName, valueRuleName, valueTypeRuleName string, root Node, invokerAncestors []Node, currentNode Node) ResolvedValue {

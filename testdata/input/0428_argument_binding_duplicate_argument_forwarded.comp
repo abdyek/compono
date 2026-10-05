@@ -1,0 +1,13 @@
+{{ PAGE }}
+
+~ PAGE
+{{ WRAP content = CARD(title = "Bound") }}
+
+~ WRAP content = NO_MATTER
+{{ FORWARD c = content }}
+
+~ FORWARD c = NO_MATTER
+{{ c title = "Caller" }}
+
+~ CARD title = ""
+# {{ title }}

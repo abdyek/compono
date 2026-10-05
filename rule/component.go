@@ -195,10 +195,10 @@ func (_ *compParamType) Rules() []Rule {
 		newCompContextParam(),
 		newCompRecordParam(),
 		newCompArrayParam(),
+		newCompCompParam(),
 		newCompStringParam(),
 		newCompIntegerParam(),
 		newCompBoolParam(),
-		newCompCompParam(),
 	}
 }
 
@@ -306,14 +306,14 @@ func (_ *compCompParam) Name() string {
 }
 
 func (_ *compCompParam) Selectors() []selector.Selector {
-	p, _ := selector.NewPattern(`^[A-Z0-9]+(?:_[A-Z0-9]+)*$`)
 	return []selector.Selector{
-		p,
+		selector.NewComponentReference(),
 	}
 }
 
 func (_ *compCompParam) Rules() []Rule {
 	return []Rule{
+		newCompBoundArgs(),
 		newCompParamDefaValue(),
 	}
 }
@@ -406,10 +406,10 @@ func (_ *compArrayParamValueType) Rules() []Rule {
 		newCompContextParam(),
 		newCompRecordParam(),
 		newCompArrayParam(),
+		newCompCompParam(),
 		newCompStringParam(),
 		newCompIntegerParam(),
 		newCompBoolParam(),
-		newCompCompParam(),
 	}
 }
 
@@ -523,10 +523,10 @@ func (_ *compRecordParamValueType) Rules() []Rule {
 		newCompContextParam(),
 		newCompRecordParam(),
 		newCompArrayParam(),
+		newCompCompParam(),
 		newCompStringParam(),
 		newCompIntegerParam(),
 		newCompBoolParam(),
-		newCompCompParam(),
 	}
 }
 
@@ -947,11 +947,11 @@ func (_ *compCallArgType) Rules() []Rule {
 		newCompCallContextArg(),
 		newCompCallRecordArg(),
 		newCompCallArrayArg(),
+		newCompCallCompArg(),
 		newCompCallStringArg(),
 		newCompCallIntegerArg(),
 		newCompCallBoolArg(),
 		newCompCallParamArg(),
-		newCompCallCompArg(),
 	}
 }
 
@@ -1173,11 +1173,11 @@ func (_ *compCallArrayArgValueType) Rules() []Rule {
 		newCompCallContextArg(),
 		newCompCallRecordArg(),
 		newCompCallArrayArg(),
+		newCompCallCompArg(),
 		newCompCallStringArg(),
 		newCompCallIntegerArg(),
 		newCompCallBoolArg(),
 		newCompCallParamArg(),
-		newCompCallCompArg(),
 	}
 }
 
@@ -1291,11 +1291,11 @@ func (_ *compCallRecordArgValueType) Rules() []Rule {
 		newCompCallContextArg(),
 		newCompCallRecordArg(),
 		newCompCallArrayArg(),
+		newCompCallCompArg(),
 		newCompCallStringArg(),
 		newCompCallIntegerArg(),
 		newCompCallBoolArg(),
 		newCompCallParamArg(),
-		newCompCallCompArg(),
 	}
 }
 
@@ -1331,15 +1331,38 @@ func (_ *compCallCompArg) Name() string {
 }
 
 func (_ *compCallCompArg) Selectors() []selector.Selector {
-	p, _ := selector.NewPattern(`^[A-Z0-9]+(?:_[A-Z0-9]+)*$`)
 	return []selector.Selector{
-		p,
+		selector.NewComponentReference(),
 	}
 }
 
 func (_ *compCallCompArg) Rules() []Rule {
 	return []Rule{
+		newCompBoundArgs(),
 		newCompCallArgValue(),
+	}
+}
+
+// Component's bound arguments, e.g. (menu = menu) in MAIN_MENU(menu = menu)
+type compBoundArgs struct{}
+
+func newCompBoundArgs() Rule {
+	return &compBoundArgs{}
+}
+
+func (_ *compBoundArgs) Name() string {
+	return "comp-bound-args"
+}
+
+func (_ *compBoundArgs) Selectors() []selector.Selector {
+	return []selector.Selector{
+		selector.NewBoundArgs(),
+	}
+}
+
+func (_ *compBoundArgs) Rules() []Rule {
+	return []Rule{
+		newCompCallArg(),
 	}
 }
 

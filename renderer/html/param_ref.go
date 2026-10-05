@@ -31,7 +31,7 @@ func renderCompParamCall(r *renderer, rn renderableNode, paramRefName string) st
 
 	localCompDefSrc := target.scope
 	if localCompDefSrc == nil {
-		localCompDefSrc = localCompSourceFromNode(rn.Node(), r.root)
+		localCompDefSrc = ast.GetLocalCompSourceFromNode(rn.Node(), r.root)
 	}
 
 	localCompDef := r.findLocalCompDef(localCompDefSrc, target.name)
@@ -72,6 +72,11 @@ func renderCompParamCall(r *renderer, rn renderableNode, paramRefName string) st
 	}
 
 	return ""
+}
+
+type resolvedCompTarget struct {
+	name  string
+	scope ast.Node
 }
 
 type paramRefInLocalCompDef struct {
@@ -121,31 +126,7 @@ func (p *paramRefInLocalCompDef) Render() string {
 		return renderParamRefValue(paramRefName, p, p.renderer)
 	}
 
-	globalCompDef := ast.FindNodeByRuleName(ast.GetAncestors(p.Node()), "global-comp-def")
-	if globalCompDef == nil {
-		return ""
-	}
-
-	globalCompDefHead := ast.FindNodeByRuleName(globalCompDef.Children(), "global-comp-def-head")
-	if globalCompDefHead == nil {
-		return ""
-	}
-
-	globalCompParams := ast.FindNodeByRuleName(globalCompDefHead.Children(), "comp-params")
-	if globalCompParams == nil {
-		return ""
-	}
-
-	globalCompParam := ast.FindNode(globalCompParams.Children(), func(cp ast.Node) bool {
-		compParamName := ast.FindNodeByRuleName(cp.Children(), "comp-param-name")
-		return strings.TrimSpace(string(compParamName.Raw())) == paramRefName
-	})
-
-	if globalCompParam == nil {
-		return ""
-	}
-
-	return renderParamRefValue(paramRefName, p, p.renderer)
+	return ""
 }
 
 type paramRefInGlobalCompDef struct {
@@ -215,73 +196,7 @@ func renderParamRefValue(paramName string, rn renderableNode, r *renderer) strin
 }
 
 func resolveParamRefValue(rn renderableNode, r *renderer, paramName string) ast.ResolvedValue {
-	accessors := ast.GetParamRefAccessors(rn.Node())
-	invokerAncestors := getAncestorsByInvoker(rn)
-
-	for _, anc := range invokerAncestors {
-		if !isCompCallLikeNode(anc) {
-			continue
-		}
-
-		compCallArgs := ast.FindNodeByRuleName(anc.Children(), "comp-call-args")
-		if compCallArgs != nil {
-			compCallArg := ast.FindNode(compCallArgs.Children(), func(cca ast.Node) bool {
-				argName := ast.FindNodeByRuleName(cca.Children(), "comp-call-arg-name")
-				return argName != nil && strings.TrimSpace(string(argName.Raw())) == paramName
-			})
-			if compCallArg != nil {
-				return ast.ApplyAccessors(ast.ResolveCompCallArgValue(r.root, compCallArg, invokerAncestors, anc), accessors)
-			}
-		}
-
-		if ast.IsRuleNameOneOf(anc, []string{"block-comp-call", "inline-comp-call"}) {
-			resolved := ast.ResolveParamDefaultFromCompCall(r.root, anc, paramName)
-			if !resolved.IsZero() {
-				return ast.ApplyAccessors(resolved, accessors)
-			}
-		}
-	}
-
-	compDef := ast.FindNode(ast.GetAncestors(rn.Node()), func(anc ast.Node) bool {
-		return ast.IsRuleNameOneOf(anc, []string{"local-comp-def", "global-comp-def"})
-	})
-	if compDef == nil {
-		return ast.ResolvedValue{}
-	}
-
-	return ast.ApplyAccessors(ast.ResolveCompParamDefaultFromCompDef(r.root, compDef, paramName), accessors)
-}
-
-func findCompDefFromCompCall(compCallNode ast.Node, r *renderer) ast.Node {
-	compCallNameNode := ast.FindNodeByRuleName(compCallNode.Children(), "comp-call-name")
-	if compCallNameNode == nil {
-		return nil
-	}
-	compName := strings.TrimSpace(string(compCallNameNode.Raw()))
-
-	globalCompDefAnc := ast.FindNode(ast.GetAncestors(compCallNode), func(anc ast.Node) bool {
-		return ast.IsRuleName(anc, "global-comp-def")
-	})
-
-	localCompDefSrc := r.root
-	if globalCompDefAnc != nil {
-		localCompDefSrc = globalCompDefAnc
-	}
-
-	localCompDef := r.findLocalCompDef(localCompDefSrc, compName)
-	if localCompDef != nil {
-		return localCompDef
-	}
-
-	return r.findGlobalCompDef(compName)
-}
-
-func getParamRefNameStr(node ast.Node) string {
-	refNameNode := ast.FindNodeByRuleName(node.Children(), "param-ref-name")
-	if refNameNode != nil {
-		return strings.TrimSpace(string(refNameNode.Raw()))
-	}
-	return ""
+	return ast.ResolveParamFromAncestors(r.root, paramName, ast.GetParamRefAccessors(rn.Node()), getAncestorsByInvoker(rn))
 }
 
 func renderInlineCompDefContent(r *renderer, invoker renderableNode, compDefContent ast.Node) string {
@@ -415,15 +330,11 @@ func isCompTargetInInvokerChain(r *renderer, rn renderableNode, targetName strin
 			continue
 		}
 
-		if !ast.IsRuleName(anc, "param-ref") {
+		if !ast.IsRuleNameOneOf(anc, []string{"param-ref", "comp-value-frame"}) {
 			continue
 		}
 
-		paramRefName := getParamRefNameStr(anc)
-		if paramRefName == "" {
-			continue
-		}
-		resolved := ast.ResolveParamFromAncestors(r.root, paramRefName, ast.GetParamRefAccessors(anc), ancestors[i+1:])
+		resolved := ast.ResolveFrameCompValue(r.root, anc, ancestors[i+1:])
 		if resolved.Type == "comp" && resolved.Raw == targetName {
 			return true
 		}
@@ -458,19 +369,5 @@ func shouldTreatParamRefAsCompCall(compParam ast.Node, rn renderableNode, r *ren
 		return false
 	}
 
-	target := resolveParamFromAncestorsTarget(paramRefName, getAncestorsByInvoker(rn), r)
-	if target.name == "" {
-		return false
-	}
-	if target.name == strings.ToUpper(target.name) {
-		return true
-	}
-
-	if r.findBuiltinCompDef(target.name) != nil {
-		return true
-	}
-	if r.findLocalCompDef(target.scope, target.name) != nil {
-		return true
-	}
-	return r.findGlobalCompDef(target.name) != nil
+	return resolveParamRefValue(rn, r, paramRefName).Type == "comp"
 }

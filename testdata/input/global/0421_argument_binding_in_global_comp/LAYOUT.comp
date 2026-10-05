@@ -1,0 +1,7 @@
+title = "" content = NO_MATTER nav = MAIN_MENU(label = "Menu")
+# {{ title }}
+{{ nav }}
+{{ content }}
+
+~ MAIN_MENU label = ""
+*{{ label }}*

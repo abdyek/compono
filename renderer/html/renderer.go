@@ -143,17 +143,11 @@ func (r *renderer) applyHooks(output string, kind hook.Kind, name string, params
 	return ctx.Output
 }
 
-func (r *renderer) extractBuiltinParams(invoker renderableNode, compCall ast.Node) hook.Params {
+func (r *renderer) extractBuiltinParams(invoker renderableNode, node ast.Node) hook.Params {
 	params := hook.Params{}
 
-	compCallName := ast.FindNodeByRuleName(compCall.Children(), "comp-call-name")
-	if compCallName == nil {
-		return params
-	}
-	name := strings.TrimSpace(string(compCallName.Raw()))
-
-	compDef := ast.FindBuiltinCompDef(r.root, name)
-	if compDef == nil {
+	compDef := ast.FindFrameCompDef(r.root, node, invokerChain(invoker))
+	if compDef == nil || !ast.IsRuleName(compDef, "builtin-comp") {
 		return params
 	}
 
@@ -162,22 +156,11 @@ func (r *renderer) extractBuiltinParams(invoker renderableNode, compCall ast.Nod
 		if paramName == "" {
 			continue
 		}
-		resolved := ast.ResolveParamDefaultFromCompCall(r.root, compCall, paramName)
-		if !resolved.IsZero() && resolved.MissingContextKey == "" {
-			params[paramName] = resolvedValueToHookParam(resolved)
-		}
-	}
-
-	for _, arg := range ast.GetCompCallArgsFromCompCall(compCall) {
-		argName := ast.GetArgNameFromCompCallArg(arg)
-		if argName == "" {
-			continue
-		}
-		resolved := ast.ResolveCompCallArgValue(r.root, arg, getAncestorsByInvoker(invoker), compCall)
+		resolved := resolveBuiltinParam(r, invoker, node, paramName)
 		if resolved.IsZero() || resolved.MissingContextKey != "" {
 			continue
 		}
-		params[argName] = resolvedValueToHookParam(resolved)
+		params[paramName] = resolvedValueToHookParam(resolved)
 	}
 
 	return params

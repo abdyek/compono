@@ -1,0 +1,7 @@
+{{ OUTER content = INNER }}
+
+~ OUTER content = NO_MATTER
+{{ content label = missing }}
+
+~ INNER label = ""
+# {{ label }}

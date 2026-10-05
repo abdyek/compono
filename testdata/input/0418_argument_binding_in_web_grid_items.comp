@@ -1,0 +1,18 @@
+{{ PAGE title = "Home" }}
+
+~ PAGE title = ""
+{{ WEB_GRID
+  items = [
+    { component: HEADER(title = title), grid-area: "header" },
+    { component: LINK(text = title url = "/"), grid-area: "nav" }
+  ]
+  grid-template-columns = ["1fr"]
+  grid-template-rows = ["min-content", "1fr"]
+  grid-template-areas = [
+    ["header"],
+    ["nav"]
+  ]
+}}
+
+~ HEADER title = ""
+# {{ title }}

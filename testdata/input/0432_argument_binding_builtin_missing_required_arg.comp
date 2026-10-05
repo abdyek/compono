@@ -1,0 +1,4 @@
+{{ WRAP content = IMAGE(alt = "No media") }}
+
+~ WRAP content = NO_MATTER
+{{ content }}

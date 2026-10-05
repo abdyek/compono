@@ -1,0 +1,8 @@
+{{ OUTER title = "Hello" }}
+
+~ OUTER title = ""
+{{ INNER label = title }}
+{{ INNER label = missing }}
+
+~ INNER label = ""
+# {{ label }}
