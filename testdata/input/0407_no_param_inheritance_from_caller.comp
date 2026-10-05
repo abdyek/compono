@@ -1,0 +1,7 @@
+{{ OUTER title = "Outer" content = INNER }}
+
+~ OUTER title = "" content = NO_MATTER
+{{ content }}
+
+~ INNER title = "Inner default"
+# {{ title }}

@@ -1,0 +1,7 @@
+{{ OUTER title = "Hello" }}
+
+~ OUTER title = ""
+{{ INNER data = { label: title, items: [subtitle] } }}
+
+~ INNER data = {}
+# {{ data.label }}
