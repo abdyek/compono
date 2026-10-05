@@ -19,6 +19,7 @@ type convertConfig struct {
 	globalComponents []ast.Node
 	contextValues    map[string]any
 	rendererHooks    []hook.RendererHookFunc
+	errorStylesheet  *string
 }
 
 func WithGlobalComponent(name string, source []byte) ConvertOption {
@@ -57,6 +58,16 @@ func WithRendererHook(fn hook.RendererHookFunc) ConvertOption {
 			return nil
 		}
 		cfg.rendererHooks = append(cfg.rendererHooks, fn)
+		return nil
+	})
+}
+
+func WithErrorStylesheet(url string) ConvertOption {
+	return convertOptionFunc(func(_ *compono, cfg *convertConfig) error {
+		if cfg.errorStylesheet != nil {
+			return NewComponoError(ErrErrorStylesheetAlreadySet, "error stylesheet is already set: WithErrorStylesheet can be used at most once per conversion")
+		}
+		cfg.errorStylesheet = &url
 		return nil
 	})
 }

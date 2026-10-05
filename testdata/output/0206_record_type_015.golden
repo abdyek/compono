@@ -1,1 +1,1 @@
-<p><compono-error-inline><span slot="title">Unknown record key</span><span slot="description">The key <strong>title</strong> is not defined in this record.</span></compono-error-inline></p>
+<p><compono-error-inline><template shadowrootmode="closed"><span class="title">Unknown record key</span><span class="description">The key <strong>title</strong> is not defined in this record.</span></template></compono-error-inline></p>

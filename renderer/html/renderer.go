@@ -15,6 +15,7 @@ type renderer struct {
 	root            ast.Node
 	builtinCompMap  map[string]builtinComponent
 	hooks           []hook.RendererHookFunc
+	errorStylesheet string
 }
 
 func NewRenderer(log logger.Logger) *renderer {
@@ -123,6 +124,10 @@ func (r *renderer) findBuiltinCompDef(name string) ast.Node {
 
 func (r *renderer) SetRendererHooks(hooks []hook.RendererHookFunc) {
 	r.hooks = hooks
+}
+
+func (r *renderer) SetErrorStylesheet(url string) {
+	r.errorStylesheet = url
 }
 
 func (r *renderer) applyHooks(output string, kind hook.Kind, name string, params hook.Params) string {

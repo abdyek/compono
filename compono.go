@@ -25,6 +25,7 @@ const (
 	ErrRender
 	ErrUnsupportedType
 	ErrUnsupportedKeyNotation
+	ErrErrorStylesheetAlreadySet
 )
 
 type Compono interface {
@@ -116,6 +117,14 @@ func (c *compono) Convert(source []byte, writer io.Writer, opts ...ConvertOption
 
 	if hs, ok := c.renderer.(renderer.HookSetter); ok {
 		hs.SetRendererHooks(cfg.rendererHooks)
+	}
+
+	if es, ok := c.renderer.(renderer.ErrorStylesheetSetter); ok {
+		stylesheet := ""
+		if cfg.errorStylesheet != nil {
+			stylesheet = *cfg.errorStylesheet
+		}
+		es.SetErrorStylesheet(stylesheet)
 	}
 
 	err = c.renderer.Render(writer, root)
