@@ -301,7 +301,7 @@ func (s *componoTestSuite) TestRendererHookForMarkdownLink() {
 			found = true
 			assert.Equal(s.T(), "click", requireHookString(s.T(), call.Params, "text"))
 			assert.Equal(s.T(), "https://example.com", requireHookString(s.T(), call.Params, "url"))
-			assert.Contains(s.T(), call.Output, "<compono-link>")
+			assert.Equal(s.T(), `<a href="https://example.com">click</a>`, call.Output)
 		}
 	}
 	assert.True(s.T(), found, "expected hook to be called for link markdown element")
@@ -327,7 +327,7 @@ func (s *componoTestSuite) TestRendererHookForBuiltinLink() {
 			assert.Equal(s.T(), "Visit", requireHookString(s.T(), call.Params, "text"))
 			assert.Equal(s.T(), "https://example.com", requireHookString(s.T(), call.Params, "url"))
 			assert.Equal(s.T(), "true", requireHookString(s.T(), call.Params, "new-tab"))
-			assert.Contains(s.T(), call.Output, "<compono-link>")
+			assert.Equal(s.T(), `<a href="https://example.com" target="_blank" rel="noopener noreferrer">Visit</a>`, call.Output)
 		}
 	}
 	assert.True(s.T(), found, "expected hook to be called for LINK builtin component")
