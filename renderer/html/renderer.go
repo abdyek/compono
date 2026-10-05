@@ -49,7 +49,6 @@ func NewRenderer(log logger.Logger) *renderer {
 	builtinComps := []builtinComponent{
 		newLink(r),
 		newImage(r),
-		newNavigation(r),
 	}
 
 	for _, bc := range builtinComps {
