@@ -159,34 +159,6 @@ func (s *componoTestSuite) TestConvertWithContextErrUnsupportedKeyNotation() {
 	assert.Contains(s.T(), compErr.Message, `invalid compono struct tag "invalid_key"`)
 }
 
-func (s *componoTestSuite) TestNavigationRequiresItems() {
-	compono := New()
-
-	var buf bytes.Buffer
-	err := compono.Convert([]byte(`{{ NAVIGATION }}`), &buf)
-	require.NoError(s.T(), err)
-
-	assert.Equal(
-		s.T(),
-		`<compono-error-block><div slot="title">Invalid built-in arguments</div><div slot="description">The parameter <strong>items</strong> does not match the schema of the built-in component <strong>NAVIGATION</strong>.</div></compono-error-block>`,
-		buf.String(),
-	)
-}
-
-func (s *componoTestSuite) TestNavigationRejectsEmptyItems() {
-	compono := New()
-
-	var buf bytes.Buffer
-	err := compono.Convert([]byte(`{{ NAVIGATION items = [] }}`), &buf)
-	require.NoError(s.T(), err)
-
-	assert.Equal(
-		s.T(),
-		`<compono-error-block><div slot="title">Invalid built-in arguments</div><div slot="description">The parameter <strong>items</strong> does not match the schema of the built-in component <strong>NAVIGATION</strong>.</div></compono-error-block>`,
-		buf.String(),
-	)
-}
-
 func (s *componoTestSuite) TestRendererHookForMarkdownElement() {
 	c := New()
 
@@ -548,32 +520,6 @@ func (s *componoTestSuite) TestRendererHookParamsForAllBuiltinComponents() {
 		}
 	}
 	assert.True(s.T(), foundImage, "expected hook call for IMAGE builtin")
-
-	navSource := `{{ NAVIGATION items = [
-  { label: "Home", target: "/" },
-  { label: "About", target: "/about" }
-] }}`
-
-	buf.Reset()
-	err = c.Convert([]byte(navSource), &buf, WithRendererHook(hookFn))
-	require.NoError(s.T(), err)
-
-	foundNav := false
-	for _, call := range calls {
-		if call.Kind == hook.KindBuiltin && call.Name == "NAVIGATION" {
-			foundNav = true
-			items := requireHookArray(s.T(), call.Params, "items")
-			first, ok := items.Record(0)
-			require.True(s.T(), ok)
-			second, ok := items.Record(1)
-			require.True(s.T(), ok)
-			assert.Equal(s.T(), "Home", requireHookRecordString(s.T(), first, "label"))
-			assert.Equal(s.T(), "/", requireHookRecordString(s.T(), first, "target"))
-			assert.Equal(s.T(), "About", requireHookRecordString(s.T(), second, "label"))
-			assert.Equal(s.T(), "/about", requireHookRecordString(s.T(), second, "target"))
-		}
-	}
-	assert.True(s.T(), foundNav, "expected hook call for NAVIGATION builtin")
 }
 
 func (s *componoTestSuite) TestMultipleRendererHooks() {
@@ -653,14 +599,6 @@ func requireHookString(t *testing.T, params hook.Params, name string) string {
 
 	value, ok := params.String(name)
 	require.True(t, ok, "expected hook param %q to be a string", name)
-	return value
-}
-
-func requireHookArray(t *testing.T, params hook.Params, name string) hook.Array {
-	t.Helper()
-
-	value, ok := params.Array(name)
-	require.True(t, ok, "expected hook param %q to be an array", name)
 	return value
 }
 

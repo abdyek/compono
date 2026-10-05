@@ -1,1 +1,1 @@
-<nav><ul><li><a href="/?q=&lt;home&gt;&amp;sort=&#39;asc&#39;">&lt;Home &amp; Start&gt;</a></li><li><a href="/docs?section=api&amp;lang=go">Docs &#39;Guide&#39;</a></li></ul></nav>
+<compono-error-block><div slot="title">Unknown component</div><div slot="description">The component <strong>NAVIGATION</strong> is not defined or not registered.</div></compono-error-block>

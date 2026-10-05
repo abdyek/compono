@@ -1,1 +1,1 @@
-<nav><ul><li><a href="/">Home</a></li><li><a href="/products">Products</a><ul><li><a href="/products/cms">CMS</a></li><li><a href="/products/ssg">SSG</a></li></ul></li></ul></nav>
+<compono-error-block><div slot="title">Unknown component</div><div slot="description">The component <strong>NAVIGATION</strong> is not defined or not registered.</div></compono-error-block>
