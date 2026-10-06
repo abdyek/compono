@@ -28,6 +28,8 @@ type convertConfig struct {
 	contextValues    map[string]any
 	errorStylesheet  *string
 	isolatedScope    bool
+	attributeHook    AttributeHookFunc
+	attributeHookSet bool
 }
 
 type globalComponentOption struct {
@@ -61,7 +63,7 @@ func (o *globalComponentOption) applyConvert(c *compono, cfg *convertConfig) err
 			continue
 		}
 		if isConversionOption(opt) {
-			return NewComponoError(ErrConversionOptionInGlobal, fmt.Sprintf("conversion option not allowed inside global component %q: WithContext and WithErrorStylesheet are forbidden in global scope", o.name))
+			return NewComponoError(ErrConversionOptionInGlobal, fmt.Sprintf("conversion option not allowed inside global component %q: WithContext, WithErrorStylesheet, and WithAttributeHook are forbidden in global scope", o.name))
 		}
 		if err := opt.applyConvert(c, subCfg); err != nil {
 			return err
@@ -85,7 +87,7 @@ func (o *globalComponentOption) applyConvert(c *compono, cfg *convertConfig) err
 
 func isConversionOption(opt ConvertOption) bool {
 	switch opt.(type) {
-	case *contextOption, *errorStylesheetOption:
+	case *contextOption, *errorStylesheetOption, *attributeHookOption:
 		return true
 	default:
 		return false

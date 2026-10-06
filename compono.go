@@ -1,12 +1,14 @@
 package compono
 
 import (
+	"errors"
 	"fmt"
 	"io"
 
 	"github.com/umono-cms/compono/ast"
 	"github.com/umono-cms/compono/builtin"
 	"github.com/umono-cms/compono/errwrap"
+	"github.com/umono-cms/compono/internal/attrhook"
 	"github.com/umono-cms/compono/logger"
 	"github.com/umono-cms/compono/parser"
 	"github.com/umono-cms/compono/renderer"
@@ -29,6 +31,9 @@ const (
 	ErrConversionOptionInGlobal
 	ErrIsolatedScopeInConvert
 	ErrDuplicateSubComponent
+	ErrAttributeHookAlreadySet
+	ErrInvalidAttributeName
+	ErrAttributeConflict
 )
 
 type Compono interface {
@@ -126,9 +131,20 @@ func (c *compono) Convert(source []byte, writer io.Writer, opts ...ConvertOption
 		es.SetErrorStylesheet(stylesheet)
 	}
 
+	if hs, ok := c.renderer.(renderer.AttributeHookSetter); ok {
+		hs.SetAttributeHook(cfg.attributeHook)
+	}
+
 	err = c.renderer.Render(writer, root)
 	if err != nil {
-		return NewComponoError(ErrRender, err.Error())
+		switch {
+		case errors.Is(err, attrhook.ErrInvalidAttributeName):
+			return NewComponoError(ErrInvalidAttributeName, err.Error())
+		case errors.Is(err, attrhook.ErrAttributeConflict):
+			return NewComponoError(ErrAttributeConflict, err.Error())
+		default:
+			return NewComponoError(ErrRender, err.Error())
+		}
 	}
 	return nil
 }

@@ -14,6 +14,9 @@ type renderer struct {
 	root            ast.Node
 	builtinCompMap  map[string]builtinComponent
 	errorStylesheet string
+	attributeHook   attributeHookFunc
+	frameStack      []frame
+	attrErr         error
 }
 
 func NewRenderer(log logger.Logger) *renderer {
@@ -59,8 +62,15 @@ func NewRenderer(log logger.Logger) *renderer {
 
 func (r *renderer) Render(writer io.Writer, root ast.Node) error {
 	r.root = root
+	r.frameStack = nil
+	r.attrErr = nil
 
-	_, err := writer.Write([]byte(r.render(root)))
+	out := r.render(root)
+	if r.attrErr != nil {
+		return r.attrErr
+	}
+
+	_, err := writer.Write([]byte(out))
 	if err != nil {
 		return err
 	}
