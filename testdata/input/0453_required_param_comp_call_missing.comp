@@ -1,0 +1,8 @@
+{{ OUTER content = CARD }}
+
+~ OUTER content = NO_MATTER
+no render
+{{ content }}
+
+~ CARD title! = ""
+# {{ title }}

@@ -1,0 +1,1 @@
+<p>Hello <compono-error-inline><template shadowrootmode="closed"><span class="title">Missing argument</span><span class="description">The parameter <strong>title</strong> of component <strong>CARD</strong> is required.</span></template></compono-error-inline> world.</p>

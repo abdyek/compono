@@ -1,0 +1,4 @@
+Hello {{ CARD title = "Hi" }} world.
+
+~ CARD title
+*{{ title }}*

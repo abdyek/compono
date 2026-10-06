@@ -1,0 +1,8 @@
+{{ WRAP content = CARD(title = "Bound") }}
+
+~ WRAP content = NO_MATTER
+no render
+{{ content }}
+
+~ CARD title! = "" subtitle! = ""
+# {{ title }} - {{ subtitle }}
