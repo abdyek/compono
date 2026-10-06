@@ -201,34 +201,6 @@ func isBlockComponent(compDef ast.Node) bool {
 	return softBlock != nil
 }
 
-func findCompDef(root ast.Node, compCallNode ast.Node, name string) ast.Node {
-	globalCompDefAnc := ast.FindNode(ast.GetAncestors(compCallNode), func(anc ast.Node) bool {
-		return ast.IsRuleName(anc, "global-comp-def")
-	})
-
-	localCompDefSrc := root
-	if globalCompDefAnc != nil {
-		localCompDefSrc = globalCompDefAnc
-	}
-
-	localCompDef := ast.FindLocalCompDef(localCompDefSrc, name)
-	if localCompDef != nil {
-		return localCompDef
-	}
-
-	globalCompDef := ast.FindGlobalCompDef(root, name)
-	if globalCompDef != nil {
-		return globalCompDef
-	}
-
-	builtinCompDef := ast.FindBuiltinCompDef(root, name)
-	if builtinCompDef != nil {
-		return builtinCompDef
-	}
-
-	return nil
-}
-
 func resolvedValueMissingContextKey(value ast.ResolvedValue) string {
 	if value.MissingContextKey != "" {
 		return value.MissingContextKey
@@ -252,7 +224,7 @@ func resolveCompArgValues(ctx *wrapContext, compCall ast.Node) map[string]string
 		return nil
 	}
 
-	compDef := findCompDef(ctx.root, compCall, compCallName)
+	compDef := ast.FindCompDef(ctx.root, compCall, compCallName)
 	if compDef == nil {
 		return nil
 	}

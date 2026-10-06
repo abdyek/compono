@@ -60,7 +60,7 @@ func getUndefinedArgNames(ctx *wrapContext, compCall ast.Node) []string {
 		return []string{}
 	}
 
-	compDef := findCompDef(ctx.root, compCall, compCallName)
+	compDef := ast.FindCompDef(ctx.root, compCall, compCallName)
 	if compDef == nil {
 		return []string{}
 	}
@@ -116,7 +116,7 @@ func getBuiltinSchemaMismatchTargetName(ctx *wrapContext, compCall ast.Node) str
 		return ""
 	}
 
-	compDef := findCompDef(ctx.root, compCall, compCallName)
+	compDef := ast.FindCompDef(ctx.root, compCall, compCallName)
 	if compDef == nil {
 		return ""
 	}
@@ -128,7 +128,7 @@ func getBuiltinSchemaMismatchTargetName(ctx *wrapContext, compCall ast.Node) str
 
 	resolvedCompArgs := resolveCompArgValues(ctx, compCall)
 	if len(resolvedCompArgs) > 0 {
-		paramCompCalls := ast.FilterNodesInTree(compDefContent, func(node ast.Node) bool {
+		paramCompCalls := ast.FilterNodesInDefContent(compDefContent, func(node ast.Node) bool {
 			return isCompParamRefInCompDef(compDef, node) && hasCompCallArgsNode(node)
 		})
 
@@ -143,13 +143,13 @@ func getBuiltinSchemaMismatchTargetName(ctx *wrapContext, compCall ast.Node) str
 		}
 	}
 
-	nestedCompCalls := ast.FilterNodesInTree(compDefContent, func(node ast.Node) bool {
+	nestedCompCalls := ast.FilterNodesInDefContent(compDefContent, func(node ast.Node) bool {
 		return ast.IsRuleNameOneOf(node, []string{"block-comp-call", "inline-comp-call"})
 	})
 
 	for _, nestedCompCall := range nestedCompCalls {
 		nestedName := getCompCallNameStr(nestedCompCall)
-		nestedDef := findCompDef(ctx.root, nestedCompCall, nestedName)
+		nestedDef := ast.FindCompDef(ctx.root, nestedCompCall, nestedName)
 		if nestedName == "" || nestedDef == nil || !ast.IsRuleName(nestedDef, "builtin-comp") {
 			continue
 		}
@@ -181,7 +181,7 @@ func getBuiltinSchemaMismatchesForCompCall(ctx *wrapContext, ownerCompCall ast.N
 		return nil
 	}
 
-	compDef := findCompDef(ctx.root, targetCompCall, compName)
+	compDef := ast.FindCompDef(ctx.root, targetCompCall, compName)
 	if compDef == nil || !ast.IsRuleName(compDef, "builtin-comp") {
 		return nil
 	}
@@ -277,7 +277,7 @@ func getBuiltinSchemaMismatchDiagnostic(ctx *wrapContext, compCall ast.Node) bui
 		return builtin.ValidationDiagnostic{}
 	}
 
-	compDef := findCompDef(ctx.root, compCall, compCallName)
+	compDef := ast.FindCompDef(ctx.root, compCall, compCallName)
 	if compDef == nil {
 		return builtin.ValidationDiagnostic{}
 	}
@@ -289,7 +289,7 @@ func getBuiltinSchemaMismatchDiagnostic(ctx *wrapContext, compCall ast.Node) bui
 
 	resolvedCompArgs := resolveCompArgValues(ctx, compCall)
 	if len(resolvedCompArgs) > 0 {
-		paramCompCalls := ast.FilterNodesInTree(compDefContent, func(node ast.Node) bool {
+		paramCompCalls := ast.FilterNodesInDefContent(compDefContent, func(node ast.Node) bool {
 			return isCompParamRefInCompDef(compDef, node) && hasCompCallArgsNode(node)
 		})
 
@@ -304,13 +304,13 @@ func getBuiltinSchemaMismatchDiagnostic(ctx *wrapContext, compCall ast.Node) bui
 		}
 	}
 
-	nestedCompCalls := ast.FilterNodesInTree(compDefContent, func(node ast.Node) bool {
+	nestedCompCalls := ast.FilterNodesInDefContent(compDefContent, func(node ast.Node) bool {
 		return ast.IsRuleNameOneOf(node, []string{"block-comp-call", "inline-comp-call"})
 	})
 
 	for _, nestedCompCall := range nestedCompCalls {
 		nestedName := getCompCallNameStr(nestedCompCall)
-		nestedDef := findCompDef(ctx.root, nestedCompCall, nestedName)
+		nestedDef := ast.FindCompDef(ctx.root, nestedCompCall, nestedName)
 		if nestedName == "" || nestedDef == nil || !ast.IsRuleName(nestedDef, "builtin-comp") {
 			continue
 		}
@@ -337,7 +337,7 @@ func getWrongTypeArgNames(ctx *wrapContext, compCall ast.Node) []string {
 		return []string{}
 	}
 
-	compDef := findCompDef(ctx.root, compCall, compCallName)
+	compDef := ast.FindCompDef(ctx.root, compCall, compCallName)
 	if compDef == nil {
 		return []string{}
 	}
@@ -379,7 +379,7 @@ func getWrongTypeArgNamesFromNestedCompCalls(ctx *wrapContext, compCall ast.Node
 		return nil
 	}
 
-	compDef := findCompDef(ctx.root, compCall, compCallName)
+	compDef := ast.FindCompDef(ctx.root, compCall, compCallName)
 	if compDef == nil {
 		return nil
 	}
@@ -389,13 +389,13 @@ func getWrongTypeArgNamesFromNestedCompCalls(ctx *wrapContext, compCall ast.Node
 		return nil
 	}
 
-	nestedCompCalls := ast.FilterNodesInTree(compDefContent, func(node ast.Node) bool {
+	nestedCompCalls := ast.FilterNodesInDefContent(compDefContent, func(node ast.Node) bool {
 		return ast.IsRuleNameOneOf(node, []string{"block-comp-call", "inline-comp-call"})
 	})
 
 	result := []string{}
 	for _, nestedCompCall := range nestedCompCalls {
-		targetCompDef := findCompDef(ctx.root, nestedCompCall, getCompCallNameStr(nestedCompCall))
+		targetCompDef := ast.FindCompDef(ctx.root, nestedCompCall, getCompCallNameStr(nestedCompCall))
 		if targetCompDef == nil {
 			continue
 		}
@@ -430,7 +430,7 @@ func getBuiltinSchemaMismatchArgNamesFromNestedCompCalls(ctx *wrapContext, compC
 		return nil
 	}
 
-	compDef := findCompDef(ctx.root, compCall, compCallName)
+	compDef := ast.FindCompDef(ctx.root, compCall, compCallName)
 	if compDef == nil {
 		return nil
 	}
@@ -440,7 +440,7 @@ func getBuiltinSchemaMismatchArgNamesFromNestedCompCalls(ctx *wrapContext, compC
 		return nil
 	}
 
-	nestedCompCalls := ast.FilterNodesInTree(compDefContent, func(node ast.Node) bool {
+	nestedCompCalls := ast.FilterNodesInDefContent(compDefContent, func(node ast.Node) bool {
 		return ast.IsRuleNameOneOf(node, []string{"block-comp-call", "inline-comp-call"})
 	})
 
@@ -522,7 +522,7 @@ func collectFromResolvedParamCompCalls(
 		return nil
 	}
 
-	compDef := findCompDef(ctx.root, compCall, compCallName)
+	compDef := ast.FindCompDef(ctx.root, compCall, compCallName)
 	if compDef == nil {
 		return nil
 	}
@@ -537,7 +537,7 @@ func collectFromResolvedParamCompCalls(
 		return nil
 	}
 
-	paramCompCalls := ast.FilterNodesInTree(compDefContent, func(node ast.Node) bool {
+	paramCompCalls := ast.FilterNodesInDefContent(compDefContent, func(node ast.Node) bool {
 		return isCompParamRefInCompDef(compDef, node) && hasCompCallArgsNode(node)
 	})
 
@@ -599,7 +599,7 @@ func resolveParamCompCallTarget(
 		return "", nil
 	}
 
-	targetCompDef := findCompDef(ctx.root, compCall, targetCompName)
+	targetCompDef := ast.FindCompDef(ctx.root, compCall, targetCompName)
 	if targetCompDef == nil {
 		return "", nil
 	}

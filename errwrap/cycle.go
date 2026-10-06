@@ -15,7 +15,7 @@ func isCalledByItself() func(*wrapContext, ast.Node) bool {
 			return false
 		}
 
-		calledCompDef := findCompDef(ctx.root, node, compCallName)
+		calledCompDef := ast.FindCompDef(ctx.root, node, compCallName)
 		if calledCompDef == nil {
 			return false
 		}
@@ -70,7 +70,7 @@ func compCallHasCycle(ctx *wrapContext, compCall ast.Node) bool {
 		return false
 	}
 
-	if findCompDef(ctx.root, compCall, startName) == nil {
+	if ast.FindCompDef(ctx.root, compCall, startName) == nil {
 		ctx.compCallCycleCache[compCall] = false
 		return false
 	}
@@ -82,7 +82,7 @@ func compCallHasCycle(ctx *wrapContext, compCall ast.Node) bool {
 			return false
 		}
 
-		def := findCompDef(ctx.root, callNode, callName)
+		def := ast.FindCompDef(ctx.root, callNode, callName)
 		if def == nil {
 			return false
 		}
@@ -92,7 +92,7 @@ func compCallHasCycle(ctx *wrapContext, compCall ast.Node) bool {
 			return false
 		}
 
-		children := ast.FilterNodesInTree(content, func(node ast.Node) bool {
+		children := ast.FilterNodesInDefContent(content, func(node ast.Node) bool {
 			return ast.IsRuleNameOneOf(node, []string{"block-comp-call", "inline-comp-call"})
 		})
 
@@ -127,7 +127,7 @@ func takesItselfAsArgOrDefault() func(*wrapContext, ast.Node) bool {
 			return false
 		}
 
-		compDef := findCompDef(ctx.root, compCall, compCallName)
+		compDef := ast.FindCompDef(ctx.root, compCall, compCallName)
 		if compDef == nil {
 			return false
 		}
@@ -148,7 +148,7 @@ func takesItselfAsArgOrDefault() func(*wrapContext, ast.Node) bool {
 				continue
 			}
 
-			paramCompCalls := ast.FilterNodesInTree(compDefContent, func(n ast.Node) bool {
+			paramCompCalls := ast.FilterNodesInDefContent(compDefContent, func(n ast.Node) bool {
 				if !isCompParamRefInCompDef(compDef, n) {
 					return false
 				}
@@ -208,7 +208,7 @@ func getParamCycleClosers(ctx *wrapContext) map[ast.Node]string {
 			path[signature] = true
 			defer delete(path, signature)
 
-			compDef := findCompDef(ctx.root, callNode, compName)
+			compDef := ast.FindCompDef(ctx.root, callNode, compName)
 			if compDef == nil {
 				return
 			}
@@ -218,7 +218,7 @@ func getParamCycleClosers(ctx *wrapContext) map[ast.Node]string {
 				return
 			}
 
-			paramCompCalls := ast.FilterNodesInTree(compDefContent, func(node ast.Node) bool {
+			paramCompCalls := ast.FilterNodesInDefContent(compDefContent, func(node ast.Node) bool {
 				return isCompParamRefInCompDef(compDef, node)
 			})
 
@@ -233,7 +233,7 @@ func getParamCycleClosers(ctx *wrapContext) map[ast.Node]string {
 					continue
 				}
 
-				if findCompDef(ctx.root, paramCompCall, targetCompName) == nil {
+				if ast.FindCompDef(ctx.root, paramCompCall, targetCompName) == nil {
 					continue
 				}
 
@@ -262,7 +262,7 @@ func resolveCompArgValuesForCallTarget(
 	targetCompName string,
 	parentResolvedCompArgs map[string]string,
 ) map[string]string {
-	targetCompDef := findCompDef(ctx.root, callNode, targetCompName)
+	targetCompDef := ast.FindCompDef(ctx.root, callNode, targetCompName)
 	if targetCompDef == nil {
 		return nil
 	}

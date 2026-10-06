@@ -113,7 +113,7 @@ func isCompParamRefInCompDef(compDef ast.Node, node ast.Node) bool {
 func isUnknownComponent() func(*wrapContext, ast.Node) bool {
 	return func(ctx *wrapContext, node ast.Node) bool {
 		compCallName := getCompCallNameStr(node)
-		return findCompDef(ctx.root, node, compCallName) == nil
+		return ast.FindCompDef(ctx.root, node, compCallName) == nil
 	}
 }
 
@@ -126,7 +126,7 @@ func isKnownComponent() func(*wrapContext, ast.Node) bool {
 func hasUnknownResolvedCompArg() func(*wrapContext, ast.Node) bool {
 	return func(ctx *wrapContext, compCall ast.Node) bool {
 		compCallName := getCompCallNameStr(compCall)
-		compDef := findCompDef(ctx.root, compCall, compCallName)
+		compDef := ast.FindCompDef(ctx.root, compCall, compCallName)
 		if compDef == nil {
 			return false
 		}
@@ -145,7 +145,7 @@ func getUnknownResolvedCompArgs(ctx *wrapContext, compCall ast.Node, compDef ast
 	}
 
 	usedCompParamNames := map[string]struct{}{}
-	for _, paramCompCall := range ast.FilterNodesInTree(compDefContent, func(node ast.Node) bool {
+	for _, paramCompCall := range ast.FilterNodesInDefContent(compDefContent, func(node ast.Node) bool {
 		return isCompParamRefInCompDef(compDef, node)
 	}) {
 		name := getParamCompCallNameStr(paramCompCall)
@@ -183,7 +183,7 @@ func getUnknownResolvedCompArgs(ctx *wrapContext, compCall ast.Node, compDef ast
 			}
 		}
 
-		if findCompDef(ctx.root, lookupScope, value) == nil && !util.InSliceString(value, unknowns) {
+		if ast.FindCompDef(ctx.root, lookupScope, value) == nil && !util.InSliceString(value, unknowns) {
 			unknowns = append(unknowns, value)
 		}
 	}
@@ -198,7 +198,7 @@ func callsBlockComponent() func(*wrapContext, ast.Node) bool {
 			return false
 		}
 
-		compDef := findCompDef(ctx.root, node, compCallName)
+		compDef := ast.FindCompDef(ctx.root, node, compCallName)
 		if compDef == nil {
 			return false
 		}
@@ -219,7 +219,7 @@ func getResolvedInlineBlockCompName(ctx *wrapContext, compCall ast.Node) string 
 		return ""
 	}
 
-	compDef := findCompDef(ctx.root, compCall, compCallName)
+	compDef := ast.FindCompDef(ctx.root, compCall, compCallName)
 	if compDef == nil {
 		return ""
 	}
@@ -233,7 +233,7 @@ func getResolvedInlineBlockCompName(ctx *wrapContext, compCall ast.Node) string 
 	explicitCompArgs := getExplicitCompArgMap(compCall)
 	explicitParamArgs := getExplicitParamArgMap(compCall)
 
-	inlineParamCalls := ast.FilterNodesInTree(compDefContent, func(n ast.Node) bool {
+	inlineParamCalls := ast.FilterNodesInDefContent(compDefContent, func(n ast.Node) bool {
 		return ast.IsRuleName(n, "param-ref") && isInlineParamRefNode(n)
 	})
 
@@ -270,7 +270,7 @@ func getResolvedInlineBlockCompName(ctx *wrapContext, compCall ast.Node) string 
 			}
 		}
 
-		argCompDef := findCompDef(ctx.root, lookupScope, resolvedCompName)
+		argCompDef := ast.FindCompDef(ctx.root, lookupScope, resolvedCompName)
 		if argCompDef == nil {
 			continue
 		}
@@ -288,7 +288,7 @@ func getResolvedInlineBlockCompName(ctx *wrapContext, compCall ast.Node) string 
 			continue
 		}
 
-		globalScopedCompDef := findCompDef(ctx.root, globalCompContent, resolvedCompName)
+		globalScopedCompDef := ast.FindCompDef(ctx.root, globalCompContent, resolvedCompName)
 		if globalScopedCompDef == nil {
 			return resolvedCompName
 		}

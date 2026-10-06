@@ -102,8 +102,8 @@ func (r *renderer) findLocalCompDef(srcNode ast.Node, name string) ast.Node {
 	return ast.FindLocalCompDef(srcNode, name)
 }
 
-func (r *renderer) findGlobalCompDef(name string) ast.Node {
-	return ast.FindGlobalCompDef(r.root, name)
+func (r *renderer) findGlobalCompDef(from ast.Node, name string) ast.Node {
+	return ast.FindGlobalCompDef(r.root, from, name)
 }
 
 func (r *renderer) findBuiltinComp(name string) builtinComponent {

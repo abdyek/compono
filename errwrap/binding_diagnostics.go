@@ -206,7 +206,7 @@ func getBoundCompValues(root ast.Node, node ast.Node) []boundCompValue {
 
 		result = append(result, boundCompValue{
 			name:    name,
-			compDef: findCompDef(root, compValue, name),
+			compDef: ast.FindCompDef(root, compValue, name),
 			args: ast.FilterNodes(boundArgs.Children(), func(child ast.Node) bool {
 				return ast.IsRuleName(child, "comp-call-arg")
 			}),
@@ -223,7 +223,7 @@ func getBindingSources(root ast.Node, call ast.Node) []ast.Node {
 		return sources
 	}
 
-	compDef := findCompDef(root, call, getCompCallNameStr(call))
+	compDef := ast.FindCompDef(root, call, getCompCallNameStr(call))
 	if compDef == nil || ast.IsRuleName(compDef, "builtin-comp") {
 		return sources
 	}

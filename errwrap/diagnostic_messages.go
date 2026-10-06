@@ -33,7 +33,7 @@ func unknownCompCallMsg(_ *wrapContext, node ast.Node) string {
 
 func unknownCompParamCallMsg(ctx *wrapContext, compCall ast.Node) string {
 	compCallName := getCompCallNameStr(compCall)
-	compDef := findCompDef(ctx.root, compCall, compCallName)
+	compDef := ast.FindCompDef(ctx.root, compCall, compCallName)
 	if compDef == nil {
 		return "The component **" + compCallName + "** is not defined or not registered."
 	}
