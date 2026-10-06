@@ -99,7 +99,12 @@ func addLinkToChain(root ast.Node, chain *[]ast.Node, compCall ast.Node) {
 		return
 	}
 
-	compCalls := ast.FilterNodesInDefContent(compDef, func(child ast.Node) bool {
+	compDefContent := getCompDefContent(compDef)
+	if compDefContent == nil {
+		return
+	}
+
+	compCalls := ast.FilterNodesInDefContent(compDefContent, func(child ast.Node) bool {
 		return ast.IsRuleNameOneOf(child, []string{"block-comp-call", "inline-comp-call"})
 	})
 
