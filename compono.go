@@ -118,10 +118,6 @@ func (c *compono) Convert(source []byte, writer io.Writer, opts ...ConvertOption
 
 	c.errorWrapper.Wrap(root)
 
-	if hs, ok := c.renderer.(renderer.HookSetter); ok {
-		hs.SetRendererHooks(cfg.rendererHooks)
-	}
-
 	if es, ok := c.renderer.(renderer.ErrorStylesheetSetter); ok {
 		stylesheet := ""
 		if cfg.errorStylesheet != nil {

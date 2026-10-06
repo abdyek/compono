@@ -5,7 +5,6 @@ import (
 	"strings"
 
 	"github.com/umono-cms/compono/ast"
-	"github.com/umono-cms/compono/renderer/hook"
 )
 
 type codeBlock struct {
@@ -29,19 +28,15 @@ func (_ *codeBlock) Condition(invoker renderableNode, node ast.Node) bool {
 
 func (cb *codeBlock) Render() string {
 	langClass := "language-plaintext"
-	params := hook.Params{}
 	cbl := ast.FindNodeByRuleName(cb.Node().Children(), "code-block-lang")
 	if cbl != nil {
 		lang := html.EscapeString(strings.TrimSpace(string(cbl.Raw())))
 		if lang != "" {
 			langClass = "language-" + lang
-			params["lang"] = hook.NewString(strings.TrimSpace(string(cbl.Raw())))
 		}
 	}
 	content := cb.renderer.renderChildren(cb, cb.Node().Children())
-	params["content"] = hook.NewString(html.UnescapeString(content))
-	output := `<pre><code class="` + langClass + `">` + content + `</code></pre>`
-	return cb.renderer.applyHooks(output, hook.KindMarkdown, "code-block", params)
+	return `<pre><code class="` + langClass + `">` + content + `</code></pre>`
 }
 
 type codeBlockContent struct {
@@ -88,8 +83,7 @@ func (_ *inlineCode) Condition(_ renderableNode, node ast.Node) bool {
 
 func (ic *inlineCode) Render() string {
 	content := ic.renderer.renderChildren(ic, ic.Node().Children())
-	output := `<code style="white-space: pre">` + content + "</code>"
-	return ic.renderer.applyHooks(output, hook.KindMarkdown, "inline-code", hook.Params{"content": hook.NewString(html.UnescapeString(content))})
+	return `<code style="white-space: pre">` + content + "</code>"
 }
 
 type inlineCodeContent struct {
