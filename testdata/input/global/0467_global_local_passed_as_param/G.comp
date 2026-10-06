@@ -1,0 +1,7 @@
+{{ WRAP content = L }}
+
+~ WRAP content = NO_MATTER
+{{ content }}
+
+~ L
+hello

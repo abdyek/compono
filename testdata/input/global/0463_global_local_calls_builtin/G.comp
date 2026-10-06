@@ -1,0 +1,6 @@
+{{ L }}
+
+~ L
+loc
+
+{{ LINK text="hi" url="/x" }}
