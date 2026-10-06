@@ -56,7 +56,7 @@ func isImageBuiltinComponent() func(*wrapContext, ast.Node) bool {
 			return false
 		}
 
-		compDef := findCompDef(ctx.root, node, "IMAGE")
+		compDef := ast.FindCompDef(ctx.root, node, "IMAGE")
 		return compDef != nil && ast.IsRuleName(compDef, "builtin-comp")
 	}
 }
@@ -98,7 +98,7 @@ func walkImageCallTree(ctx *wrapContext, ownerCompCall ast.Node, visit func(ast.
 			return imageError{}
 		}
 
-		compDef := findCompDef(ctx.root, current, compName)
+		compDef := ast.FindCompDef(ctx.root, current, compName)
 		if compDef == nil {
 			return imageError{}
 		}
@@ -108,7 +108,7 @@ func walkImageCallTree(ctx *wrapContext, ownerCompCall ast.Node, visit func(ast.
 			return imageError{}
 		}
 
-		for _, nested := range ast.FilterNodesInTree(compDefContent, func(child ast.Node) bool {
+		for _, nested := range ast.FilterNodesInDefContent(compDefContent, func(child ast.Node) bool {
 			return ast.IsRuleNameOneOf(child, []string{"block-comp-call", "inline-comp-call"})
 		}) {
 			if err := walk(nested, append([]ast.Node{current}, invokerAncestors...)); err.title != "" {
@@ -127,7 +127,7 @@ func getImageErrorForCompCalls(ctx *wrapContext, targetCompCall ast.Node, invoke
 		return imageError{}
 	}
 
-	targetCompDef := findCompDef(ctx.root, targetCompCall, "IMAGE")
+	targetCompDef := ast.FindCompDef(ctx.root, targetCompCall, "IMAGE")
 	if targetCompDef == nil || !ast.IsRuleName(targetCompDef, "builtin-comp") {
 		return imageError{}
 	}

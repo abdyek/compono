@@ -94,12 +94,12 @@ func addLinkToChain(root ast.Node, chain *[]ast.Node, compCall ast.Node) {
 		return
 	}
 
-	compDef := findCompDef(root, compCall, compCallName)
+	compDef := ast.FindCompDef(root, compCall, compCallName)
 	if compDef == nil {
 		return
 	}
 
-	compCalls := ast.FilterNodesInTree(compDef, func(child ast.Node) bool {
+	compCalls := ast.FilterNodesInDefContent(compDef, func(child ast.Node) bool {
 		return ast.IsRuleNameOneOf(child, []string{"block-comp-call", "inline-comp-call"})
 	})
 
@@ -205,7 +205,7 @@ func (ew *errorWrapper) getReplacementForCompCall(root ast.Node, compCall ast.No
 		return ew.createInlineError(compCall, "Unknown key", unknownContextKeyMsg(missingKey))
 	}
 
-	compDef := findCompDef(root, compCall, getCompCallNameStr(compCall))
+	compDef := ast.FindCompDef(root, compCall, getCompCallNameStr(compCall))
 	if compDef == nil {
 		return nil
 	}
@@ -240,7 +240,7 @@ func (ew *errorWrapper) getMissingContextKeyForCompCall(root ast.Node, compCall 
 	}
 	seen[compCall] = true
 
-	compDef := findCompDef(root, compCall, getCompCallNameStr(compCall))
+	compDef := ast.FindCompDef(root, compCall, getCompCallNameStr(compCall))
 	if compDef == nil {
 		return ""
 	}
@@ -304,7 +304,7 @@ func getMissingContextKeyInBoundArgs(root ast.Node, arg ast.Node) string {
 func (ew *errorWrapper) getInlineParamRefReplacements(root ast.Node, compCall ast.Node) map[ast.Node]ast.Node {
 	result := map[ast.Node]ast.Node{}
 
-	compDef := findCompDef(root, compCall, getCompCallNameStr(compCall))
+	compDef := ast.FindCompDef(root, compCall, getCompCallNameStr(compCall))
 	if compDef == nil {
 		return result
 	}
@@ -345,7 +345,7 @@ func (ew *errorWrapper) getInlineParamRefReplacements(root ast.Node, compCall as
 			continue
 		}
 
-		targetCompDef := findCompDef(root, compCall, indexed.Raw)
+		targetCompDef := ast.FindCompDef(root, compCall, indexed.Raw)
 		if targetCompDef == nil || !isBlockComponent(targetCompDef) {
 			continue
 		}

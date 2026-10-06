@@ -54,7 +54,7 @@ func (cc *compCall) Render() string {
 		return cc.renderer.renderChildren(cc, localCompDefContent.Children())
 	}
 
-	globalCompDef := cc.renderer.findGlobalCompDef(string(compCallName.Raw()))
+	globalCompDef := cc.renderer.findGlobalCompDef(cc.Node(), string(compCallName.Raw()))
 	if globalCompDef != nil {
 		globalCompDefContent := ast.FindNodeByRuleName(globalCompDef.Children(), "global-comp-def-content")
 		if globalCompDefContent == nil {

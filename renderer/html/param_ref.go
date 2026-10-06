@@ -54,7 +54,7 @@ func renderCompParamCall(r *renderer, rn renderableNode, paramRefName string) st
 		return r.renderChildren(rn, localCompDefContent.Children())
 	}
 
-	globalCompDef := r.findGlobalCompDef(target.name)
+	globalCompDef := r.findGlobalCompDef(target.scope, target.name)
 	if globalCompDef != nil {
 		globalCompDefContent := ast.FindNodeByRuleName(globalCompDef.Children(), "global-comp-def-content")
 		if globalCompDefContent == nil {

@@ -144,6 +144,46 @@ c.RegisterGlobalComponent("BLOG_PAGE", []byte(`title="" content=""
 {{ content }}`))
 ```
 
+### Global Component Scopes
+
+All global components share one namespace, so two unrelated groups of components can clash: a name may be defined twice, or a call inside one group may resolve to a component of the other. Scopes solve this. A `WithGlobalComponent` can take other `WithGlobalComponent`s as options. These are its **sub components**, and it is their **owner**:
+
+```go
+c.Convert(pageSource, w,
+	compono.WithGlobalComponent("CARD", cardSource),
+	compono.WithGlobalComponent("LAYOUT", layoutSource,
+		compono.WithIsolatedScope(),
+		compono.WithGlobalComponent("CARD", otherCardSource),
+		compono.WithGlobalComponent("TABLE", tableSource),
+	),
+)
+```
+
+There are two `CARD`s here and both work. A `CARD` call in the page resolves to the first one, and a `CARD` call inside `LAYOUT` resolves to the second one. `LAYOUT` cannot reach the page's `CARD`.
+
+**Visibility:** A sub component can only be called from its owner's body and from its siblings' bodies. It is not visible from the converted source or from other global components. It neither overrides a same-named global component outside nor is overridden by one.
+
+**Resolution:** A call inside a global component's body looks in this order:
+
+1. The local components of the source the call is written in.
+2. The global component's sub components.
+3. The scope the global component is defined in, then outward through the scopes of its owners, and finally the global components given to `Convert` and registered with `RegisterGlobalComponent`.
+4. Built-in components.
+
+A global component without sub components resolves exactly as before: `Local > Global > Built-in`. Nesting depth is unlimited and the same rules apply at every level.
+
+**Isolation:** `WithIsolatedScope()` stops step 3. Calls in the body of that global component and in the bodies of its sub components resolve only to locals, its sub components and built-ins. Giving it more than once has the same effect as giving it once.
+
+**Syntactic resolution:** A call resolves in the scope of the source it is written in, not where it is rendered. If the page passes `{{ LAYOUT content = BODY }}`, the calls inside `BODY` resolve in the page's scope even though they are rendered inside `LAYOUT`. `LAYOUT`'s sub components are not visible from `BODY`.
+
+**Built-in names:** Sub components override built-in components, and Compono does not check sub component names against the built-in list. Adding a new built-in in a later version does not change the output of a sub component with that name.
+
+**Errors:** `Convert` returns an error when:
+
+- a conversion option (`WithContext`, `WithErrorStylesheet`, `WithRendererHook`) is given to a global component at any depth, even with an empty value (`ErrConversionOptionInGlobal`),
+- `WithIsolatedScope` is given directly to `Convert` (`ErrIsolatedScopeInConvert`),
+- two sub components of the same owner share a name (`ErrDuplicateSubComponent`).
+
 ## Built-in Components
 
 ### LINK
@@ -788,6 +828,12 @@ err := c.UnregisterGlobalComponent(name string)
 // Inject a global component for a single conversion
 err := c.Convert(source, writer, compono.WithGlobalComponent(name, globalSource))
 
+// Give a global component its own sub components and isolate its scope
+err := c.Convert(source, writer, compono.WithGlobalComponent(name, globalSource,
+    compono.WithIsolatedScope(),
+    compono.WithGlobalComponent(subName, subSource),
+))
+
 // Inject convert-time context values
 err := c.Convert(source, writer, compono.WithContext(map[string]any{
     "app/version": "1.2.0",
@@ -850,6 +896,8 @@ c.RegisterGlobalComponent("LINK", []byte(`Custom link behavior`))
 Now all `{{ LINK }}` calls will use your global definition instead of the built-in one.
 
 This allows you to customize or extend built-in components without modifying the library.
+
+Inside a global component with sub components, the sub components come between the local components and the outer global components. See [Global Component Scopes](#global-component-scopes).
 
 ## License
 

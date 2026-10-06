@@ -82,13 +82,50 @@ func FindLocalCompDef(srcNode Node, name string) Node {
 	})
 }
 
-func FindGlobalCompDef(root Node, name string) Node {
+// FindGlobalCompDef searches the scope chain starting from the enclosing globals
+// of from (innermost first, then their inner scopes), stopping at isolated scopes,
+// and finally checking root.
+func FindGlobalCompDef(root Node, from Node, name string) Node {
+	if from == nil {
+		return findGlobalCompDefInWrapper(root, name)
+	}
+
+	current := from
+	if !IsRuleName(current, "global-comp-def") {
+		current = FindNode(GetAncestors(current), func(anc Node) bool {
+			return IsRuleName(anc, "global-comp-def")
+		})
+	}
+
+	for current != nil {
+		if subWrapper := FindNodeByRuleName(current.Children(), "global-comp-def-wrapper"); subWrapper != nil {
+			if found := findGlobalCompDefInNode(subWrapper, name); found != nil {
+				return found
+			}
+		}
+
+		if isIsolatedGlobal(current) {
+			return nil
+		}
+
+		current = FindNode(GetAncestors(current), func(anc Node) bool {
+			return IsRuleName(anc, "global-comp-def")
+		})
+	}
+
+	return findGlobalCompDefInWrapper(root, name)
+}
+
+func findGlobalCompDefInWrapper(root Node, name string) Node {
 	globalCompDefWrapper := FindNodeByRuleName(root.Children(), "global-comp-def-wrapper")
 	if globalCompDefWrapper == nil {
 		return nil
 	}
+	return findGlobalCompDefInNode(globalCompDefWrapper, name)
+}
 
-	return FindNode(globalCompDefWrapper.Children(), func(child Node) bool {
+func findGlobalCompDefInNode(wrapper Node, name string) Node {
+	return FindNode(wrapper.Children(), func(child Node) bool {
 		if !IsRuleName(child, "global-comp-def") {
 			return false
 		}
@@ -104,6 +141,10 @@ func FindGlobalCompDef(root Node, name string) Node {
 
 		return true
 	})
+}
+
+func isIsolatedGlobal(node Node) bool {
+	return FindNodeByRuleName(node.Children(), "isolated-scope") != nil
 }
 
 func FindBuiltinCompDef(root Node, name string) Node {
@@ -134,6 +175,26 @@ func FilterNodesInTree(node Node, filter func(Node) bool) []Node {
 	filtered := FilterNodes(node.Children(), filter)
 	for _, child := range node.Children() {
 		filtered = append(filtered, FilterNodesInTree(child, filter)...)
+	}
+	return filtered
+}
+
+// FilterNodesInDefContent returns nodes matching filter within a definition's
+// content, without entering nested sub-component definitions.
+func FilterNodesInDefContent(node Node, filter func(Node) bool) []Node {
+	if node == nil {
+		return nil
+	}
+
+	filtered := []Node{}
+	for _, child := range node.Children() {
+		if IsRuleName(child, "global-comp-def-wrapper") {
+			continue
+		}
+		if filter(child) {
+			filtered = append(filtered, child)
+		}
+		filtered = append(filtered, FilterNodesInDefContent(child, filter)...)
 	}
 	return filtered
 }
@@ -432,7 +493,7 @@ func FindCompDef(root Node, compCallNode Node, name string) Node {
 		return localCompDef
 	}
 
-	globalCompDef := FindGlobalCompDef(root, name)
+	globalCompDef := FindGlobalCompDef(root, compCallNode, name)
 	if globalCompDef != nil {
 		return globalCompDef
 	}
@@ -463,7 +524,7 @@ func FindCompDefInScope(root Node, scope Node, node Node, name string) Node {
 		}
 	}
 
-	if globalCompDef := FindGlobalCompDef(root, name); globalCompDef != nil {
+	if globalCompDef := FindGlobalCompDef(root, scope, name); globalCompDef != nil {
 		return globalCompDef
 	}
 

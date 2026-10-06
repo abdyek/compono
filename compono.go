@@ -26,6 +26,9 @@ const (
 	ErrUnsupportedType
 	ErrUnsupportedKeyNotation
 	ErrErrorStylesheetAlreadySet
+	ErrConversionOptionInGlobal
+	ErrIsolatedScopeInConvert
+	ErrDuplicateSubComponent
 )
 
 type Compono interface {
@@ -262,6 +265,9 @@ func (c *compono) newConvertConfig(opts ...ConvertOption) (*convertConfig, error
 		if opt == nil {
 			continue
 		}
+		if _, ok := opt.(*isolatedScopeOption); ok {
+			return nil, NewComponoError(ErrIsolatedScopeInConvert, "WithIsolatedScope is not allowed at the top level of Convert")
+		}
 		if err := opt.applyConvert(c, cfg); err != nil {
 			return nil, err
 		}
@@ -269,11 +275,15 @@ func (c *compono) newConvertConfig(opts ...ConvertOption) (*convertConfig, error
 	return cfg, nil
 }
 
-func (c *compono) newGlobalWrapper(injected []ast.Node) ast.Node {
+func (c *compono) newGlobalWrapper(injected []*globalComponentNode) ast.Node {
 	gw := ast.DefaultEmptyNode()
 	gw.SetRule(rule.NewGlobalCompDefWrapper())
 
-	children := append([]ast.Node{}, injected...)
+	var children []ast.Node
+	for _, node := range injected {
+		c.buildGlobalCompDefNode(node)
+		children = append(children, node.node)
+	}
 	children = append(children, c.cloneGlobalComponents()...)
 	gw.SetChildren(children)
 
@@ -282,6 +292,34 @@ func (c *compono) newGlobalWrapper(injected []ast.Node) ast.Node {
 	}
 
 	return gw
+}
+
+func (c *compono) buildGlobalCompDefNode(node *globalComponentNode) {
+	if node.isolated {
+		isolatedMarker := ast.DefaultEmptyNode()
+		isolatedMarker.SetRule(rule.NewDynamic("isolated-scope"))
+		isolatedMarker.SetParent(node.node)
+		node.node.SetChildren(append(node.node.Children(), isolatedMarker))
+	}
+
+	if len(node.subComponents) > 0 {
+		subWrapper := ast.DefaultEmptyNode()
+		subWrapper.SetRule(rule.NewGlobalCompDefWrapper())
+		subWrapper.SetParent(node.node)
+
+		var subChildren []ast.Node
+		for _, sub := range node.subComponents {
+			c.buildGlobalCompDefNode(sub)
+			subChildren = append(subChildren, sub.node)
+		}
+		subWrapper.SetChildren(subChildren)
+
+		for _, child := range subWrapper.Children() {
+			child.SetParent(subWrapper)
+		}
+
+		node.node.SetChildren(append(node.node.Children(), subWrapper))
+	}
 }
 
 func (c *compono) newGlobalComponentNode(name string, source []byte) (ast.Node, error) {
