@@ -162,7 +162,7 @@ func (_ *compParamName) Name() string {
 }
 
 func (_ *compParamName) Selectors() []selector.Selector {
-	seli, _ := selector.NewStartEndLeftInner(`^\s*([a-z][a-z0-9-]*)\s*`, `=`)
+	seli, _ := selector.NewStartEndLeftInner(`^\s*([a-z][a-z0-9-]*)\s*`, `!|=`)
 	p, _ := selector.NewPattern(`^\s*[a-z][a-z0-9-]*\s*$`)
 	return []selector.Selector{
 		seli,
@@ -1441,7 +1441,7 @@ func (_ *globalCompDefHead) Name() string {
 }
 
 func (_ *globalCompDefHead) Selectors() []selector.Selector {
-	p, _ := selector.NewStartEnd(`^([a-z][a-z0-9-]*)[ \t\r\n]*=[ \t\r\n]*(".*?"|\d+(?:\.\d+)?|true|false|\[|\{|[A-Z0-9]+(?:_[A-Z0-9]+)*|context\s*\()`, `\n|\z`)
+	p, _ := selector.NewStartEnd(`^([a-z][a-z0-9-]*)!?[ \t\r\n]*=[ \t\r\n]*(".*?"|\d+(?:\.\d+)?|true|false|\[|\{|[A-Z0-9]+(?:_[A-Z0-9]+)*|context\s*\()`, `\n|\z`)
 	return []selector.Selector{
 		p,
 	}

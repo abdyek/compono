@@ -115,15 +115,21 @@ func (ca *componentAssignments) Select(source []byte, without ...[2]int) [][2]in
 			offset++
 			continue
 		}
-		offset = skipComponentSpaces(source, nameEnd)
+
+		afterName := nameEnd
+		if !ca.requireValue && afterName < len(source) && source[afterName] == '!' {
+			afterName++
+		}
+
+		offset = skipComponentSpaces(source, afterName)
 
 		if offset >= len(source) || source[offset] != '=' {
 			if ca.requireValue {
 				offset = nameEnd
 				continue
 			}
-			results = append(results, [2]int{start, nameEnd})
-			offset = nameEnd
+			results = append(results, [2]int{start, afterName})
+			offset = afterName
 			continue
 		}
 
@@ -449,6 +455,86 @@ func skipComponentSpaces(source []byte, offset int) int {
 		offset++
 	}
 	return offset
+}
+
+// FirstInvalidCompParamDef scans component parameter definitions, the part of a
+// component definition head after the component name, and returns the text of
+// the first invalid definition. Each definition must be a name
+// ([a-z][a-z0-9-]*), an optional '!' glued to the name, optional spaces, '=',
+// optional spaces and a value accepted by scanComponentValue. The bool is false
+// when every definition is valid.
+func FirstInvalidCompParamDef(source []byte) (string, bool) {
+	offset := 0
+	for {
+		offset = skipComponentSpaces(source, offset)
+		if offset >= len(source) {
+			return "", false
+		}
+
+		start := offset
+		nameEnd, ok := scanComponentParamName(source, offset)
+		if !ok {
+			return invalidCompParamDefText(source, start), true
+		}
+
+		afterName := nameEnd
+		if afterName < len(source) && source[afterName] == '!' {
+			afterName++
+		}
+
+		offset = skipComponentSpaces(source, afterName)
+		if offset >= len(source) || source[offset] != '=' {
+			return invalidCompParamDefText(source, start), true
+		}
+		offset++
+
+		offset = skipComponentSpaces(source, offset)
+		valueEnd, ok := scanComponentValue(source, offset, false)
+		if !ok {
+			offset = skipComponentValueToken(source, offset)
+			continue
+		}
+		offset = valueEnd
+	}
+}
+
+func skipComponentValueToken(source []byte, offset int) int {
+	for offset < len(source) && !isComponentSpace(source[offset]) {
+		offset++
+	}
+	return offset
+}
+
+func invalidCompParamDefText(source []byte, start int) string {
+	end := len(source)
+	for i := start + 1; i < len(source); i++ {
+		if !isComponentSpace(source[i-1]) {
+			continue
+		}
+		if startsCompParamDef(source, i) {
+			end = i
+			break
+		}
+	}
+	return string(bytes.TrimSpace(source[start:end]))
+}
+
+func startsCompParamDef(source []byte, offset int) bool {
+	nameEnd, ok := scanComponentParamName(source, offset)
+	if !ok {
+		return false
+	}
+
+	if nameEnd < len(source) && source[nameEnd] == '!' {
+		nameEnd++
+	}
+
+	offset = skipComponentSpaces(source, nameEnd)
+	return offset < len(source) && source[offset] == '='
+}
+
+func isComponentSpace(ch byte) bool {
+	return ch == ' ' || ch == '\n' || ch == '\r' || ch == '\t'
 }
 
 func scanComponentParamName(source []byte, offset int) (int, bool) {

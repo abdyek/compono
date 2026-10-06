@@ -4,8 +4,66 @@ import (
 	"strings"
 
 	"github.com/umono-cms/compono/ast"
+	"github.com/umono-cms/compono/selector"
 	"github.com/umono-cms/compono/util"
 )
+
+func invalidParamDef() conditionAnalyzer {
+	return conditionAnalyzer{
+		conditions: []func(*wrapContext, ast.Node) bool{
+			isRuleNameOneOf("block-comp-call", "inline-comp-call"),
+			isKnownComponent(),
+			hasInvalidParamDef(),
+		},
+		title:   staticTitle("Invalid parameter definition"),
+		message: invalidParamDefMsg,
+		block:   blockFromRuleName,
+	}
+}
+
+func hasInvalidParamDef() func(*wrapContext, ast.Node) bool {
+	return func(ctx *wrapContext, compCall ast.Node) bool {
+		_, ok := getInvalidCompParamDef(ctx, compCall)
+		return ok
+	}
+}
+
+// getInvalidCompParamDef returns the first invalid parameter definition of the
+// local component definition the call resolves to. The definitions are the text
+// of the definition head after the component name.
+func getInvalidCompParamDef(ctx *wrapContext, compCall ast.Node) (string, bool) {
+	compCallName := getCompCallNameStr(compCall)
+	if compCallName == "" {
+		return "", false
+	}
+
+	compDef := ast.FindCompDef(ctx.root, compCall, compCallName)
+	if compDef == nil || !ast.IsRuleName(compDef, "local-comp-def") {
+		return "", false
+	}
+
+	head := ast.FindNodeByRuleName(compDef.Children(), "local-comp-def-head")
+	if head == nil {
+		return "", false
+	}
+
+	nameNode := ast.FindNodeByRuleName(head.Children(), "local-comp-name")
+	if nameNode == nil {
+		return "", false
+	}
+	name := strings.TrimSpace(string(nameNode.Raw()))
+	if name == "" {
+		return "", false
+	}
+
+	headRaw := string(head.Raw())
+	nameIdx := strings.Index(headRaw, name)
+	if nameIdx < 0 {
+		return "", false
+	}
+
+	return selector.FirstInvalidCompParamDef([]byte(headRaw[nameIdx+len(name):]))
+}
 
 func unknownCompCall() conditionAnalyzer {
 	return conditionAnalyzer{

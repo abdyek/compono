@@ -269,6 +269,27 @@ func GetParamNameFromCompParam(compParam Node) string {
 	return strings.TrimSpace(string(compParamName.Raw()))
 }
 
+// IsRequiredCompParam reports whether the given component parameter definition
+// marks its parameter as required with a '!' glued to the parameter name, e.g.
+// `title! = ""`. The parameter name itself never contains the '!'.
+func IsRequiredCompParam(compParam Node) bool {
+	if compParam == nil {
+		return false
+	}
+
+	compParamName := FindNodeByRuleName(compParam.Children(), "comp-param-name")
+	if compParamName == nil {
+		return false
+	}
+
+	name := strings.TrimSpace(string(compParamName.Raw()))
+	if name == "" {
+		return false
+	}
+
+	return strings.HasPrefix(strings.TrimSpace(string(compParam.Raw())), name+"!")
+}
+
 func GetArgNameFromCompCallArg(compCallArg Node) string {
 	compCallArgName := FindNodeByRuleName(compCallArg.Children(), "comp-call-arg-name")
 	return strings.TrimSpace(string(compCallArgName.Raw()))
