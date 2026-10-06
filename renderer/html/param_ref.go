@@ -48,6 +48,8 @@ func renderCompParamCall(r *renderer, rn renderableNode, paramRefName string) st
 		if localCompDefContent == nil {
 			return ""
 		}
+		r.pushLocalFrame(target.name)
+		defer r.popFrame()
 		if inlineCall {
 			return renderInlineCompDefContent(r, rn, localCompDefContent)
 		}
@@ -60,6 +62,8 @@ func renderCompParamCall(r *renderer, rn renderableNode, paramRefName string) st
 		if globalCompDefContent == nil {
 			return ""
 		}
+		r.pushGlobalFrame(target.name, globalCompDef)
+		defer r.popFrame()
 		if inlineCall {
 			return renderInlineCompDefContent(r, rn, globalCompDefContent)
 		}

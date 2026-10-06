@@ -180,7 +180,7 @@ A global component without sub components resolves exactly as before: `Local > G
 
 **Errors:** `Convert` returns an error when:
 
-- a conversion option (`WithContext`, `WithErrorStylesheet`) is given to a global component at any depth, even with an empty value (`ErrConversionOptionInGlobal`),
+- a conversion option (`WithContext`, `WithErrorStylesheet`, `WithAttributeHook`) is given to a global component at any depth, even with an empty value (`ErrConversionOptionInGlobal`),
 - `WithIsolatedScope` is given directly to `Convert` (`ErrIsolatedScopeInConvert`),
 - two sub components of the same owner share a name (`ErrDuplicateSubComponent`).
 
@@ -719,6 +719,71 @@ Error placement depends on how `context(...)` is used:
 - using it in an inline component call renders an inline error at the call site
 - default values are resolved lazily, so no error is produced unless that parameter is actually used
 
+## Attribute Hook
+
+An attribute hook lets an application add HTML attributes to the output of built-in component calls, for example a theme's `class`. It is registered per conversion with `compono.WithAttributeHook`. The hook only returns attributes. Where they are written is defined by each built-in.
+
+```go
+err := c.Convert(pageSource, w,
+	compono.WithGlobalComponent("LAYOUT", layoutSource,
+		compono.WithIsolatedScope(),
+		compono.WithGlobalComponent("MAIN_MENU", menuSource),
+	),
+	compono.WithAttributeHook(func(builtin string, chain []compono.Frame) map[string]string {
+		if builtin == "LINK" && len(chain) > 0 && chain[len(chain)-1].Name == "MAIN_MENU" {
+			return map[string]string{"class": "main-menu-link"}
+		}
+		return nil
+	}),
+)
+```
+
+For a `LINK` call in the body of `MAIN_MENU`, the hook receives `"LINK"` and this chain:
+
+```go
+[]compono.Frame{
+	{Name: "LAYOUT", Kind: compono.FrameGlobal, ScopePath: []string{}},
+	{Name: "MAIN_MENU", Kind: compono.FrameGlobal, ScopePath: []string{"LAYOUT"}},
+}
+```
+
+### When the Hook Is Called
+
+- Only for real built-in calls. A call that resolves to a local or global component is not a built-in call, even if its name is a built-in name. Markdown elements never call the hook.
+- Once per call, before the built-in's output is written, in render order, on the goroutine running `Convert`.
+- Never for a call that is replaced by an error element. Error elements never get attributes.
+
+### The Chain
+
+The chain is the call stack at the moment the built-in is rendered, ordered from the outermost frame to the innermost.
+
+- Each frame has a `Name` and a `Kind`: `compono.FrameGlobal`, `compono.FrameLocal` or `compono.FrameBuiltin`.
+- `ScopePath` is set only for global frames: the names of the global component's owners, outermost first (see [Global Component Scopes](#global-component-scopes)). It is an empty slice for a global in the root scope and `nil` for other kinds.
+- The converted source is not a frame. A built-in written directly in the source gets an empty chain.
+- The chain does not contain the rendered built-in itself. Its name is the `builtin` argument.
+- The chain is dynamic. Content passed through a component parameter belongs to the frame it is rendered in, although its calls are resolved where they are written.
+- The slices are only valid during the call. Copy them to keep them.
+
+### Writing Attributes
+
+- A `nil` or empty map writes nothing.
+- Values are escaped and quoted. Attributes are written after Compono's own attributes, sorted by name, so the output is deterministic.
+- Each attribute goes to the root element of the built-in, unless the built-in names a special point for it:
+  - `LINK`: everything goes to `<a>`.
+  - `IMAGE`: `sizes` goes to every element that carries `srcset` (each `<source>`), and the other attributes go to the root element. An `IMAGE` without variants has no `<source>`, so `sizes` is not written. This is not an error.
+- Built-ins never write `class` or `sizes` themselves, so the hook's value is the only value. There is no merging.
+
+### Hook Errors
+
+`Convert` returns an error when:
+
+- `WithAttributeHook` is given more than once in a conversion, even with `nil` (`ErrAttributeHookAlreadySet`). A `nil` hook given once is the same as no hook.
+- it is given to a global component (`ErrConversionOptionInGlobal`),
+- the hook returns a name that does not match `[a-z][a-z0-9-]*` (`ErrInvalidAttributeName`),
+- the hook returns an attribute that Compono writes on that element itself, such as `href`, `target` or `rel` on `LINK`'s `<a>` (`ErrAttributeConflict`).
+
+Nothing is written to the writer in these cases. The hook cannot return an error. Validating the values is the job of the application that gives the hook.
+
 ## Error Handling
 
 Compono provides error feedback by rendering placeholders where errors occur.
@@ -791,6 +856,11 @@ err := c.Convert(source, writer, compono.WithContext(map[string]any{
 
 // Set the stylesheet URL linked inside error elements (once per conversion)
 err := c.Convert(source, writer, compono.WithErrorStylesheet("/_umono/error.css"))
+
+// Add attributes to built-in component calls (once per conversion)
+err := c.Convert(source, writer, compono.WithAttributeHook(func(builtin string, chain []compono.Frame) map[string]string {
+    return nil
+}))
 ```
 
 ## Component Naming Convention

@@ -38,14 +38,24 @@ func (img *image) Render(invoker renderableNode, node ast.Node) string {
 	media := img.resolveArg(invoker, node, "media")
 	alt := img.resolveArg(invoker, node, "alt")
 
-	renderedImg := `<img src="` + html.EscapeString(img.recordField(media, "url")) + `"` +
+	variants := img.variants(media)
+
+	conflicts := imageConflictAttributes
+	if len(variants) > 0 {
+		conflicts = map[string]bool{}
+	}
+	attrs := img.renderer.callAttributeHook(img.Name(), conflicts)
+
+	imgAttrs := ` src="` + html.EscapeString(img.recordField(media, "url")) + `"` +
 		` alt="` + html.EscapeString(strings.TrimSpace(alt.Raw)) + `"` +
 		` width="` + html.EscapeString(img.recordField(media, "width")) + `"` +
-		` height="` + html.EscapeString(img.recordField(media, "height")) + `">`
+		` height="` + html.EscapeString(img.recordField(media, "height")) + `"`
 
-	variants := img.variants(media)
+	renderedImg := `<img` + imgAttrs + `>`
+
 	if len(variants) == 0 {
-		return renderedImg
+		return `<img` + imgAttrs +
+			formatHookAttributes(attrs, "sizes") + `>`
 	}
 
 	grouped := map[string][]imageVariant{}
@@ -55,6 +65,11 @@ func (img *image) Render(invoker renderableNode, node ast.Node) string {
 			order = append(order, variant.mimeType)
 		}
 		grouped[variant.mimeType] = append(grouped[variant.mimeType], variant)
+	}
+
+	sizeAttr := ""
+	if sizes, ok := attrs["sizes"]; ok {
+		sizeAttr = ` sizes="` + html.EscapeString(sizes) + `"`
 	}
 
 	sources := make([]string, 0, len(order))
@@ -69,10 +84,17 @@ func (img *image) Render(invoker renderableNode, node ast.Node) string {
 			srcsetParts = append(srcsetParts, html.EscapeString(item.url)+" "+item.widthRaw+"w")
 		}
 
-		sources = append(sources, `<source type="`+html.EscapeString(mimeType)+`" srcset="`+strings.Join(srcsetParts, ", ")+`">`)
+		sources = append(sources, `<source type="`+html.EscapeString(mimeType)+`" srcset="`+strings.Join(srcsetParts, ", ")+`"`+sizeAttr+`>`)
 	}
 
-	return `<picture>` + strings.Join(sources, "") + renderedImg + `</picture>`
+	return `<picture` + formatHookAttributes(attrs, "sizes") + `>` + strings.Join(sources, "") + renderedImg + `</picture>`
+}
+
+var imageConflictAttributes = map[string]bool{
+	"src":    true,
+	"alt":    true,
+	"width":  true,
+	"height": true,
 }
 
 func (img *image) resolveArg(invoker renderableNode, compCall ast.Node, name string) ast.ResolvedValue {
