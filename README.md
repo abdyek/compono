@@ -346,7 +346,7 @@ A `NAVIGATION` call now renders an `Unknown component` error. Local or global co
 
 Components can accept parameters. Each parameter must have a **default value** defined in the component definition.
 
-If a parameter value is not provided during the call, the **default value is used**.
+If a parameter value is not provided during the call, the **default value is used**. A parameter can also be marked as [required](#required-parameters).
 
 ```
 {{ SAY_HELLO name="Jane" }}
@@ -365,6 +365,30 @@ Supported parameter types:
 - **Component** → `comp = COMP`
 - **Array** → `items = ["Jane", 22, true, COMP]`
 - **Record** → `config = { lang: "tr", for-admin: true }`
+
+### Required Parameters
+
+A parameter whose name is followed by `!` is required. A call that does not give it renders `Missing argument`:
+
+```
+{{ COVER media = context(media-by-alias/cover) }}
+
+~ COVER media! = {} alt! = ""
+{{ IMAGE media = media alt = alt }}
+```
+
+This renders `Missing argument` with the message `The parameter **alt** of component **COVER** is required.` When several are missing, the message is `The parameters **a**, **b** of component **[component]** are required.`
+
+- The `!` is glued to the name: `alt! = ""`.
+- The default value of a required parameter only declares its type. It is never used or resolved.
+- An empty value satisfies the requirement. `alt = ""` is a given argument. The component decides what an empty value means.
+- A required argument can be given in the call or bound with [Argument Binding](#argument-binding). Bound and given arguments are checked together.
+- The error is shown on the call that misses the argument. If the called component comes from a component parameter, it is shown on the topmost call where the component value is written.
+- `!` is for local and global components. Required parameters of built-in components are checked by their own errors.
+
+### Parameter Definition Errors
+
+A parameter definition must be `name = default` or `name! = default`. A definition without a default value (`~ X a`) or with any other shape (`~ X a ! = ""`, `~ X !a = ""`) renders `Invalid parameter definition` with the message `The parameter definition **[text]** of component **[component]** is invalid.` The error is shown on every call of the component, and the whole call is replaced by the error.
 
 ---
 
@@ -466,7 +490,7 @@ Output:
 
 - Binding a parameter that the component does not define renders `Unknown parameter`.
 - Binding a value of the wrong type renders `Wrong argument type`.
-- Required arguments of a bound built-in component are validated with the bound and the given arguments together.
+- Required arguments of a bound component are validated with the bound and the given arguments together. This applies to built-in components and to [required parameters](#required-parameters) of local and global components.
 - Giving an argument to a parameter that is already bound renders `Duplicate argument` with the message `The parameter **[name]** of component **[component]** is already bound.` There is no precedence rule between a bound and a given argument.
 
 ```

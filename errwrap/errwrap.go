@@ -437,6 +437,10 @@ func resolveCompCallParamValues(root ast.Node, compDef ast.Node, compCall ast.No
 	values := map[string]ast.ResolvedValue{}
 
 	for _, compParam := range ast.GetCompParamsFromCompDef(compDef) {
+		if ast.IsRequiredCompParam(compParam) {
+			continue
+		}
+
 		name := ast.GetParamNameFromCompParam(compParam)
 		if name == "" {
 			continue

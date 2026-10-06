@@ -20,6 +20,7 @@ type conditionAnalyzer struct {
 
 func diagnosticAnalyzers() []diagnosticAnalyzer {
 	return []diagnosticAnalyzer{
+		invalidParamDef(),
 		infiniteBlockCompCallByItself(),
 		infiniteInlineCompCallByItself(),
 		infiniteCompCallByChain(),
@@ -30,6 +31,7 @@ func diagnosticAnalyzers() []diagnosticAnalyzer {
 		blockCompInsideInline(),
 		blockParamCompInsideInline(),
 		undefinedParam(),
+		missingArg(),
 		wrongImageArgType(),
 		invalidImage(),
 		invalidBuiltinCompCallSchema(),

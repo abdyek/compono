@@ -85,6 +85,24 @@ func undefinedParamMsg(ctx *wrapContext, node ast.Node) string {
 	return "The parameters **" + strings.Join(undefinedArgNames, "**, **") + "** are not defined for this component."
 }
 
+func invalidParamDefMsg(ctx *wrapContext, node ast.Node) string {
+	text, _ := getInvalidCompParamDef(ctx, node)
+	return "The parameter definition **" + text + "** of component **" + getCompCallNameStr(node) + "** is invalid."
+}
+
+func missingArgMsg(ctx *wrapContext, node ast.Node) string {
+	compName, missingArgNames := getMissingArgs(ctx, node)
+	if len(missingArgNames) == 0 {
+		return "One or more parameters are required for this component."
+	}
+
+	if len(missingArgNames) == 1 {
+		return "The parameter **" + missingArgNames[0] + "** of component **" + compName + "** is required."
+	}
+
+	return "The parameters **" + strings.Join(missingArgNames, "**, **") + "** of component **" + compName + "** are required."
+}
+
 func wrongArgTypeMsg(ctx *wrapContext, node ast.Node) string {
 	return wrongArgTypeNamesMsg(getWrongTypeArgNames(ctx, node))
 }

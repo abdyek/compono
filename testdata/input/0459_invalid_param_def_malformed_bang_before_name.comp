@@ -1,0 +1,10 @@
+{{ CARD title = "Hello" }}
+
+{{ CARD title = "World" }}
+
+Hello {{ CARD title = "Inline" }} world.
+
+Hello {{ CARD title = "Again" }} again.
+
+~ CARD !title = ""
+# {{ title }}

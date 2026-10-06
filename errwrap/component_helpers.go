@@ -73,12 +73,16 @@ func getCompDefParamInfos(compDef ast.Node) []compParamInfo {
 			typeVariant := compParamType.Children()[0]
 			typ = ast.GetTypeFromCompParam(compParam)
 			if typ == "context" {
-				root := compDef
-				ancestors := ast.GetAncestors(compDef)
-				if len(ancestors) > 0 {
-					root = ancestors[len(ancestors)-1]
+				if ast.IsRequiredCompParam(compParam) {
+					typ = ""
+				} else {
+					root := compDef
+					ancestors := ast.GetAncestors(compDef)
+					if len(ancestors) > 0 {
+						root = ancestors[len(ancestors)-1]
+					}
+					typ = ast.ResolveCompParamDefaultFromCompDef(root, compDef, name).Type
 				}
-				typ = ast.ResolveCompParamDefaultFromCompDef(root, compDef, name).Type
 			}
 			if ast.FindNodeByRuleName(typeVariant.Children(), "comp-param-defa-value") != nil {
 				defVal = ast.GetParamDefValFromCompParam(compParam)
