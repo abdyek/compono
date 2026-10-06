@@ -448,6 +448,13 @@ func (s *componoTestSuite) TestErrConversionOptionInGlobal() {
 	require.Error(s.T(), err)
 	require.ErrorAs(s.T(), err, &compErr)
 	assert.Equal(s.T(), ErrConversionOptionInGlobal, compErr.Code)
+
+	err = New().Convert([]byte(`{{ G }}`), io.Discard,
+		WithGlobalComponent("G", []byte(`hi`), WithAttributeHook(nil)),
+	)
+	require.Error(s.T(), err)
+	require.ErrorAs(s.T(), err, &compErr)
+	assert.Equal(s.T(), ErrConversionOptionInGlobal, compErr.Code)
 }
 
 func (s *componoTestSuite) TestErrIsolatedScopeInConvert() {
