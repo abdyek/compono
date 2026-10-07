@@ -38,7 +38,7 @@ const (
 )
 
 type Compono interface {
-	Convert(source []byte, writer io.Writer, opts ...ConvertOption) error
+	Convert(source []byte, writer io.Writer, opts ...ConvertOption) ([]Diagnostic, error)
 	Parser() parser.Parser
 	Renderer() renderer.Renderer
 	Validator() validator.Validator
@@ -73,21 +73,21 @@ type compono struct {
 	logger       logger.Logger
 }
 
-func (c *compono) Convert(source []byte, writer io.Writer, opts ...ConvertOption) error {
+func (c *compono) Convert(source []byte, writer io.Writer, opts ...ConvertOption) ([]Diagnostic, error) {
 	if len(source) == 0 {
-		return nil
+		return nil, nil
 	}
 
 	cfg, err := c.newConvertConfig(opts...)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	root := c.parser.Parse(source, ast.DefaultRootNode())
 
 	contextWrapper, err := buildContextWrapper(root, cfg.contextValues)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	root.SetChildren(append(root.Children(), contextWrapper))
 
@@ -103,7 +103,7 @@ func (c *compono) Convert(source []byte, writer io.Writer, opts ...ConvertOption
 
 	err = c.validator.Validate(root)
 	if err != nil {
-		return NewComponoError(ErrInvalidAST, err.Error())
+		return nil, NewComponoError(ErrInvalidAST, err.Error())
 	}
 
 	c.errorWrapper.Wrap(root)
@@ -113,21 +113,21 @@ func (c *compono) Convert(source []byte, writer io.Writer, opts ...ConvertOption
 		stylesheet = *cfg.errorStylesheet
 	}
 
-	err = c.renderer.Render(writer, root, renderer.Options{
+	rendered, err := c.renderer.Render(writer, root, renderer.Options{
 		AttributeHook:   cfg.attributeHook,
 		ErrorStylesheet: stylesheet,
 	})
 	if err != nil {
 		switch {
 		case errors.Is(err, attrhook.ErrInvalidAttributeName):
-			return NewComponoError(ErrInvalidAttributeName, err.Error())
+			return nil, NewComponoError(ErrInvalidAttributeName, err.Error())
 		case errors.Is(err, attrhook.ErrAttributeConflict):
-			return NewComponoError(ErrAttributeConflict, err.Error())
+			return nil, NewComponoError(ErrAttributeConflict, err.Error())
 		default:
-			return NewComponoError(ErrRender, err.Error())
+			return nil, NewComponoError(ErrRender, err.Error())
 		}
 	}
-	return nil
+	return newDiagnostics(root, sourcesOf(root, source, cfg.globalComponents), rendered), nil
 }
 
 func (c *compono) Parser() parser.Parser {
@@ -171,6 +171,19 @@ func (c *compono) newConvertConfig(opts ...ConvertOption) (*convertConfig, error
 		seen[comp.name] = true
 	}
 	return cfg, nil
+}
+
+func sourcesOf(root ast.Node, source []byte, globals []*globalComponentNode) map[ast.Node][]byte {
+	sources := map[ast.Node][]byte{root: source}
+	addGlobalSources(sources, globals)
+	return sources
+}
+
+func addGlobalSources(sources map[ast.Node][]byte, globals []*globalComponentNode) {
+	for _, g := range globals {
+		sources[g.node] = g.source
+		addGlobalSources(sources, g.subComponents)
+	}
 }
 
 func (c *compono) newGlobalWrapper(injected []*globalComponentNode) ast.Node {

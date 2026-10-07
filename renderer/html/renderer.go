@@ -23,7 +23,9 @@ type renderer struct {
 	errorStylesheet string
 	attributeHook   attributeHookFunc
 	frameStack      []frame
+	callNodes       []ast.Node
 	attrErr         error
+	diagnostics     []Diagnostic
 }
 
 func NewRenderer(log logger.Logger) *renderer {
@@ -67,7 +69,7 @@ func NewRenderer(log logger.Logger) *renderer {
 	return r
 }
 
-func (r *renderer) Render(writer io.Writer, root ast.Node, opts Options) error {
+func (r *renderer) Render(writer io.Writer, root ast.Node, opts Options) ([]Diagnostic, error) {
 	cr := NewRenderer(logger.Scoped(r.logger))
 	cr.root = root
 	cr.attributeHook = opts.AttributeHook
@@ -75,15 +77,17 @@ func (r *renderer) Render(writer io.Writer, root ast.Node, opts Options) error {
 
 	out := cr.render(root)
 	if cr.attrErr != nil {
-		return cr.attrErr
+		return nil, cr.attrErr
 	}
+
+	out, diagnostics := cr.takeDiagnostics(out)
 
 	_, err := writer.Write([]byte(out))
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	return nil
+	return diagnostics, nil
 }
 
 func (r *renderer) render(node ast.Node) string {

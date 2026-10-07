@@ -16,16 +16,18 @@ type attributeHookFunc = attrhook.AttributeHookFunc
 
 var attributeNamePattern = regexp.MustCompile(`^[a-z][a-z0-9-]*$`)
 
-func (r *renderer) pushLocalFrame(name string) {
+func (r *renderer) pushLocalFrame(name string, call ast.Node) {
 	r.frameStack = append(r.frameStack, frame{Name: name, Kind: attrhook.FrameLocal})
+	r.callNodes = append(r.callNodes, call)
 }
 
-func (r *renderer) pushGlobalFrame(name string, def ast.Node) {
+func (r *renderer) pushGlobalFrame(name string, def ast.Node, call ast.Node) {
 	r.frameStack = append(r.frameStack, frame{
 		Name:      name,
 		Kind:      attrhook.FrameGlobal,
 		ScopePath: globalScopePath(def),
 	})
+	r.callNodes = append(r.callNodes, call)
 }
 
 func (r *renderer) popFrame() {
@@ -33,6 +35,7 @@ func (r *renderer) popFrame() {
 		return
 	}
 	r.frameStack = r.frameStack[:len(r.frameStack)-1]
+	r.callNodes = r.callNodes[:len(r.callNodes)-1]
 }
 
 func globalScopePath(def ast.Node) []string {

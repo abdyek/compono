@@ -172,6 +172,7 @@ func (ew *errorWrapper) createError(errRuleName string, node ast.Node, title, ms
 		errMsgNode,
 		selfNode,
 	})
+	errNode.SetRange(node.Range())
 
 	return errNode
 }
@@ -191,6 +192,7 @@ func (ew *errorWrapper) getCallReplacements(root ast.Node) map[ast.Node]ast.Node
 	for _, compCall := range rootCompCalls {
 		replacement := ew.getReplacementForCompCall(root, compCall)
 		if replacement != nil {
+			setErrorRanges(replacement, compCall.Range())
 			result[compCall] = replacement
 		}
 
@@ -200,6 +202,15 @@ func (ew *errorWrapper) getCallReplacements(root ast.Node) map[ast.Node]ast.Node
 	}
 
 	return result
+}
+
+func setErrorRanges(node ast.Node, rng ast.Range) {
+	if ast.IsRuleNameOneOf(node, []string{"block-error", "inline-error"}) {
+		node.SetRange(rng)
+	}
+	for _, child := range node.Children() {
+		setErrorRanges(child, rng)
+	}
 }
 
 func (ew *errorWrapper) getReplacementForCompCall(root ast.Node, compCall ast.Node) ast.Node {
@@ -494,6 +505,7 @@ func cloneNode(src ast.Node, replacements map[ast.Node]ast.Node) ast.Node {
 	node := ast.DefaultEmptyNode()
 	node.SetRule(rule.NewDynamic(src.Rule().Name()))
 	node.SetRaw(src.Raw())
+	node.SetRange(src.Range())
 
 	children := make([]ast.Node, 0, len(src.Children()))
 	for _, child := range src.Children() {

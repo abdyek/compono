@@ -47,7 +47,7 @@ func (cc *compCall) Render() string {
 		if localCompDefContent == nil {
 			return ""
 		}
-		cc.renderer.pushLocalFrame(strings.TrimSpace(string(compCallName.Raw())))
+		cc.renderer.pushLocalFrame(strings.TrimSpace(string(compCallName.Raw())), cc.Node())
 		defer cc.renderer.popFrame()
 		if inlineCompCall {
 			return cc.renderInlineCompCall(strings.TrimSpace(string(compCallName.Raw())), localCompDefContent)
@@ -61,7 +61,7 @@ func (cc *compCall) Render() string {
 		if globalCompDefContent == nil {
 			return ""
 		}
-		cc.renderer.pushGlobalFrame(strings.TrimSpace(string(compCallName.Raw())), globalCompDef)
+		cc.renderer.pushGlobalFrame(strings.TrimSpace(string(compCallName.Raw())), globalCompDef, cc.Node())
 		defer cc.renderer.popFrame()
 		if inlineCompCall {
 			return cc.renderInlineCompCall(strings.TrimSpace(string(compCallName.Raw())), globalCompDefContent)
