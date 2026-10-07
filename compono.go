@@ -21,8 +21,8 @@ type ErrorCode int
 
 const (
 	ErrInvalidGlobalName ErrorCode = iota + 1
-	ErrGlobalAlreadyRegistered
-	ErrGlobalNotExist
+	_                              // 2: ErrGlobalAlreadyRegistered, removed in v0.7
+	_                              // 3: ErrGlobalNotExist, removed in v0.7
 	ErrInvalidAST
 	ErrRender
 	ErrUnsupportedType
@@ -38,8 +38,6 @@ const (
 
 type Compono interface {
 	Convert(source []byte, writer io.Writer, opts ...ConvertOption) error
-	RegisterGlobalComponent(string, []byte) error
-	UnregisterGlobalComponent(string) error
 	Parser() parser.Parser
 	SetParser(parser.Parser)
 	Renderer() renderer.Renderer
@@ -60,9 +58,6 @@ func New() Compono {
 	v := validator.DefaultValidator()
 	ew := errwrap.DefaultErrorWrapper()
 
-	gw := ast.DefaultEmptyNode()
-	gw.SetRule(rule.NewGlobalCompDefWrapper())
-
 	bw := ast.DefaultEmptyNode()
 	bw.SetRule(rule.NewDynamic("builtin-comp-wrapper"))
 
@@ -72,7 +67,6 @@ func New() Compono {
 		validator:      v,
 		errorWrapper:   ew,
 		logger:         log,
-		globalWrapper:  gw,
 		builtinWrapper: bw,
 	}
 
@@ -87,7 +81,6 @@ type compono struct {
 	validator      validator.Validator
 	errorWrapper   errwrap.ErrorWrapper
 	logger         logger.Logger
-	globalWrapper  ast.Node
 	builtinWrapper ast.Node
 }
 
@@ -149,38 +142,6 @@ func (c *compono) Convert(source []byte, writer io.Writer, opts ...ConvertOption
 	return nil
 }
 
-func (c *compono) RegisterGlobalComponent(name string, source []byte) error {
-	if registered := c.getGlobalCompDefByName(name); registered != nil {
-		return NewComponoError(ErrGlobalAlreadyRegistered, fmt.Sprintf("cannot register global component %q: already registered", name))
-	}
-
-	parsed, err := c.newGlobalComponentNode(name, source)
-	if err != nil {
-		return err
-	}
-
-	c.globalWrapper.SetChildren(append([]ast.Node{parsed}, c.globalWrapper.Children()...))
-
-	return nil
-}
-
-func (c *compono) UnregisterGlobalComponent(name string) error {
-	if registered := c.getGlobalCompDefByName(name); registered == nil {
-		return NewComponoError(ErrGlobalNotExist, fmt.Sprintf("cannot unregister global component %q: does not exist", name))
-	}
-
-	globalComps := ast.FilterNodes(c.globalWrapper.Children(), func(gc ast.Node) bool {
-		globalCompName := ast.FindNodeByRuleName(gc.Children(), "global-comp-name")
-		if string(globalCompName.Raw()) == name {
-			return false
-		}
-		return true
-	})
-
-	c.globalWrapper.SetChildren(globalComps)
-	return nil
-}
-
 func (c *compono) Parser() parser.Parser {
 	return c.parser
 }
@@ -221,56 +182,6 @@ func (c *compono) SetLogger(logger logger.Logger) {
 	c.logger = logger
 }
 
-func (c *compono) getGlobalCompDefByName(name string) ast.Node {
-	for _, gcd := range c.globalWrapper.Children() {
-		if gcd.Rule().Name() != "global-comp-def" {
-			continue
-		}
-		for _, child := range gcd.Children() {
-			if child.Rule().Name() == "global-comp-name" && name == string(child.Raw()) {
-				return gcd
-			}
-		}
-	}
-	return nil
-}
-
-func (c *compono) cloneGlobalComponents() []ast.Node {
-	children := c.globalWrapper.Children()
-	if len(children) == 0 {
-		return nil
-	}
-
-	cloned := make([]ast.Node, len(children))
-	for i, child := range children {
-		cloned[i] = c.cloneNode(child)
-	}
-	return cloned
-}
-
-func (c *compono) cloneNode(node ast.Node) ast.Node {
-	if node == nil {
-		return nil
-	}
-
-	clone := ast.DefaultEmptyNode()
-	clone.SetRule(node.Rule())
-	clone.SetRaw(node.Raw())
-
-	children := node.Children()
-	if len(children) > 0 {
-		clonedChildren := make([]ast.Node, len(children))
-		for i, child := range children {
-			clonedChild := c.cloneNode(child)
-			clonedChild.SetParent(clone)
-			clonedChildren[i] = clonedChild
-		}
-		clone.SetChildren(clonedChildren)
-	}
-
-	return clone
-}
-
 func (c *compono) newConvertConfig(opts ...ConvertOption) (*convertConfig, error) {
 	cfg := &convertConfig{}
 	for _, opt := range opts {
@@ -296,7 +207,6 @@ func (c *compono) newGlobalWrapper(injected []*globalComponentNode) ast.Node {
 		c.buildGlobalCompDefNode(node)
 		children = append(children, node.node)
 	}
-	children = append(children, c.cloneGlobalComponents()...)
 	gw.SetChildren(children)
 
 	for _, child := range gw.Children() {
