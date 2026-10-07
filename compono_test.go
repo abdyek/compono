@@ -57,18 +57,20 @@ func (s *componoTestSuite) TestGolden() {
 		}
 
 		var buf bytes.Buffer
-		_, err = comp.Convert([]byte(strings.TrimSpace(string(input))), &buf, opts...)
+		diags, err := comp.Convert([]byte(strings.TrimSpace(string(input))), &buf, opts...)
 		assert.Nil(s.T(), err)
 
+		baseName := strings.TrimSuffix(name, ".comp")
 		goldenPath := filepath.Join(
 			"testdata/output",
-			strings.TrimSuffix(name, ".comp")+".golden",
+			baseName+".golden",
 		)
 
 		golden, err := os.ReadFile(goldenPath)
 		require.Nil(s.T(), err, "golden file missing")
 
 		assert.Equal(s.T(), strings.TrimSpace(string(golden)), buf.String(), "from %s", inputPath)
+		assert.Equal(s.T(), readDiagnosticsGolden(s.T(), filepath.Join("testdata/output", baseName+".diag")), formatDiagnostics(diags), "from %s", inputPath)
 	}
 }
 
@@ -99,22 +101,24 @@ func (s *componoTestSuite) TestGoldenForWithGlobalComponent() {
 		opts = append(opts, WithGlobalComponent(strings.TrimSuffix(name, ".comp"), []byte(strings.TrimSpace(string(input)))))
 
 		var buf bytes.Buffer
-		_, err = comp.Convert(
+		diags, err := comp.Convert(
 			[]byte(`{{ `+strings.TrimSuffix(name, ".comp")+` }}`),
 			&buf,
 			opts...,
 		)
 		assert.Nil(s.T(), err)
 
+		baseName := strings.TrimSuffix(name, ".comp")
 		goldenPath := filepath.Join(
 			"testdata/global_output",
-			strings.TrimSuffix(name, ".comp")+".golden",
+			baseName+".golden",
 		)
 
 		golden, err := os.ReadFile(goldenPath)
 		require.Nil(s.T(), err, "golden file missing")
 
 		assert.Equal(s.T(), strings.TrimSpace(string(golden)), buf.String(), "from %s", inputPath)
+		assert.Equal(s.T(), readDiagnosticsGolden(s.T(), filepath.Join("testdata/global_output", baseName+".diag")), formatDiagnostics(diags), "from %s", inputPath)
 	}
 }
 
@@ -170,10 +174,11 @@ func (s *componoTestSuite) TestGoldenForScopes() {
 		opts := buildScopeOpts(s.T(), filepath.Join(caseDir, "global"))
 
 		var buf bytes.Buffer
-		_, err = comp.Convert([]byte(strings.TrimSpace(string(input))), &buf, opts...)
+		diags, err := comp.Convert([]byte(strings.TrimSpace(string(input))), &buf, opts...)
 		assert.Nil(s.T(), err)
 
 		assert.Equal(s.T(), strings.TrimSpace(string(golden)), buf.String(), "case %s", caseName)
+		assert.Equal(s.T(), readDiagnosticsGolden(s.T(), filepath.Join(caseDir, "output.diag")), formatDiagnostics(diags), "case %s", caseName)
 	}
 }
 

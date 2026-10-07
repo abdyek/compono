@@ -1,0 +1,6 @@
+# Layout
+
+{{ CARD }}
+
+~ CARD
+Hi {{ FOO }}

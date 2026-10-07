@@ -1,0 +1,1 @@
+invalid-component-usage GLOBAL 4:9-4:26 global:GLOBAL>local:COMP_WRAPPER

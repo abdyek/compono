@@ -1,0 +1,2 @@
+infinite-component-call - 11:1-11:8 local:A>local:B
+infinite-component-call - 7:1-7:8 local:B>local:A
