@@ -52,6 +52,9 @@ func (cc *compCall) Render() string {
 		if localCompDefContent == nil {
 			return ""
 		}
+		if title, message, ok := errwrap.CallArgTypeError(cc.renderer.root, cc.Node(), localCompDef, invokerChain(cc.Invoker())); ok {
+			return cc.renderer.recordDiagnostic(cc.Node(), title, message, ast.IsRuleName(cc.Node(), "block-comp-call"))
+		}
 		cc.renderer.pushLocalFrame(strings.TrimSpace(string(compCallName.Raw())), cc.Node())
 		defer cc.renderer.popFrame()
 		if inlineCompCall {
@@ -66,6 +69,9 @@ func (cc *compCall) Render() string {
 		if globalCompDefContent == nil {
 			return ""
 		}
+		if title, message, ok := errwrap.CallArgTypeError(cc.renderer.root, cc.Node(), globalCompDef, invokerChain(cc.Invoker())); ok {
+			return cc.renderer.recordDiagnostic(cc.Node(), title, message, ast.IsRuleName(cc.Node(), "block-comp-call"))
+		}
 		cc.renderer.pushGlobalFrame(strings.TrimSpace(string(compCallName.Raw())), globalCompDef, cc.Node())
 		defer cc.renderer.popFrame()
 		if inlineCompCall {
@@ -76,6 +82,9 @@ func (cc *compCall) Render() string {
 
 	builtinComp := cc.renderer.findBuiltinComp(string(compCallName.Raw()))
 	if builtinComp != nil {
+		if title, message, ok := errwrap.BuiltinCallError(cc.renderer.root, cc.Node(), strings.TrimSpace(string(compCallName.Raw())), invokerChain(cc.Invoker())); ok {
+			return cc.renderer.recordDiagnostic(cc.Node(), title, message, ast.IsRuleName(cc.Node(), "block-comp-call"))
+		}
 		return builtinComp.Render(cc, cc.Node())
 	}
 

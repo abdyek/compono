@@ -33,23 +33,6 @@ func wrongImageArgType() conditionAnalyzer {
 	}
 }
 
-func invalidImage() conditionAnalyzer {
-	return conditionAnalyzer{
-		conditions: []func(*wrapContext, ast.Node) bool{
-			isRuleNameOneOf("block-comp-call", "inline-comp-call"),
-			not(isInsideCompDef()),
-			isImageWithSpecificError(),
-		},
-		title: func(ctx *wrapContext, node ast.Node) string {
-			return getImageError(ctx, node).title
-		},
-		message: func(ctx *wrapContext, node ast.Node) string {
-			return getImageError(ctx, node).message
-		},
-		block: blockFromRuleName,
-	}
-}
-
 func isImageBuiltinComponent() func(*wrapContext, ast.Node) bool {
 	return func(ctx *wrapContext, node ast.Node) bool {
 		if getCompCallNameStr(node) != "IMAGE" {
@@ -61,85 +44,14 @@ func isImageBuiltinComponent() func(*wrapContext, ast.Node) bool {
 	}
 }
 
-func isImageWithSpecificError() func(*wrapContext, ast.Node) bool {
-	return func(ctx *wrapContext, node ast.Node) bool {
-		return getImageError(ctx, node).title != ""
-	}
-}
-
-func getImageError(ctx *wrapContext, node ast.Node) imageError {
-	if !ast.IsRuleNameOneOf(node, []string{"block-comp-call", "inline-comp-call"}) {
-		return imageError{}
-	}
-
-	return walkImageCallTree(ctx, node, func(target ast.Node, invokerAncestors []ast.Node) imageError {
-		return getImageErrorForCompCalls(ctx, target, invokerAncestors)
-	})
-}
-
-func walkImageCallTree(ctx *wrapContext, ownerCompCall ast.Node, visit func(ast.Node, []ast.Node) imageError) imageError {
-	seen := map[ast.Node]bool{}
-
-	var walk func(ast.Node, []ast.Node) imageError
-	walk = func(current ast.Node, invokerAncestors []ast.Node) imageError {
-		if seen[current] {
-			return imageError{}
-		}
-		seen[current] = true
-
-		if getCompCallNameStr(current) == "IMAGE" {
-			if err := visit(current, invokerAncestors); err.title != "" {
-				return err
-			}
-		}
-
-		compName := getCompCallNameStr(current)
-		if compName == "" {
-			return imageError{}
-		}
-
-		compDef := ast.FindCompDef(ctx.root, current, compName)
-		if compDef == nil {
-			return imageError{}
-		}
-
-		compDefContent := getCompDefContent(compDef)
-		if compDefContent == nil {
-			return imageError{}
-		}
-
-		for _, nested := range ast.FilterNodesInDefContent(compDefContent, func(child ast.Node) bool {
-			return ast.IsRuleNameOneOf(child, []string{"block-comp-call", "inline-comp-call"})
-		}) {
-			if err := walk(nested, append([]ast.Node{current}, invokerAncestors...)); err.title != "" {
-				return err
-			}
-		}
-
-		return imageError{}
-	}
-
-	return walk(ownerCompCall, ast.GetAncestors(ownerCompCall))
-}
-
-func getImageErrorForCompCalls(ctx *wrapContext, targetCompCall ast.Node, invokerAncestors []ast.Node) imageError {
-	if getCompCallNameStr(targetCompCall) != "IMAGE" {
-		return imageError{}
-	}
-
-	targetCompDef := ast.FindCompDef(ctx.root, targetCompCall, "IMAGE")
-	if targetCompDef == nil || !ast.IsRuleName(targetCompDef, "builtin-comp") {
-		return imageError{}
-	}
-
-	media := resolveImageArg(ctx, targetCompCall, invokerAncestors, "media")
+func imageValueError(media, alt ast.ResolvedValue) imageError {
 	if key := resolvedValueMissingContextKey(media); key != "" {
 		return imageError{
 			title:   "Unknown key",
 			message: "The key **" + key + "** is not injected.",
 		}
 	}
-	if key := resolvedValueMissingContextKey(resolveImageArg(ctx, targetCompCall, invokerAncestors, "alt")); key != "" {
+	if key := resolvedValueMissingContextKey(alt); key != "" {
 		return imageError{
 			title:   "Unknown key",
 			message: "The key **" + key + "** is not injected.",
@@ -160,15 +72,6 @@ func getImageErrorForCompCalls(ctx *wrapContext, targetCompCall ast.Node, invoke
 	}
 
 	return imageError{}
-}
-
-func resolveImageArg(ctx *wrapContext, targetCompCall ast.Node, invokerAncestors []ast.Node, name string) ast.ResolvedValue {
-	arg := ast.GetCompCallArgByParamName(ast.GetCompCallArgsFromCompCall(targetCompCall), name)
-	if arg != nil {
-		return ast.ResolveCompCallArgValue(ctx.root, arg, invokerAncestors, targetCompCall)
-	}
-
-	return ast.ResolveParamDefaultFromCompCall(ctx.root, targetCompCall, name)
 }
 
 func getImageUnsupportedMimeTypeError(media ast.ResolvedValue) imageError {

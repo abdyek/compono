@@ -168,6 +168,13 @@ func isKnownComponent() func(*wrapContext, ast.Node) bool {
 	}
 }
 
+func isNotBuiltinComponent() func(*wrapContext, ast.Node) bool {
+	return func(ctx *wrapContext, node ast.Node) bool {
+		compDef := ast.FindCompDef(ctx.root, node, getCompCallNameStr(node))
+		return !ast.IsRuleName(compDef, "builtin-comp")
+	}
+}
+
 func hasUnknownResolvedCompArg() func(*wrapContext, ast.Node) bool {
 	return func(ctx *wrapContext, compCall ast.Node) bool {
 		compCallName := getCompCallNameStr(compCall)

@@ -2,6 +2,7 @@ package errwrap
 
 import (
 	"github.com/umono-cms/compono/ast"
+	"github.com/umono-cms/compono/builtin"
 	"github.com/umono-cms/compono/util"
 )
 
@@ -60,6 +61,45 @@ func CallArgsError(root, compCall ast.Node, invokerAncestors []ast.Node) (title,
 		}
 	}
 	return "", "", false
+}
+
+// CallArgTypeError returns the error of a call to the local or global
+// component compDef whose arguments forwarded from a parameter
+// (`n = value`, `n = items[0]`) resolve to a value of the wrong type.
+// invokerAncestors are as for ast.ResolveCompCallArgValue.
+func CallArgTypeError(root, call, compDef ast.Node, invokerAncestors []ast.Node) (title, message string, ok bool) {
+	paramTypeMap := getCompDefParamTypeMap(compDef)
+	if paramTypeMap == nil {
+		return "", "", false
+	}
+
+	wrongType := []string{}
+	for _, arg := range ast.GetCompCallArgsFromCompCall(call) {
+		if !ast.IsRuleName(arg, "comp-call-arg") {
+			continue
+		}
+		if ast.GetTypeFromCompCallArg(arg) != "param" {
+			continue
+		}
+
+		name := ast.GetArgNameFromCompCallArg(arg)
+		expected, hasExpected := paramTypeMap[name]
+		if !hasExpected || expected == "" {
+			continue
+		}
+
+		resolved := ast.ResolveCompCallArgValue(root, arg, invokerAncestors, call)
+		if resolved.Type == "" || resolvedValueMissingContextKey(resolved) != "" || resolved.Type == expected {
+			continue
+		}
+
+		wrongType = appendUniqueStrings(wrongType, name)
+	}
+
+	if len(wrongType) == 0 {
+		return "", "", false
+	}
+	return "Wrong argument type", wrongArgTypeNamesMsg(wrongType), true
 }
 
 // ParamCompCallError returns the error of a call through a component
@@ -126,10 +166,10 @@ func ParamCompCallError(root, paramRef ast.Node, value ast.ResolvedValue, compDe
 		}
 
 		actualType := ast.GetTypeFromCompCallArg(arg)
-		if actualType == "context" {
+		if actualType == "context" || actualType == "param" {
 			actualType = ast.ResolveCompCallArgValue(root, arg, invokerAncestors, paramRef).Type
 		}
-		if actualType == "" || actualType == "param" || actualType == expectedType {
+		if actualType == "" || actualType == expectedType {
 			continue
 		}
 
@@ -147,6 +187,56 @@ func ParamCompCallError(root, paramRef ast.Node, value ast.ResolvedValue, compDe
 			}
 			return "Duplicate argument", duplicateArgumentMsg(name, value.Raw), true
 		}
+	}
+
+	return "", "", false
+}
+
+// BuiltinCallError returns the error of a call to the built-in component
+// name. call is the call or the parameter reference that renders the
+// built-in, and its arguments, explicit or bound, are resolved with
+// invokerAncestors as for ast.ResolveFrameParam.
+func BuiltinCallError(root, call ast.Node, name string, invokerAncestors []ast.Node) (title, message string, ok bool) {
+	if name == "IMAGE" {
+		media := ast.ResolveFrameParam(root, call, "media", invokerAncestors)
+		alt := ast.ResolveFrameParam(root, call, "alt", invokerAncestors)
+		if err := imageValueError(media, alt); err.title != "" {
+			return err.title, err.message, true
+		}
+	}
+
+	definition, found := builtin.FindDefinition(name)
+	if !found {
+		return "", "", false
+	}
+
+	mismatches := []builtinSchemaMismatch{}
+	for _, param := range definition.Params {
+		_, given := ast.ResolveFrameArg(root, call, param.Name, invokerAncestors)
+		if !given && !param.IsRequired {
+			continue
+		}
+
+		value := ast.ResolveFrameParam(root, call, param.Name, invokerAncestors)
+		if value.IsZero() || resolvedValueMissingContextKey(value) != "" || builtin.MatchesResolvedValue(param.Schema, value) {
+			continue
+		}
+
+		mismatches = append(mismatches, builtinSchemaMismatch{
+			name:       param.Name,
+			diagnostic: builtinParamDiagnostic(param, value),
+		})
+	}
+
+	if len(mismatches) > 0 {
+		if diagnostic := firstBuiltinSchemaMismatchDiagnostic(mismatches); diagnostic.Title != "" {
+			return diagnostic.Title, diagnostic.Message, true
+		}
+		names := make([]string, 0, len(mismatches))
+		for _, m := range mismatches {
+			names = appendUniqueStrings(names, m.name)
+		}
+		return "Invalid built-in arguments", builtinSchemaMismatchNamesMsg(name, names), true
 	}
 
 	return "", "", false
