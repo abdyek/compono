@@ -25,100 +25,38 @@ type invalidContextKeyNotation struct {
 }
 
 func (s *componoTestSuite) TestGolden() {
-	inputFiles, err := filepath.Glob("testdata/input/*.comp")
+	caseDirs, err := filepath.Glob("testdata/*")
 	require.Nil(s.T(), err)
-	require.NotEmpty(s.T(), inputFiles, "no .comp files found")
+	require.NotEmpty(s.T(), caseDirs, "no golden test cases found")
 
-	for _, inputPath := range inputFiles {
-		name := filepath.Base(inputPath)
-		input, err := os.ReadFile(inputPath)
-		require.Nil(s.T(), err)
-
-		globalFiles, err := filepath.Glob("testdata/input/global/" + strings.TrimSuffix(name, ".comp") + "/*.comp")
-		require.Nil(s.T(), err)
-
-		comp := New()
-		comp.Logger().SetLogLevel(logger.All)
-
-		opts := []ConvertOption{}
-		for _, gPath := range globalFiles {
-			globalCompName := filepath.Base(gPath)
-			globalInput, err := os.ReadFile(gPath)
+	for _, caseDir := range caseDirs {
+		caseName := filepath.Base(caseDir)
+		s.Run(caseName, func() {
+			input, err := os.ReadFile(filepath.Join(caseDir, "input.comp"))
 			require.Nil(s.T(), err)
 
-			opts = append(opts, WithGlobalComponent(strings.TrimSuffix(globalCompName, ".comp"), []byte(strings.TrimSpace(string(globalInput)))))
-		}
-
-		contextPath := filepath.Join("testdata/input/context", strings.TrimSuffix(name, ".comp")+".json")
-		if _, err := os.Stat(contextPath); err == nil {
-			contextValues, err := readContextFixture(contextPath)
-			require.Nil(s.T(), err)
-			opts = append(opts, WithContext(contextValues))
-		}
-
-		var buf bytes.Buffer
-		diags, err := comp.Convert([]byte(strings.TrimSpace(string(input))), &buf, opts...)
-		assert.Nil(s.T(), err)
-
-		baseName := strings.TrimSuffix(name, ".comp")
-		goldenPath := filepath.Join(
-			"testdata/output",
-			baseName+".golden",
-		)
-
-		golden, err := os.ReadFile(goldenPath)
-		require.Nil(s.T(), err, "golden file missing")
-
-		assert.Equal(s.T(), strings.TrimSpace(string(golden)), buf.String(), "from %s", inputPath)
-		assert.Equal(s.T(), readDiagnosticsGolden(s.T(), filepath.Join("testdata/output", baseName+".diag")), formatDiagnostics(diags), "from %s", inputPath)
-	}
-}
-
-func (s *componoTestSuite) TestGoldenForWithGlobalComponent() {
-	inputFiles, err := filepath.Glob("testdata/global_input/*.comp")
-	require.Nil(s.T(), err)
-	require.NotEmpty(s.T(), inputFiles, "no .comp files found")
-
-	for _, inputPath := range inputFiles {
-		name := filepath.Base(inputPath)
-		input, err := os.ReadFile(inputPath)
-		require.Nil(s.T(), err)
-
-		globalFiles, err := filepath.Glob("testdata/global_input/global/" + strings.TrimSuffix(name, ".comp") + "/*.comp")
-		require.Nil(s.T(), err)
-
-		comp := New()
-		comp.Logger().SetLogLevel(logger.All)
-
-		opts := []ConvertOption{}
-		for _, gPath := range globalFiles {
-			globalCompName := filepath.Base(gPath)
-			globalInput, err := os.ReadFile(gPath)
+			golden, err := os.ReadFile(filepath.Join(caseDir, "output.golden"))
 			require.Nil(s.T(), err)
 
-			opts = append(opts, WithGlobalComponent(strings.TrimSuffix(globalCompName, ".comp"), []byte(strings.TrimSpace(string(globalInput)))))
-		}
-		opts = append(opts, WithGlobalComponent(strings.TrimSuffix(name, ".comp"), []byte(strings.TrimSpace(string(input)))))
+			comp := New()
+			comp.Logger().SetLogLevel(logger.All)
 
-		var buf bytes.Buffer
-		diags, err := comp.Convert(
-			[]byte(`{{ `+strings.TrimSuffix(name, ".comp")+` }}`),
-			&buf,
-			opts...,
-		)
-		assert.Nil(s.T(), err)
+			opts := buildGlobalOpts(s.T(), filepath.Join(caseDir, "global"))
 
-		baseName := strings.TrimSuffix(name, ".comp")
-		goldenPath := filepath.Join(
-			"testdata/global_output",
-			baseName+".golden",
-		)
+			contextPath := filepath.Join(caseDir, "context.json")
+			if _, err := os.Stat(contextPath); err == nil {
+				contextValues, err := readContextFixture(contextPath)
+				require.Nil(s.T(), err)
+				opts = append(opts, WithContext(contextValues))
+			}
 
-		golden, err := os.ReadFile(goldenPath)
-		require.Nil(s.T(), err, "golden file missing")
+			var buf bytes.Buffer
+			diags, err := comp.Convert([]byte(strings.TrimSpace(string(input))), &buf, opts...)
+			assert.Nil(s.T(), err)
 
-		assert.Equal(s.T(), strings.TrimSpace(string(golden)), buf.String(), "from %s", inputPath)
-		assert.Equal(s.T(), readDiagnosticsGolden(s.T(), filepath.Join("testdata/global_output", baseName+".diag")), formatDiagnostics(diags), "from %s", inputPath)
+			assert.Equal(s.T(), strings.TrimSpace(string(golden)), buf.String(), "case %s", caseName)
+			assert.Equal(s.T(), readDiagnosticsGolden(s.T(), filepath.Join(caseDir, "output.diag")), formatDiagnostics(diags), "case %s", caseName)
+		})
 	}
 }
 
@@ -154,35 +92,7 @@ func (s *componoTestSuite) TestConvertWithContextErrUnsupportedKeyNotation() {
 	assert.Contains(s.T(), compErr.Message, `invalid compono struct tag "invalid_key"`)
 }
 
-func (s *componoTestSuite) TestGoldenForScopes() {
-	caseDirs, err := filepath.Glob("testdata/scope/*")
-	require.Nil(s.T(), err)
-	require.NotEmpty(s.T(), caseDirs, "no scope test cases found")
-
-	for _, caseDir := range caseDirs {
-		caseName := filepath.Base(caseDir)
-
-		input, err := os.ReadFile(filepath.Join(caseDir, "input.comp"))
-		require.Nil(s.T(), err)
-
-		golden, err := os.ReadFile(filepath.Join(caseDir, "output.golden"))
-		require.Nil(s.T(), err)
-
-		comp := New()
-		comp.Logger().SetLogLevel(logger.All)
-
-		opts := buildScopeOpts(s.T(), filepath.Join(caseDir, "global"))
-
-		var buf bytes.Buffer
-		diags, err := comp.Convert([]byte(strings.TrimSpace(string(input))), &buf, opts...)
-		assert.Nil(s.T(), err)
-
-		assert.Equal(s.T(), strings.TrimSpace(string(golden)), buf.String(), "case %s", caseName)
-		assert.Equal(s.T(), readDiagnosticsGolden(s.T(), filepath.Join(caseDir, "output.diag")), formatDiagnostics(diags), "case %s", caseName)
-	}
-}
-
-func buildScopeOpts(t *testing.T, dir string) []ConvertOption {
+func buildGlobalOpts(t *testing.T, dir string) []ConvertOption {
 	t.Helper()
 
 	if _, err := os.Stat(dir); os.IsNotExist(err) {
@@ -202,7 +112,7 @@ func buildScopeOpts(t *testing.T, dir string) []ConvertOption {
 		src, err := os.ReadFile(cPath)
 		require.Nil(t, err)
 
-		subOpts := buildScopeOpts(t, filepath.Join(dir, name))
+		subOpts := buildGlobalOpts(t, filepath.Join(dir, name))
 
 		opts = append(opts, WithGlobalComponent(name, []byte(strings.TrimSpace(string(src))), subOpts...))
 	}

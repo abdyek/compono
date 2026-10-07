@@ -1,6 +1,7 @@
 package parser
 
 import (
+	"io/fs"
 	"os"
 	"path/filepath"
 	"testing"
@@ -212,7 +213,7 @@ func TestParseRangesMatchRaw(t *testing.T) {
 		walk(node)
 	}
 
-	rootFiles, err := filepath.Glob("../testdata/input/*.comp")
+	rootFiles, err := filepath.Glob("../testdata/*/input.comp")
 	require.NoError(t, err)
 	for _, path := range rootFiles {
 		source, err := os.ReadFile(path)
@@ -225,17 +226,28 @@ func TestParseRangesMatchRaw(t *testing.T) {
 		assertRanges(t, path, source, node)
 	}
 
-	globalFiles, err := filepath.Glob("../testdata/input/global/*/*.comp")
+	globalDirs, err := filepath.Glob("../testdata/*/global")
 	require.NoError(t, err)
-	for _, path := range globalFiles {
-		source, err := os.ReadFile(path)
+	for _, dir := range globalDirs {
+		err := filepath.WalkDir(dir, func(path string, d fs.DirEntry, walkErr error) error {
+			require.NoError(t, walkErr)
+			if d.IsDir() {
+				return nil
+			}
+			if filepath.Ext(path) != ".comp" {
+				return nil
+			}
+			source, err := os.ReadFile(path)
+			require.NoError(t, err)
+
+			node := ast.DefaultEmptyNode()
+			node.SetRule(rule.NewGlobalCompDef())
+
+			node = p.Parse(source, node)
+			assertRanges(t, path, source, node)
+			return nil
+		})
 		require.NoError(t, err)
-
-		node := ast.DefaultEmptyNode()
-		node.SetRule(rule.NewGlobalCompDef())
-
-		node = p.Parse(source, node)
-		assertRanges(t, path, source, node)
 	}
 }
 
