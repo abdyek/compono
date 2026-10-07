@@ -61,7 +61,7 @@ func hookBuiltinNames(calls []hookCall) []string {
 
 func (s *componoTestSuite) convertWithOpts(source string, opts ...ConvertOption) (string, error) {
 	var buf bytes.Buffer
-	err := New().Convert([]byte(source), &buf, opts...)
+	_, err := New().Convert([]byte(source), &buf, opts...)
 	return buf.String(), err
 }
 

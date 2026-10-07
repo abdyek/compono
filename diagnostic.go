@@ -1,7 +1,11 @@
 package compono
 
 import (
+	"slices"
+	"strings"
+
 	"github.com/umono-cms/compono/ast"
+	"github.com/umono-cms/compono/renderer"
 )
 
 // DiagnosticCode is the fixed name of the kind of a diagnostic. It is the
@@ -70,4 +74,80 @@ type Call struct {
 	Source []string
 	// Range is the range of the call in Source.
 	Range Range
+}
+
+func newDiagnostics(root ast.Node, sources map[ast.Node][]byte, rendered []renderer.Diagnostic) []Diagnostic {
+	if len(rendered) == 0 {
+		return nil
+	}
+	diags := make([]Diagnostic, 0, len(rendered))
+	for _, r := range rendered {
+		var calls []Call
+		for _, c := range r.Calls {
+			calls = append(calls, Call{
+				Name:   c.Name,
+				Kind:   c.Kind,
+				Source: sourcePath(c.Node),
+				Range:  rangeOf(root, sources, c.Node),
+			})
+		}
+		diags = append(diags, Diagnostic{
+			Code:    DiagnosticCode(strings.ReplaceAll(strings.ToLower(r.Title), " ", "-")),
+			Message: r.Message,
+			Source:  sourcePath(r.Node),
+			Range:   rangeOf(root, sources, r.Node),
+			Calls:   calls,
+		})
+	}
+	return diags
+}
+
+func sourcePath(node ast.Node) []string {
+	var names []string
+	for cur := node; cur != nil; cur = cur.Parent() {
+		if ast.IsRuleName(cur, "global-comp-def") {
+			names = append(names, globalCompName(cur))
+		}
+	}
+	if len(names) == 0 {
+		return nil
+	}
+	slices.Reverse(names)
+	return names
+}
+
+func globalCompName(node ast.Node) string {
+	nameNode := ast.FindNodeByRuleName(node.Children(), "global-comp-name")
+	if nameNode == nil {
+		return ""
+	}
+	return strings.TrimSpace(string(nameNode.Raw()))
+}
+
+func sourceDef(root, node ast.Node) ast.Node {
+	for cur := node; cur != nil; cur = cur.Parent() {
+		if ast.IsRuleName(cur, "global-comp-def") {
+			return cur
+		}
+	}
+	return root
+}
+
+func rangeOf(root ast.Node, sources map[ast.Node][]byte, node ast.Node) Range {
+	source := sources[sourceDef(root, node)]
+	rng := node.Range()
+	return Range{
+		Start: positionIn(source, rng.Start),
+		End:   positionIn(source, rng.End),
+	}
+}
+
+func positionIn(source []byte, offset int) Position {
+	if offset < 0 {
+		offset = 0
+	}
+	if offset > len(source) {
+		offset = len(source)
+	}
+	return ast.PositionAt(source, offset)
 }

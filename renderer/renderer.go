@@ -11,8 +11,14 @@ import (
 // Options holds the settings of a single Render call.
 type Options = html.Options
 
+// Diagnostic is an error element written to the output.
+type Diagnostic = html.Diagnostic
+
+// Call is a component call on the render stack.
+type Call = html.Call
+
 type Renderer interface {
-	Render(writer io.Writer, root ast.Node, opts Options) error
+	Render(writer io.Writer, root ast.Node, opts Options) ([]Diagnostic, error)
 }
 
 func DefaultRenderer(log logger.Logger) Renderer {

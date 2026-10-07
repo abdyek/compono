@@ -19,6 +19,7 @@ func (f convertOptionFunc) applyConvert(c *compono, cfg *convertConfig) error {
 type globalComponentNode struct {
 	name          string
 	node          ast.Node
+	source        []byte
 	isolated      bool
 	subComponents []*globalComponentNode
 }
@@ -77,6 +78,7 @@ func (o *globalComponentOption) applyConvert(c *compono, cfg *convertConfig) err
 	node := &globalComponentNode{
 		name:          o.name,
 		node:          globalNode,
+		source:        o.source,
 		isolated:      subCfg.isolatedScope,
 		subComponents: subCfg.globalComponents,
 	}
