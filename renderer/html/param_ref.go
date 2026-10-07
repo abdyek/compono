@@ -89,6 +89,9 @@ func renderCompParamCall(r *renderer, rn renderableNode, paramRefName string) st
 
 	builtinComp := r.findBuiltinComp(target.name)
 	if builtinComp != nil {
+		if title, message, ok := errwrap.BuiltinCallError(r.root, rn.Node(), target.name, getAncestorsByInvoker(rn)); ok {
+			return r.recordDiagnostic(rn.Node(), title, message, !inlineCall)
+		}
 		return builtinComp.Render(rn.Invoker(), rn.Node())
 	}
 

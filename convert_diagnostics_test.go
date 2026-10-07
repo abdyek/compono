@@ -416,3 +416,55 @@ func TestConvertDiagnosticDropsLinkForURLUnit(t *testing.T) {
 	}}
 	assert.Equal(t, want, diags)
 }
+
+func TestConvertDiagnosticForwardedArgTypeDropsPerRender(t *testing.T) {
+	var buf bytes.Buffer
+	diags, err := New().Convert([]byte("{{ W a = [1] }}\n\n{{ W a = [\"x\"] }}\n\n~ W a = []\n{{ C n = a[0] }}\n\n~ C n = 0\nN {{ n }}"), &buf)
+	require.NoError(t, err)
+	assert.Equal(t, "<p>N 1</p>", buf.String())
+	want := []Diagnostic{{
+		Code:    CodeWrongArgumentType,
+		Message: "The parameter **n** has the wrong type.",
+		Source:  nil,
+		Range: Range{
+			Start: Position{Offset: 47, Line: 6, Column: 1},
+			End:   Position{Offset: 63, Line: 6, Column: 17},
+		},
+		Calls: []Call{{
+			Name:   "W",
+			Kind:   FrameLocal,
+			Source: nil,
+			Range: Range{
+				Start: Position{Offset: 17, Line: 3, Column: 1},
+				End:   Position{Offset: 34, Line: 3, Column: 18},
+			},
+		}},
+	}}
+	assert.Equal(t, want, diags)
+}
+
+func TestConvertDiagnosticImageDropsPerRender(t *testing.T) {
+	var buf bytes.Buffer
+	diags, err := New().Convert([]byte("{{ CARD m = \"image/jpeg\" }}\n\n{{ CARD m = \"image/svg+xml\" }}\n\n~ CARD m = \"\"\n{{ IMAGE media = { url: \"/a.jpg\", width: 1, height: 1, mime-type: m } alt = \"a\" }}"), &buf)
+	require.NoError(t, err)
+	assert.Equal(t, `<img src="/a.jpg" alt="a" width="1" height="1">`, buf.String())
+	want := []Diagnostic{{
+		Code:    CodeUnsupportedMimeType,
+		Message: "The mime-type **image/svg+xml** is unsupported.",
+		Source:  nil,
+		Range: Range{
+			Start: Position{Offset: 75, Line: 6, Column: 1},
+			End:   Position{Offset: 157, Line: 6, Column: 83},
+		},
+		Calls: []Call{{
+			Name:   "CARD",
+			Kind:   FrameLocal,
+			Source: nil,
+			Range: Range{
+				Start: Position{Offset: 29, Line: 3, Column: 1},
+				End:   Position{Offset: 59, Line: 3, Column: 31},
+			},
+		}},
+	}}
+	assert.Equal(t, want, diags)
+}

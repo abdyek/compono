@@ -118,32 +118,16 @@ func wrongArgTypeNamesMsg(wrongTypeArgNames []string) string {
 	return "The parameters **" + strings.Join(wrongTypeArgNames, "**, **") + "** have the wrong type."
 }
 
-func invalidBuiltinCompCallSchemaTitle(ctx *wrapContext, node ast.Node) string {
-	if diagnostic := getBuiltinSchemaMismatchDiagnostic(ctx, node); diagnostic.Title != "" {
-		return diagnostic.Title
-	}
-	return "Invalid built-in arguments"
-}
-
-func invalidBuiltinCompCallSchemaMsg(ctx *wrapContext, node ast.Node) string {
-	if diagnostic := getBuiltinSchemaMismatchDiagnostic(ctx, node); diagnostic.Message != "" {
-		return diagnostic.Message
-	}
-
-	mismatchedArgNames := getBuiltinSchemaMismatchArgNames(ctx, node)
-	compName := getBuiltinSchemaMismatchTargetName(ctx, node)
-	if compName == "" {
-		compName = getCompCallNameStr(node)
-	}
-	if len(mismatchedArgNames) == 0 {
+func builtinSchemaMismatchNamesMsg(compName string, names []string) string {
+	if len(names) == 0 {
 		return "One or more arguments do not match the schema of the built-in component **" + compName + "**."
 	}
 
-	if len(mismatchedArgNames) == 1 {
-		return "The parameter **" + mismatchedArgNames[0] + "** does not match the schema of the built-in component **" + compName + "**."
+	if len(names) == 1 {
+		return "The parameter **" + names[0] + "** does not match the schema of the built-in component **" + compName + "**."
 	}
 
-	return "The parameters **" + strings.Join(mismatchedArgNames, "**, **") + "** do not match the schema of the built-in component **" + compName + "**."
+	return "The parameters **" + strings.Join(names, "**, **") + "** do not match the schema of the built-in component **" + compName + "**."
 }
 
 func paramRefInRootMsg(_ *wrapContext, _ ast.Node) string {

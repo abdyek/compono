@@ -7,7 +7,6 @@ type wrapContext struct {
 	compCallChains     [][]ast.Node
 	compCallCycleCache map[ast.Node]bool
 	paramCycleClosers  map[ast.Node]string
-	bindingIssues      map[ast.Node]diagnostic
 }
 
 type conditionAnalyzer struct {
@@ -31,10 +30,7 @@ func diagnosticAnalyzers() []diagnosticAnalyzer {
 		undefinedParam(),
 		missingArg(),
 		wrongImageArgType(),
-		invalidImage(),
-		invalidBuiltinCompCallSchema(),
 		wrongArgType(),
-		boundArgumentAnalyzer{},
 		paramRefInRootContent(),
 		paramRefInLinkInRootContent(),
 		contextRefAnalyzer{},

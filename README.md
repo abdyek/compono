@@ -837,7 +837,7 @@ The part an error drops renders nothing; the rest of the output is written. For 
 
 In a markdown link, an error of a `{{ }}` unit in the text drops only that unit, and an error in the address drops the whole link: `[Docs {{ x }}](/docs)` renders `<a href="/docs">Docs </a>` when `x` cannot be used.
 
-An error that depends on the value of a parameter is found where the value is used, separately for every render. A `{{ }}` unit with an index out of range, an unknown record key, an array or record used directly, or a block component used inline drops only itself, in the component where it is written. The same unit can drop in one call and render in another:
+An error that depends on the value of a parameter is found where the value is used, separately for every render. A `{{ }}` unit with an index out of range, an unknown record key, an array or record used directly, or a block component used inline drops only itself, in the component where it is written. A call whose argument comes from a parameter, such as an `IMAGE` whose `media` is passed down or a call that forwards a value of the wrong type, is checked the same way and drops where it is written. The same unit can drop in one call and render in another:
 
 ```
 {{ ITEM list = [1] }}

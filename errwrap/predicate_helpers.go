@@ -24,12 +24,6 @@ func hasCompCallArgsNode(node ast.Node) bool {
 	return ast.FindNodeByRuleName(node.Children(), "comp-call-args") != nil
 }
 
-func isInsideCompDef() func(*wrapContext, ast.Node) bool {
-	return func(_ *wrapContext, node ast.Node) bool {
-		return findEnclosingCompDef(node) != nil
-	}
-}
-
 func any(conds ...func(*wrapContext, ast.Node) bool) func(*wrapContext, ast.Node) bool {
 	return func(ctx *wrapContext, node ast.Node) bool {
 		for _, cond := range conds {
