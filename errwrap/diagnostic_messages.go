@@ -64,14 +64,6 @@ func blockCompInsideInlineMsg(_ *wrapContext, node ast.Node) string {
 	return "The component **" + name + "** is a block component and cannot be used inline."
 }
 
-func blockParamCompInsideInlineMsg(ctx *wrapContext, node ast.Node) string {
-	name := getResolvedInlineBlockCompName(ctx, node)
-	if name == "" {
-		name = getCompCallNameStr(node)
-	}
-	return "The component **" + name + "** is a block component and cannot be used inline."
-}
-
 func undefinedParamMsg(ctx *wrapContext, node ast.Node) string {
 	undefinedArgNames := getUndefinedArgNames(ctx, node)
 	if len(undefinedArgNames) == 0 {

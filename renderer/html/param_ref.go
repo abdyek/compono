@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"github.com/umono-cms/compono/ast"
+	"github.com/umono-cms/compono/errwrap"
 )
 
 type baseParamRef struct {
@@ -48,6 +49,11 @@ func renderCompParamCall(r *renderer, rn renderableNode, paramRefName string) st
 		if localCompDefContent == nil {
 			return ""
 		}
+		if inlineCall {
+			if title, message, ok := errwrap.InlineCompValueError(target.name, localCompDef); ok {
+				return r.recordDiagnostic(rn.Node(), title, message, false)
+			}
+		}
 		r.pushLocalFrame(target.name, rn.Node())
 		defer r.popFrame()
 		if inlineCall {
@@ -61,6 +67,11 @@ func renderCompParamCall(r *renderer, rn renderableNode, paramRefName string) st
 		globalCompDefContent := ast.FindNodeByRuleName(globalCompDef.Children(), "global-comp-def-content")
 		if globalCompDefContent == nil {
 			return ""
+		}
+		if inlineCall {
+			if title, message, ok := errwrap.InlineCompValueError(target.name, globalCompDef); ok {
+				return r.recordDiagnostic(rn.Node(), title, message, false)
+			}
 		}
 		r.pushGlobalFrame(target.name, globalCompDef, rn.Node())
 		defer r.popFrame()
@@ -127,7 +138,7 @@ func (p *paramRefInLocalCompDef) Render() string {
 			return renderCompParamCall(p.renderer, p, paramRefName)
 		}
 
-		return renderParamRefValue(paramRefName, p, p.renderer)
+		return renderParamRefUnit(paramRefName, p, p.renderer)
 	}
 
 	return ""
@@ -180,7 +191,7 @@ func (p *paramRefInGlobalCompDef) Render() string {
 		return renderCompParamCall(p.renderer, p, paramRefName)
 	}
 
-	return renderParamRefValue(paramRefName, p, p.renderer)
+	return renderParamRefUnit(paramRefName, p, p.renderer)
 }
 
 func renderResolvedValue(value ast.ResolvedValue) string {
@@ -191,12 +202,15 @@ func renderResolvedValue(value ast.ResolvedValue) string {
 	return html.EscapeString(strings.TrimSpace(value.Raw))
 }
 
-func renderParamRefValue(paramName string, rn renderableNode, r *renderer) string {
-	value := resolveParamRefValue(rn, r, paramName)
-	if value.IsZero() || value.Type == "array" || value.Type == "record" {
-		return ""
+// renderParamRefUnit renders a parameter reference unit with a value. An
+// error of the resolved value drops the unit.
+func renderParamRefUnit(paramName string, rn renderableNode, r *renderer) string {
+	accessors := ast.GetParamRefAccessors(rn.Node())
+	value := ast.ResolveParamFromAncestors(r.root, paramName, nil, getAncestorsByInvoker(rn))
+	if title, message, ok := errwrap.ParamRefValueError(paramName, value, accessors); ok {
+		return r.recordDiagnostic(rn.Node(), title, message, false)
 	}
-	return renderResolvedValue(value)
+	return renderResolvedValue(ast.ApplyAccessors(value, accessors))
 }
 
 func resolveParamRefValue(rn renderableNode, r *renderer, paramName string) ast.ResolvedValue {

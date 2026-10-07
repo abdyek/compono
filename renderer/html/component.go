@@ -4,6 +4,7 @@ import (
 	"strings"
 
 	"github.com/umono-cms/compono/ast"
+	"github.com/umono-cms/compono/errwrap"
 )
 
 type compCall struct {
@@ -26,6 +27,10 @@ func (_ *compCall) Condition(invoker renderableNode, node ast.Node) bool {
 }
 
 func (cc *compCall) Render() string {
+	if title, message, ok := errwrap.CallArgsError(cc.renderer.root, cc.Node(), invokerChain(cc.Invoker())); ok {
+		return cc.renderer.recordDiagnostic(cc.Node(), title, message, ast.IsRuleName(cc.Node(), "block-comp-call"))
+	}
+
 	inlineCompCall := false
 	if ast.IsRuleName(cc.Node(), "inline-comp-call") {
 		inlineCompCall = true
