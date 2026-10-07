@@ -268,3 +268,47 @@ func TestConvertDroppedUnitRendersNothing(t *testing.T) {
 	assert.Equal(t, "<p>Hello  world</p>", buf.String())
 	assert.Len(t, diags, 2)
 }
+
+func TestConvertDiagnosticDropsOnlyUnitInLinkText(t *testing.T) {
+	var buf bytes.Buffer
+	diags, err := New().Convert([]byte("[Docs {{ label }}](/docs)"), &buf)
+	require.NoError(t, err)
+	assert.Equal(t, `<p><a href="/docs">Docs </a></p>`, buf.String())
+	want := []Diagnostic{{
+		Code:    CodeInvalidParameterUsage,
+		Message: "Parameters cannot be used in the root context.",
+		Source:  nil,
+		Range: Range{
+			Start: Position{Offset: 6, Line: 1, Column: 7},
+			End:   Position{Offset: 17, Line: 1, Column: 18},
+		},
+		Calls: nil,
+	}}
+	assert.Equal(t, want, diags)
+}
+
+func TestConvertDiagnosticDropsLinkForURLUnit(t *testing.T) {
+	var buf bytes.Buffer
+	diags, err := New().Convert([]byte("{{ COMP }}\n\n~ COMP\n[{{ label }}]({{ target }})"), &buf)
+	require.NoError(t, err)
+	assert.Equal(t, "<p></p>", buf.String())
+	want := []Diagnostic{{
+		Code:    CodeUnknownParameter,
+		Message: "The parameter **target** is not defined for this component.",
+		Source:  nil,
+		Range: Range{
+			Start: Position{Offset: 19, Line: 4, Column: 1},
+			End:   Position{Offset: 46, Line: 4, Column: 28},
+		},
+		Calls: []Call{{
+			Name:   "COMP",
+			Kind:   FrameLocal,
+			Source: nil,
+			Range: Range{
+				Start: Position{Offset: 0, Line: 1, Column: 1},
+				End:   Position{Offset: 10, Line: 1, Column: 11},
+			},
+		}},
+	}}
+	assert.Equal(t, want, diags)
+}
