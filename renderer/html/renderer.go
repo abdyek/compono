@@ -11,8 +11,7 @@ import (
 
 // Options holds the settings of a single Render call.
 type Options struct {
-	AttributeHook   attrhook.AttributeHookFunc
-	ErrorStylesheet string
+	AttributeHook attrhook.AttributeHookFunc
 }
 
 type renderingFrame struct {
@@ -25,7 +24,6 @@ type renderer struct {
 	renderableNodes []renderableNode
 	root            ast.Node
 	builtinCompMap  map[string]builtinComponent
-	errorStylesheet string
 	attributeHook   attributeHookFunc
 	frameStack      []frame
 	rendering       []renderingFrame
@@ -79,7 +77,6 @@ func (r *renderer) Render(writer io.Writer, root ast.Node, opts Options) ([]Diag
 	cr := NewRenderer(logger.Scoped(r.logger))
 	cr.root = root
 	cr.attributeHook = opts.AttributeHook
-	cr.errorStylesheet = opts.ErrorStylesheet
 
 	out := cr.render(root)
 	if cr.attrErr != nil {

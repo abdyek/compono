@@ -11,7 +11,7 @@ import (
 // Options holds the settings of a single Render call.
 type Options = html.Options
 
-// Diagnostic is an error element written to the output.
+// Diagnostic is a part of the output that an error dropped.
 type Diagnostic = html.Diagnostic
 
 // Call is a component call on the render stack.
