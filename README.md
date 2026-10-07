@@ -738,7 +738,7 @@ If a referenced key is not injected, `Convert` returns a diagnostic with:
 What renders nothing depends on how `context(...)` is used:
 
 - direct usage drops the `{{ context(...) }}` unit
-- using it in a component call drops the call
+- using it in an argument of a component call drops that call, also when the value reaches the argument through a parameter
 - default values are resolved lazily, so no error is produced unless that parameter is actually used
 
 ## Attribute Hook
@@ -836,6 +836,19 @@ A diagnostic has these fields:
 The part an error drops renders nothing; the rest of the output is written. For example, `Hello {{ FOO }} world` with an undefined `FOO` renders `<p>Hello  world</p>`.
 
 In a markdown link, an error of a `{{ }}` unit in the text drops only that unit, and an error in the address drops the whole link: `[Docs {{ x }}](/docs)` renders `<a href="/docs">Docs </a>` when `x` cannot be used.
+
+An error that depends on the value of a parameter is found where the value is used, separately for every render. A `{{ }}` unit with an index out of range, an unknown record key, an array or record used directly, or a block component used inline drops only itself, in the component where it is written. The same unit can drop in one call and render in another:
+
+```
+{{ ITEM list = [1] }}
+
+{{ ITEM list = [] }}
+
+~ ITEM list = []
+Item: {{ list[0] }}
+```
+
+renders `<p>Item: 1</p><p>Item: </p>` and returns one `array-index-out-of-range` diagnostic whose `Calls` holds the second `ITEM` call.
 
 `Convert` returns one diagnostic for each dropped part, in output order. A global component called 10 times with an error inside returns 10 diagnostics, each with its own `Calls`; grouping them is up to the application. An error that is never rendered, such as one inside a component that is never called, returns no diagnostic. The same source and options always return the same diagnostics in the same order.
 
