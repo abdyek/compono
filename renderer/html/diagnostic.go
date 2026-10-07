@@ -9,11 +9,11 @@ import (
 	"github.com/umono-cms/compono/internal/attrhook"
 )
 
-// Diagnostic is an error element written to the output.
+// Diagnostic is a part of the output that an error dropped.
 type Diagnostic struct {
 	Title   string
 	Message string
-	// Node is the node the error element is rendered from.
+	// Node is the dropped node.
 	Node ast.Node
 	// Calls are the component calls around Node, outermost first.
 	Calls []Call

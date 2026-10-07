@@ -27,7 +27,6 @@ type globalComponentNode struct {
 type convertConfig struct {
 	globalComponents []*globalComponentNode
 	contextValues    map[string]any
-	errorStylesheet  *string
 	isolatedScope    bool
 	attributeHook    AttributeHookFunc
 	attributeHookSet bool
@@ -42,7 +41,7 @@ type globalComponentOption struct {
 // WithGlobalComponent returns a ConvertOption that injects a global component
 // for a single conversion. The name must be SCREAMING_SNAKE_CASE. Sub-options
 // may include nested WithGlobalComponent calls (which become sub-components of
-// this global) and WithIsolatedScope. WithContext and WithErrorStylesheet are
+// this global) and WithIsolatedScope. WithContext and WithAttributeHook are
 // not permitted inside a global component at any depth.
 func WithGlobalComponent(name string, source []byte, opts ...ConvertOption) ConvertOption {
 	return &globalComponentOption{
@@ -64,7 +63,7 @@ func (o *globalComponentOption) applyConvert(c *compono, cfg *convertConfig) err
 			continue
 		}
 		if isConversionOption(opt) {
-			return NewComponoError(ErrConversionOptionInGlobal, fmt.Sprintf("conversion option not allowed inside global component %q: WithContext, WithErrorStylesheet, and WithAttributeHook are forbidden in global scope", o.name))
+			return NewComponoError(ErrConversionOptionInGlobal, fmt.Sprintf("conversion option not allowed inside global component %q: WithContext and WithAttributeHook are forbidden in global scope", o.name))
 		}
 		if err := opt.applyConvert(c, subCfg); err != nil {
 			return err
@@ -89,7 +88,7 @@ func (o *globalComponentOption) applyConvert(c *compono, cfg *convertConfig) err
 
 func isConversionOption(opt ConvertOption) bool {
 	switch opt.(type) {
-	case *contextOption, *errorStylesheetOption, *attributeHookOption:
+	case *contextOption, *attributeHookOption:
 		return true
 	default:
 		return false
@@ -130,24 +129,6 @@ func (o *contextOption) applyConvert(_ *compono, cfg *convertConfig) error {
 		cfg.contextValues[key] = value
 	}
 
-	return nil
-}
-
-type errorStylesheetOption struct {
-	url string
-}
-
-// WithErrorStylesheet returns a ConvertOption that sets the error stylesheet
-// URL. This option is not permitted inside WithGlobalComponent.
-func WithErrorStylesheet(url string) ConvertOption {
-	return &errorStylesheetOption{url: url}
-}
-
-func (o *errorStylesheetOption) applyConvert(_ *compono, cfg *convertConfig) error {
-	if cfg.errorStylesheet != nil {
-		return NewComponoError(ErrErrorStylesheetAlreadySet, "error stylesheet is already set: WithErrorStylesheet can be used at most once per conversion")
-	}
-	cfg.errorStylesheet = &o.url
 	return nil
 }
 

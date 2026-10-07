@@ -27,7 +27,7 @@ const (
 	ErrRender
 	ErrUnsupportedType
 	ErrUnsupportedKeyNotation
-	ErrErrorStylesheetAlreadySet
+	_ // 8: ErrErrorStylesheetAlreadySet, removed in v0.7
 	ErrConversionOptionInGlobal
 	ErrIsolatedScopeInConvert
 	ErrDuplicateSubComponent
@@ -108,14 +108,8 @@ func (c *compono) Convert(source []byte, writer io.Writer, opts ...ConvertOption
 
 	c.errorWrapper.Wrap(root)
 
-	stylesheet := ""
-	if cfg.errorStylesheet != nil {
-		stylesheet = *cfg.errorStylesheet
-	}
-
 	rendered, err := c.renderer.Render(writer, root, renderer.Options{
-		AttributeHook:   cfg.attributeHook,
-		ErrorStylesheet: stylesheet,
+		AttributeHook: cfg.attributeHook,
 	})
 	if err != nil {
 		switch {
