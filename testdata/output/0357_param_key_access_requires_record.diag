@@ -1,0 +1,5 @@
+invalid-parameter-access - 8:1-8:18 local:KEY_STRING
+invalid-parameter-access - 11:1-11:18 local:KEY_INTEGER
+invalid-parameter-access - 14:1-14:18 local:KEY_BOOL
+invalid-parameter-access - 17:1-17:18 local:KEY_COMPONENT
+invalid-parameter-access - 20:1-20:18 local:KEY_ARRAY

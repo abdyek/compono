@@ -1,0 +1,2 @@
+infinite-component-call C 2:1-2:8 global:A>global:B>global:C
+infinite-component-call A 5:1-5:8 global:A
