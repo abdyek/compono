@@ -35,7 +35,7 @@ func paramRefInLinkInRootContent() conditionAnalyzer {
 		conditions: []func(*wrapContext, ast.Node) bool{
 			isRuleName("link"),
 			isInsideRootContent(),
-			hasParamRefInLink(),
+			hasParamRefInLinkURL(),
 		},
 		title:   staticTitle("Invalid parameter usage"),
 		message: paramRefInRootMsg,
@@ -48,7 +48,7 @@ func undefinedParamRefInLink() conditionAnalyzer {
 		conditions: []func(*wrapContext, ast.Node) bool{
 			isRuleName("link"),
 			not(isInsideRootContent()),
-			hasUndefinedParamRefInLink(),
+			hasUndefinedParamRefInLinkURL(),
 		},
 		title:   staticTitle("Unknown parameter"),
 		message: undefinedParamRefsInLinkMsg,
@@ -191,29 +191,33 @@ func isUndefinedParamCompCall() func(*wrapContext, ast.Node) bool {
 	}
 }
 
-func hasParamRefInLink() func(*wrapContext, ast.Node) bool {
+func hasParamRefInLinkURL() func(*wrapContext, ast.Node) bool {
 	return func(_ *wrapContext, link ast.Node) bool {
-		return len(getParamRefsInLink(link)) > 0
+		return len(getParamRefsInLinkURL(link)) > 0
 	}
 }
 
-func hasUndefinedParamRefInLink() func(*wrapContext, ast.Node) bool {
+func hasUndefinedParamRefInLinkURL() func(*wrapContext, ast.Node) bool {
 	return func(ctx *wrapContext, link ast.Node) bool {
-		return len(getUndefinedParamRefNamesInLink(ctx, link)) > 0
+		return len(getUndefinedParamRefNamesInLinkURL(ctx, link)) > 0
 	}
 }
 
-func getParamRefsInLink(link ast.Node) []ast.Node {
-	return ast.FilterNodesInTree(link, func(node ast.Node) bool {
+func getParamRefsInLinkURL(link ast.Node) []ast.Node {
+	linkURL := ast.FindNodeByRuleName(link.Children(), "link-url")
+	if linkURL == nil {
+		return nil
+	}
+	return ast.FilterNodesInTree(linkURL, func(node ast.Node) bool {
 		return ast.IsRuleName(node, "param-ref")
 	})
 }
 
-func getUndefinedParamRefNamesInLink(ctx *wrapContext, link ast.Node) []string {
+func getUndefinedParamRefNamesInLinkURL(ctx *wrapContext, link ast.Node) []string {
 	names := []string{}
 	isUndefined := isUndefinedParamRef()
 
-	for _, paramRef := range getParamRefsInLink(link) {
+	for _, paramRef := range getParamRefsInLinkURL(link) {
 		refName := getParamRefNameStr(paramRef)
 		if refName == "" || util.InSliceString(refName, names) {
 			continue
