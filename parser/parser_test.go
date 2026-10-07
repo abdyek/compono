@@ -182,11 +182,29 @@ func TestParseSetsRanges(t *testing.T) {
 func TestParseRangesMatchRaw(t *testing.T) {
 	p := DefaultParser(logger.NewLogger())
 
+	cutRemoved := func(source []byte, r ast.Range, removed [][2]int) []byte {
+		out := []byte{}
+		pos := r.Start
+		for _, rem := range removed {
+			if rem[0] < r.Start || rem[1] > r.End {
+				continue
+			}
+			out = append(out, source[pos:rem[0]]...)
+			pos = rem[1]
+		}
+		out = append(out, source[pos:r.End]...)
+		return out
+	}
+
 	assertRanges := func(t *testing.T, path string, source []byte, node ast.Node) {
+		lineRemover, ok := node.Rule().(rule.LineRemover)
+		require.True(t, ok, "rule %q must implement rule.LineRemover", node.Rule().Name())
+		removed := lineRemover.RemovedLines(source)
+
 		var walk func(ast.Node)
 		walk = func(n ast.Node) {
 			r := n.Range()
-			assert.Equal(t, string(n.Raw()), string(source[r.Start:r.End]), "at %q", path)
+			assert.Equal(t, string(cutRemoved(source, r, removed)), string(n.Raw()), "at %q", path)
 			for _, child := range n.Children() {
 				walk(child)
 			}
@@ -200,7 +218,10 @@ func TestParseRangesMatchRaw(t *testing.T) {
 		source, err := os.ReadFile(path)
 		require.NoError(t, err)
 
-		node := p.Parse(source, ast.DefaultRootNode())
+		node := ast.DefaultEmptyNode()
+		node.SetRule(rule.NewRoot())
+
+		node = p.Parse(source, node)
 		assertRanges(t, path, source, node)
 	}
 
@@ -216,6 +237,27 @@ func TestParseRangesMatchRaw(t *testing.T) {
 		node = p.Parse(source, node)
 		assertRanges(t, path, source, node)
 	}
+}
+
+func TestParseCommentLineRanges(t *testing.T) {
+	p := DefaultParser(logger.NewLogger())
+
+	root := p.Parse([]byte("a\n// x\nb"), ast.DefaultRootNode())
+
+	assert.Equal(t, []byte("a\nb"), root.Raw())
+	assert.Equal(t, ast.Range{Start: 0, End: 8}, root.Range())
+
+	ps := ast.FilterNodesInTree(root, func(node ast.Node) bool {
+		return ast.IsRuleName(node, "p")
+	})
+	require.Len(t, ps, 1)
+	assert.Equal(t, ast.Range{Start: 0, End: 8}, ps[0].Range())
+
+	plains := ast.FilterNodesInTree(root, func(node ast.Node) bool {
+		return ast.IsRuleName(node, "plain") && string(node.Raw()) == "b"
+	})
+	require.Len(t, plains, 1)
+	assert.Equal(t, ast.Range{Start: 7, End: 8}, plains[0].Range())
 }
 
 type tree struct {
