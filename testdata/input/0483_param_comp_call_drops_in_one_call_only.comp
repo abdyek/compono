@@ -1,0 +1,12 @@
+{{ W c = A }}
+
+{{ W c = B }}
+
+~ W c = NO_MATTER
+{{ c x = "hi" }}
+
+~ A x = ""
+A {{ x }}
+
+~ B
+B
