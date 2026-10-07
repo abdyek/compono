@@ -15,6 +15,11 @@ type Options struct {
 	ErrorStylesheet string
 }
 
+type renderingFrame struct {
+	def       ast.Node
+	signature string
+}
+
 type renderer struct {
 	logger          logger.Logger
 	renderableNodes []renderableNode
@@ -23,6 +28,7 @@ type renderer struct {
 	errorStylesheet string
 	attributeHook   attributeHookFunc
 	frameStack      []frame
+	rendering       []renderingFrame
 	callNodes       []ast.Node
 	attrErr         error
 	diagnostics     []Diagnostic

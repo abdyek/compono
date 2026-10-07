@@ -443,6 +443,74 @@ func TestConvertDiagnosticForwardedArgTypeDropsPerRender(t *testing.T) {
 	assert.Equal(t, want, diags)
 }
 
+func TestConvertDiagnosticInfiniteCallPerEntry(t *testing.T) {
+	var buf bytes.Buffer
+	diags, err := New().Convert([]byte("{{ A }}\n\n{{ B }}\n\n~ A\n# a\n{{ B }}\n\n~ B\n# b\n{{ A }}"), &buf)
+	require.NoError(t, err)
+	assert.Equal(t, "<h1>a</h1><h1>b</h1><h1>b</h1><h1>a</h1>", buf.String())
+	want := []Diagnostic{
+		{
+			Code:    CodeInfiniteComponentCall,
+			Message: "The call to component **A** creates an infinite loop and was skipped.",
+			Source:  nil,
+			Range: Range{
+				Start: Position{Offset: 43, Line: 11, Column: 1},
+				End:   Position{Offset: 50, Line: 11, Column: 8},
+			},
+			Calls: []Call{
+				{
+					Name:   "A",
+					Kind:   FrameLocal,
+					Source: nil,
+					Range: Range{
+						Start: Position{Offset: 0, Line: 1, Column: 1},
+						End:   Position{Offset: 7, Line: 1, Column: 8},
+					},
+				},
+				{
+					Name:   "B",
+					Kind:   FrameLocal,
+					Source: nil,
+					Range: Range{
+						Start: Position{Offset: 26, Line: 7, Column: 1},
+						End:   Position{Offset: 33, Line: 7, Column: 8},
+					},
+				},
+			},
+		},
+		{
+			Code:    CodeInfiniteComponentCall,
+			Message: "The call to component **B** creates an infinite loop and was skipped.",
+			Source:  nil,
+			Range: Range{
+				Start: Position{Offset: 26, Line: 7, Column: 1},
+				End:   Position{Offset: 33, Line: 7, Column: 8},
+			},
+			Calls: []Call{
+				{
+					Name:   "B",
+					Kind:   FrameLocal,
+					Source: nil,
+					Range: Range{
+						Start: Position{Offset: 9, Line: 3, Column: 1},
+						End:   Position{Offset: 16, Line: 3, Column: 8},
+					},
+				},
+				{
+					Name:   "A",
+					Kind:   FrameLocal,
+					Source: nil,
+					Range: Range{
+						Start: Position{Offset: 43, Line: 11, Column: 1},
+						End:   Position{Offset: 50, Line: 11, Column: 8},
+					},
+				},
+			},
+		},
+	}
+	assert.Equal(t, want, diags)
+}
+
 func TestConvertDiagnosticImageDropsPerRender(t *testing.T) {
 	var buf bytes.Buffer
 	diags, err := New().Convert([]byte("{{ CARD m = \"image/jpeg\" }}\n\n{{ CARD m = \"image/svg+xml\" }}\n\n~ CARD m = \"\"\n{{ IMAGE media = { url: \"/a.jpg\", width: 1, height: 1, mime-type: m } alt = \"a\" }}"), &buf)

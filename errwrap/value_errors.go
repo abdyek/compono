@@ -1,6 +1,9 @@
 package errwrap
 
 import (
+	"sort"
+	"strings"
+
 	"github.com/umono-cms/compono/ast"
 	"github.com/umono-cms/compono/builtin"
 	"github.com/umono-cms/compono/util"
@@ -240,4 +243,34 @@ func BuiltinCallError(root, call ast.Node, name string, invokerAncestors []ast.N
 	}
 
 	return "", "", false
+}
+
+// CallSignature identifies what a frame renders: the values of the component
+// parameters of compDef resolved for frame. frame is a component call or a
+// parameter reference that renders compDef, and invokerAncestors are as for
+// ast.ResolveFrameParam. Entering compDef again with the same signature while
+// it is being rendered never ends.
+func CallSignature(root, frame, compDef ast.Node, invokerAncestors []ast.Node) string {
+	infos := getCompDefParamInfos(compDef)
+	compInfos := make([]compParamInfo, 0, len(infos))
+	for _, info := range infos {
+		if info.typ == "comp" {
+			compInfos = append(compInfos, info)
+		}
+	}
+	sort.Slice(compInfos, func(i, j int) bool {
+		return compInfos[i].name < compInfos[j].name
+	})
+
+	parts := make([]string, 0, len(compInfos))
+	for _, info := range compInfos {
+		parts = append(parts, info.name+"="+ast.ResolveFrameParam(root, frame, info.name, invokerAncestors).Raw)
+	}
+	return strings.Join(parts, "|")
+}
+
+// InfiniteCallError returns the error of a call to the component name that
+// enters a component already being rendered with the same signature.
+func InfiniteCallError(name string) (title, message string) {
+	return "Infinite component call", "The call to component **" + name + "** creates an infinite loop and was skipped."
 }

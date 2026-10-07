@@ -3,10 +3,7 @@ package errwrap
 import "github.com/umono-cms/compono/ast"
 
 type wrapContext struct {
-	root               ast.Node
-	compCallChains     [][]ast.Node
-	compCallCycleCache map[ast.Node]bool
-	paramCycleClosers  map[ast.Node]string
+	root ast.Node
 }
 
 type conditionAnalyzer struct {
@@ -19,11 +16,6 @@ type conditionAnalyzer struct {
 func diagnosticAnalyzers() []diagnosticAnalyzer {
 	return []diagnosticAnalyzer{
 		invalidParamDef(),
-		infiniteBlockCompCallByItself(),
-		infiniteInlineCompCallByItself(),
-		infiniteCompCallByChain(),
-		infiniteCompCallByParam(),
-		infiniteParamCompCallByChain(),
 		unknownCompCall(),
 		unknownCompParamCall(),
 		blockCompInsideInline(),

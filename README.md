@@ -850,6 +850,8 @@ Item: {{ list[0] }}
 
 renders `<p>Item: 1</p><p>Item: </p>` and returns one `array-index-out-of-range` diagnostic whose `Calls` holds the second `ITEM` call.
 
+A call that enters a component already being rendered with the same component values never ends. It is an `infinite-component-call` and drops where it is written, so in a cycle only the call that closes it drops. A component that calls itself with other component values is not a loop.
+
 `Convert` returns one diagnostic for each dropped part, in output order. A global component called 10 times with an error inside returns 10 diagnostics, each with its own `Calls`; grouping them is up to the application. An error that is never rendered, such as one inside a component that is never called, returns no diagnostic. The same source and options always return the same diagnostics in the same order.
 
 ### Error Stylesheet

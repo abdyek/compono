@@ -16,17 +16,19 @@ type attributeHookFunc = attrhook.AttributeHookFunc
 
 var attributeNamePattern = regexp.MustCompile(`^[a-z][a-z0-9-]*$`)
 
-func (r *renderer) pushLocalFrame(name string, call ast.Node) {
+func (r *renderer) pushLocalFrame(name string, def ast.Node, signature string, call ast.Node) {
 	r.frameStack = append(r.frameStack, frame{Name: name, Kind: attrhook.FrameLocal})
+	r.rendering = append(r.rendering, renderingFrame{def: def, signature: signature})
 	r.callNodes = append(r.callNodes, call)
 }
 
-func (r *renderer) pushGlobalFrame(name string, def ast.Node, call ast.Node) {
+func (r *renderer) pushGlobalFrame(name string, def ast.Node, signature string, call ast.Node) {
 	r.frameStack = append(r.frameStack, frame{
 		Name:      name,
 		Kind:      attrhook.FrameGlobal,
 		ScopePath: globalScopePath(def),
 	})
+	r.rendering = append(r.rendering, renderingFrame{def: def, signature: signature})
 	r.callNodes = append(r.callNodes, call)
 }
 
@@ -35,7 +37,18 @@ func (r *renderer) popFrame() {
 		return
 	}
 	r.frameStack = r.frameStack[:len(r.frameStack)-1]
+	r.rendering = r.rendering[:len(r.rendering)-1]
 	r.callNodes = r.callNodes[:len(r.callNodes)-1]
+}
+
+// isRendering reports whether def is being rendered with signature.
+func (r *renderer) isRendering(def ast.Node, signature string) bool {
+	for _, rf := range r.rendering {
+		if rf.def == def && rf.signature == signature {
+			return true
+		}
+	}
+	return false
 }
 
 func globalScopePath(def ast.Node) []string {
