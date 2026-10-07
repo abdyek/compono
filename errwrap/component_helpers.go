@@ -1,6 +1,7 @@
 package errwrap
 
 import (
+	"sort"
 	"strings"
 
 	"github.com/umono-cms/compono/ast"
@@ -126,52 +127,6 @@ func findEnclosingCompDef(node ast.Node) ast.Node {
 	})
 }
 
-func isInlineParamRefNode(node ast.Node) bool {
-	if !ast.IsRuleName(node, "param-ref") {
-		return false
-	}
-
-	pContent := ast.FindNode(ast.GetAncestors(node), func(anc ast.Node) bool {
-		return ast.IsRuleName(anc, "p-content")
-	})
-	if pContent != nil {
-		hasSoftBreak := false
-		for _, child := range pContent.Children() {
-			if ast.IsRuleName(child, "soft-break") {
-				hasSoftBreak = true
-			}
-		}
-		if hasSoftBreak {
-			return false
-		}
-
-		for _, child := range pContent.Children() {
-			if child == node {
-				continue
-			}
-			if ast.IsRuleName(child, "plain") && strings.TrimSpace(string(child.Raw())) == "" {
-				continue
-			}
-			return true
-		}
-		return false
-	}
-
-	return ast.FindNode(ast.GetAncestors(node), func(anc ast.Node) bool {
-		return ast.IsRuleNameOneOf(anc, []string{
-			"h1-content",
-			"h2-content",
-			"h3-content",
-			"h4-content",
-			"h5-content",
-			"h6-content",
-			"em-content",
-			"strong-content",
-			"link-text",
-		})
-	}) != nil
-}
-
 func isBlockComponent(compDef ast.Node) bool {
 	if ast.IsRuleName(compDef, "builtin-comp") {
 		nameNode := ast.FindNodeByRuleName(compDef.Children(), "builtin-comp-name")
@@ -214,8 +169,13 @@ func resolvedValueMissingContextKey(value ast.ResolvedValue) string {
 			return key
 		}
 	}
-	for _, field := range value.Fields {
-		if key := resolvedValueMissingContextKey(field); key != "" {
+	keys := make([]string, 0, len(value.Fields))
+	for k := range value.Fields {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+	for _, k := range keys {
+		if key := resolvedValueMissingContextKey(value.Fields[k]); key != "" {
 			return key
 		}
 	}

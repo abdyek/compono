@@ -246,6 +246,58 @@ func TestConvertDiagnosticOnceForBlockErrorInParagraph(t *testing.T) {
 	assert.Equal(t, want, diags)
 }
 
+func TestConvertDiagnosticParamUnitDropsPerRender(t *testing.T) {
+	var buf bytes.Buffer
+	diags, err := New().Convert([]byte("{{ L arr = [1] }}\n\n{{ L arr = [] }}\n\n~ L arr = []\nItem: {{ arr[0] }}"), &buf)
+	require.NoError(t, err)
+	assert.Equal(t, "<p>Item: 1</p><p>Item: </p>", buf.String())
+	want := []Diagnostic{{
+		Code:    CodeArrayIndexOutOfRange,
+		Message: "The index used for parameter **arr** is out of range.",
+		Source:  nil,
+		Range: Range{
+			Start: Position{Offset: 56, Line: 6, Column: 7},
+			End:   Position{Offset: 68, Line: 6, Column: 19},
+		},
+		Calls: []Call{{
+			Name:   "L",
+			Kind:   FrameLocal,
+			Source: nil,
+			Range: Range{
+				Start: Position{Offset: 19, Line: 3, Column: 1},
+				End:   Position{Offset: 35, Line: 3, Column: 17},
+			},
+		}},
+	}}
+	assert.Equal(t, want, diags)
+}
+
+func TestConvertDiagnosticBlockValueInlineDropsPerRender(t *testing.T) {
+	var buf bytes.Buffer
+	diags, err := New().Convert([]byte("{{ W c = IN }}\n\n{{ W c = BL }}\n\n~ W c = NO_MATTER\nHello {{ c }}\n\n~ IN\ninline\n\n~ BL\n# block"), &buf)
+	require.NoError(t, err)
+	assert.Equal(t, "<p>Hello inline</p><p>Hello </p>", buf.String())
+	want := []Diagnostic{{
+		Code:    CodeInvalidComponentUsage,
+		Message: "The component **BL** is a block component and cannot be used inline.",
+		Source:  nil,
+		Range: Range{
+			Start: Position{Offset: 56, Line: 6, Column: 7},
+			End:   Position{Offset: 63, Line: 6, Column: 14},
+		},
+		Calls: []Call{{
+			Name:   "W",
+			Kind:   FrameLocal,
+			Source: nil,
+			Range: Range{
+				Start: Position{Offset: 16, Line: 3, Column: 1},
+				End:   Position{Offset: 30, Line: 3, Column: 15},
+			},
+		}},
+	}}
+	assert.Equal(t, want, diags)
+}
+
 func TestConvertFatalErrorReturnsNoDiagnostics(t *testing.T) {
 	var buf bytes.Buffer
 	diags, err := New().Convert([]byte("{{ FOO }}"), &buf, WithIsolatedScope())
