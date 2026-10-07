@@ -68,7 +68,7 @@ func NewRenderer(log logger.Logger) *renderer {
 }
 
 func (r *renderer) Render(writer io.Writer, root ast.Node, opts Options) error {
-	cr := NewRenderer(r.logger)
+	cr := NewRenderer(logger.Scoped(r.logger))
 	cr.root = root
 	cr.attributeHook = opts.AttributeHook
 	cr.errorStylesheet = opts.ErrorStylesheet
