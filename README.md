@@ -357,13 +357,13 @@ When validation fails, the IMAGE call renders nothing instead of producing inval
 
 `WEB_GRID` was removed in v0.7. It described a grid layout through parameters such as columns, rows, areas and breakpoints. That is presentation, not meaning. Compono only carries semantic content, and layout belongs to the stylesheet of whoever renders the output. Keeping it would also have frozen its output DOM as part of a stable contract.
 
-A `WEB_GRID` call now renders an `Unknown component` error. Local or global components named `WEB_GRID` are not affected and work as regular components.
+A `WEB_GRID` call is now an `unknown-component` error and renders nothing. Local or global components named `WEB_GRID` are not affected and work as regular components.
 
 #### NAVIGATION
 
 `NAVIGATION` was removed in v0.7. It bundled a whole menu concept (`<nav>`, `<ul>`, `<li>` and `<a>`) into one built-in. It always produced an unordered list, so ordered navigations like breadcrumbs could not be expressed, and it could not carry attributes such as `aria-current` or `aria-label`. Its item records also used `label`/`target` instead of Compono's `text`/`url` naming.
 
-A `NAVIGATION` call now renders an `Unknown component` error. Local or global components named `NAVIGATION` are not affected and work as regular components.
+A `NAVIGATION` call is now an `unknown-component` error and renders nothing. Local or global components named `NAVIGATION` are not affected and work as regular components.
 
 ## Parameters
 
@@ -391,7 +391,7 @@ Supported parameter types:
 
 ### Required Parameters
 
-A parameter whose name is followed by `!` is required. A call that does not give it renders `Missing argument`:
+A parameter whose name is followed by `!` is required. A call that does not give it is dropped and returns a `missing-argument` diagnostic:
 
 ```
 {{ COVER media = context(media-by-alias/cover) }}
@@ -400,7 +400,7 @@ A parameter whose name is followed by `!` is required. A call that does not give
 {{ IMAGE media = media alt = alt }}
 ```
 
-This renders `Missing argument` with the message `The parameter **alt** of component **COVER** is required.` When several are missing, the message is `The parameters **a**, **b** of component **[component]** are required.`
+This drops the `COVER` call with the message `The parameter **alt** of component **COVER** is required.` When several are missing, the message is `The parameters **a**, **b** of component **[component]** are required.`
 
 - The `!` is glued to the name: `alt! = ""`.
 - The default value of a required parameter only declares its type. It is never used or resolved.
@@ -411,7 +411,7 @@ This renders `Missing argument` with the message `The parameter **alt** of compo
 
 ### Parameter Definition Errors
 
-A parameter definition must be `name = default` or `name! = default`. A definition without a default value (`~ X a`) or with any other shape (`~ X a ! = ""`, `~ X !a = ""`) renders `Invalid parameter definition` with the message `The parameter definition **[text]** of component **[component]** is invalid.` Every call of the component is dropped.
+A parameter definition must be `name = default` or `name! = default`. A definition without a default value (`~ X a`) or with any other shape (`~ X a ! = ""`, `~ X !a = ""`) is an `invalid-parameter-definition` error with the message `The parameter definition **[text]** of component **[component]** is invalid.` Every call of the component is dropped and returns this diagnostic.
 
 ---
 
@@ -511,8 +511,8 @@ Output:
 
 #### Argument Binding Errors
 
-- Binding a parameter that the component does not define renders `Unknown parameter`.
-- Binding a value of the wrong type renders `Wrong argument type`.
+- Binding a parameter that the component does not define is an `unknown-parameter` error.
+- Binding a value of the wrong type is a `wrong-argument-type` error.
 - Required arguments of a bound component are validated with the bound and the given arguments together. This applies to built-in components and to [required parameters](#required-parameters) of local and global components.
 - Giving an argument to a parameter that is already bound is a `duplicate-argument` error with the message `The parameter **[name]** of component **[component]** is already bound.` The call that gives the argument is dropped. There is no precedence rule between a bound and a given argument.
 
@@ -526,7 +526,7 @@ Output:
 # {{ title }}
 ```
 
-Errors are shown on the call the bound component value is written in. For a value bound in a default value, they are shown on the call that uses the default value.
+An error of a bound value drops the call the binding is written in. For a value bound in a default value, it drops the call that uses the default value. A missing or duplicate argument is found where the component value is called (`{{ content }}`) and drops that call.
 
 ---
 
@@ -537,7 +537,7 @@ A component only sees the parameters it defines. There is no parameter inheritan
 - a local component of a global component does not see the parameters of that global component
 - a component does not see the parameters of the component calling it
 
-Every value a component needs is passed to it as an argument. Referencing a parameter that is not defined by the component renders an `Unknown parameter` error.
+Every value a component needs is passed to it as an argument. Referencing a parameter that is not defined by the component is an `unknown-parameter` error and drops the `{{ }}` unit.
 
 ```
 {{ OUTER title = "Hello" }}
@@ -739,7 +739,7 @@ What renders nothing depends on how `context(...)` is used:
 
 - direct usage drops the `{{ context(...) }}` unit
 - using it in an argument of a component call drops that call, also when the value reaches the argument through a parameter
-- default values are resolved lazily, so no error is produced unless that parameter is actually used
+- default values are resolved lazily, so no error is produced unless that parameter is actually used; then the `{{ }}` unit that uses it drops
 
 ## Attribute Hook
 
@@ -811,7 +811,9 @@ Nothing is written to the writer in these cases. The hook cannot return an error
 There are two kinds of errors:
 
 - **Fatal errors:** unexpected failures and invalid options. `Convert` returns them as `error` and writes no output.
-- **Diagnostics:** syntax and logic errors in the source. `Convert` writes the output, which is valid, and returns one `compono.Diagnostic` for each error.
+- **Diagnostics:** syntax and logic errors in the source. An error drops the part of the output it belongs to: that part renders nothing. The rest of the output is written and valid, and `Convert` returns a `compono.Diagnostic` for the dropped part.
+
+Compono never writes an error into the output. Who sees an error, and how, is up to the application.
 
 ```go
 diagnostics, err := c.Convert(source, &buf)
@@ -827,15 +829,21 @@ for _, d := range diagnostics {
 
 A diagnostic has these fields:
 
-- `Code`: the kind of the error, the kebab-case form of its title, such as `unknown-component`. Codes are exported as constants (`compono.CodeUnknownComponent`) and are never renamed. Programs should look at the code, not the message.
+- `Code`: the kind of the error, the kebab-case form of its title, such as `unknown-component`. Codes are exported as constants (`compono.CodeUnknownComponent`) and are never renamed. Several situations may share a code; the message tells them apart. Programs should look at the code, not the message.
 - `Message`: an English description. Values are emphasized with `**`. It is not HTML; escaping it is the job of whoever shows it.
-- `Source`: the source the error is in. It is empty for the converted source. For a global component it is its scope path ending with its own name: `[LAYOUT CARD]` for the sub component `CARD` of `LAYOUT`.
-- `Range`: the `[Start, End)` range of the error in `Source`. Each end has a 0-based byte `Offset`, a 1-based `Line` and a 1-based `Column` counted in runes. Positions are relative to the source as given: comment lines, a global's parameter line and leading blank lines are counted.
-- `Calls`: the component calls around the error, outermost first, each with its `Name`, `Kind` (`builtin`, `global` or `local`), `Source` and `Range`. It is empty when the error is in the converted source itself.
+- `Source`: the source the dropped part is written in. It is empty for the converted source. For a global component it is its scope path ending with its own name: `[LAYOUT CARD]` for the sub component `CARD` of `LAYOUT`.
+- `Range`: the `[Start, End)` range of the dropped part in `Source`. Each end has a 0-based byte `Offset`, a 1-based `Line` and a 1-based `Column` counted in runes. Positions are relative to the source as given: comment lines, a global's parameter line and leading blank lines are counted.
+- `Calls`: the component calls around the dropped part, outermost first, each with its `Name`, `Kind` (`builtin`, `global` or `local`), `Source` and `Range`. It is empty when the dropped part is in the converted source itself.
 
-The part an error drops renders nothing; the rest of the output is written. For example, `Hello {{ FOO }} world` with an undefined `FOO` renders `<p>Hello  world</p>`.
+### What Is Dropped
 
-In a markdown link, an error of a `{{ }}` unit in the text drops only that unit, and an error in the address drops the whole link: `[Docs {{ x }}](/docs)` renders `<a href="/docs">Docs </a>` when `x` cannot be used.
+An error drops the smallest part it belongs to:
+
+- **A component call** (built-in, global or local) for its own errors: an unknown component, argument errors, built-in specific errors, an invalid parameter definition of the called component and an infinite call. An error of an argument's value also drops the call the argument belongs to.
+- **A `{{ }}` unit** (a parameter reference or `context(key)`) for its own errors.
+- **A markdown link** for an error in its address. An error of a `{{ }}` unit in the link text drops only that unit: `[Docs {{ x }}](/docs)` renders `<a href="/docs">Docs </a>` when `x` cannot be used.
+
+The paragraph, heading or component body around a dropped part is still rendered. For example, `Hello {{ FOO }} world` with an undefined `FOO` renders `<p>Hello  world</p>`.
 
 An error that depends on the value of a parameter is found where the value is used, separately for every render. A `{{ }}` unit with an index out of range, an unknown record key, an array or record used directly, or a block component used inline drops only itself, in the component where it is written. A call whose argument comes from a parameter, such as an `IMAGE` whose `media` is passed down or a call that forwards a value of the wrong type, is checked the same way and drops where it is written. The same unit can drop in one call and render in another:
 
@@ -852,7 +860,13 @@ renders `<p>Item: 1</p><p>Item: </p>` and returns one `array-index-out-of-range`
 
 A call that enters a component already being rendered with the same component values never ends. It is an `infinite-component-call` and drops where it is written, so in a cycle only the call that closes it drops. A component that calls itself with other component values is not a loop.
 
-`Convert` returns one diagnostic for each dropped part, in output order. A global component called 10 times with an error inside returns 10 diagnostics, each with its own `Calls`; grouping them is up to the application. An error that is never rendered, such as one inside a component that is never called, returns no diagnostic. The same source and options always return the same diagnostics in the same order.
+### Rules
+
+- `Convert` returns one diagnostic for each dropped part. A global component called 10 times with an error inside returns 10 diagnostics, each with its own `Calls`; grouping them is up to the application.
+- A part with several errors returns one diagnostic.
+- An error that drops nothing returns no diagnostic, such as one inside a component that is never called.
+- Diagnostics are returned in the order of the dropped parts in the output. The same source and options always return the same diagnostics in the same order.
+- A diagnostic is not a failure: the output is written and valid. `error` is only for fatal errors, and then no diagnostics are returned.
 
 ## API Reference
 
