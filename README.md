@@ -31,7 +31,7 @@ func main() {
 `)
 
     var buf bytes.Buffer
-    if err := c.Convert(source, &buf); err != nil {
+    if _, err := c.Convert(source, &buf); err != nil {
         panic(err)
     }
 
@@ -655,7 +655,7 @@ type CurrentUser struct {
     LastName  string `compono:"last-name"`
 }
 
-err := c.Convert(source, &buf, compono.WithContext(map[string]any{
+_, err := c.Convert(source, &buf, compono.WithContext(map[string]any{
     "app/version":   "1.2.0",
     "feature/live":  true,
     "stats/numbers": []int{10, 20, 30},
@@ -747,7 +747,7 @@ Error placement depends on how `context(...)` is used:
 An attribute hook lets an application add HTML attributes to the output of built-in component calls, for example a theme's `class`. It is registered per conversion with `compono.WithAttributeHook`. The hook only returns attributes. Where they are written is defined by each built-in.
 
 ```go
-err := c.Convert(pageSource, w,
+_, err := c.Convert(pageSource, w,
 	compono.WithGlobalComponent("LAYOUT", layoutSource,
 		compono.WithIsolatedScope(),
 		compono.WithGlobalComponent("MAIN_MENU", menuSource),
@@ -809,8 +809,32 @@ Nothing is written to the writer in these cases. The hook cannot return an error
 
 ## Error Handling
 
-Compono provides error feedback by rendering placeholders where errors occur.
-Fatal errors during conversion stop the process and no output is produced.
+There are two kinds of errors:
+
+- **Fatal errors:** unexpected failures and invalid options. `Convert` returns them as `error` and writes no output.
+- **Diagnostics:** syntax and logic errors in the source. `Convert` writes the output, which is valid, and returns one `compono.Diagnostic` for each error.
+
+```go
+diagnostics, err := c.Convert(source, &buf)
+if err != nil {
+    return err
+}
+for _, d := range diagnostics {
+    fmt.Printf("%v %d:%d %s: %s\n", d.Source, d.Range.Start.Line, d.Range.Start.Column, d.Code, d.Message)
+}
+```
+
+### Diagnostics
+
+A diagnostic has these fields:
+
+- `Code`: the kind of the error, the kebab-case form of its title, such as `unknown-component`. Codes are exported as constants (`compono.CodeUnknownComponent`) and are never renamed. Programs should look at the code, not the message.
+- `Message`: an English description. Values are emphasized with `**`. It is not HTML; escaping it is the job of whoever shows it.
+- `Source`: the source the error is in. It is empty for the converted source. For a global component it is its scope path ending with its own name: `[LAYOUT CARD]` for the sub component `CARD` of `LAYOUT`.
+- `Range`: the `[Start, End)` range of the error in `Source`. Each end has a 0-based byte `Offset`, a 1-based `Line` and a 1-based `Column` counted in runes. Positions are relative to the source as given: comment lines, a global's parameter line and leading blank lines are counted.
+- `Calls`: the component calls around the error, outermost first, each with its `Name`, `Kind` (`builtin`, `global` or `local`), `Source` and `Range`. It is empty when the error is in the converted source itself.
+
+`Convert` returns one diagnostic for each error element written to the output, in output order. A global component called 10 times with an error inside returns 10 diagnostics, each with its own `Calls`; grouping them is up to the application. An error that is never rendered, such as one inside a component that is never called, returns no diagnostic. The same source and options always return the same diagnostics in the same order.
 
 ### Error Elements
 
@@ -837,7 +861,7 @@ Title and description text is HTML-escaped. The `<strong>` emphasis is part of C
 `compono.WithErrorStylesheet` sets the stylesheet URL used by error elements:
 
 ```go
-err := c.Convert(source, writer, compono.WithErrorStylesheet("/_umono/error.css"))
+_, err := c.Convert(source, writer, compono.WithErrorStylesheet("/_umono/error.css"))
 ```
 
 `/_umono/error.css` is only an example path. Compono does not serve or ship a stylesheet, so your application must serve one at the URL it passes.
@@ -854,28 +878,28 @@ err := c.Convert(source, writer, compono.WithErrorStylesheet("/_umono/error.css"
 // Create a new Compono instance
 c := compono.New()
 
-// Convert source to HTML
-err := c.Convert(source []byte, writer io.Writer, opts ...compono.ConvertOption)
+// Convert source to HTML and get the diagnostics of the conversion
+diagnostics, err := c.Convert(source []byte, writer io.Writer, opts ...compono.ConvertOption)
 
 // Give a global component for a single conversion
-err := c.Convert(source, writer, compono.WithGlobalComponent(name, globalSource))
+_, err := c.Convert(source, writer, compono.WithGlobalComponent(name, globalSource))
 
 // Give a global component its own sub components and isolate its scope
-err := c.Convert(source, writer, compono.WithGlobalComponent(name, globalSource,
+_, err := c.Convert(source, writer, compono.WithGlobalComponent(name, globalSource,
     compono.WithIsolatedScope(),
     compono.WithGlobalComponent(subName, subSource),
 ))
 
 // Inject convert-time context values
-err := c.Convert(source, writer, compono.WithContext(map[string]any{
+_, err := c.Convert(source, writer, compono.WithContext(map[string]any{
     "app/version": "1.2.0",
 }))
 
 // Set the stylesheet URL linked inside error elements (once per conversion)
-err := c.Convert(source, writer, compono.WithErrorStylesheet("/_umono/error.css"))
+_, err := c.Convert(source, writer, compono.WithErrorStylesheet("/_umono/error.css"))
 
 // Add attributes to built-in component calls (once per conversion)
-err := c.Convert(source, writer, compono.WithAttributeHook(func(builtin string, chain []compono.Frame) map[string]string {
+_, err := c.Convert(source, writer, compono.WithAttributeHook(func(builtin string, chain []compono.Frame) map[string]string {
     return nil
 }))
 ```
