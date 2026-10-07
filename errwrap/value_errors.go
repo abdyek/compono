@@ -2,6 +2,7 @@ package errwrap
 
 import (
 	"github.com/umono-cms/compono/ast"
+	"github.com/umono-cms/compono/util"
 )
 
 // ParamRefValueError returns the error of a parameter reference unit whose
@@ -58,5 +59,95 @@ func CallArgsError(root, compCall ast.Node, invokerAncestors []ast.Node) (title,
 			return "Unknown key", unknownContextKeyMsg(key), true
 		}
 	}
+	return "", "", false
+}
+
+// ParamCompCallError returns the error of a call through a component
+// parameter, paramRef, that renders the component value. compDef is the local
+// or global definition the value resolved to, nil if there is none.
+// invokerAncestors are as for ast.ResolveCompCallArgValue.
+func ParamCompCallError(root, paramRef ast.Node, value ast.ResolvedValue, compDef ast.Node, invokerAncestors []ast.Node) (title, message string, ok bool) {
+	if compDef == nil {
+		return "Unknown component", "The component **" + value.Raw + "** is not defined or not registered.", true
+	}
+
+	explicitArgs := []ast.Node{}
+	for _, arg := range ast.GetCompCallArgsFromCompCall(paramRef) {
+		if !ast.IsRuleName(arg, "comp-call-arg") {
+			continue
+		}
+		explicitArgs = append(explicitArgs, arg)
+	}
+
+	var boundArgs []ast.Node
+	if value.Bound != nil {
+		boundArgs = value.Bound.Args()
+	}
+
+	definedParams := getCompDefParamNames(compDef)
+
+	undefined := []string{}
+	for _, arg := range explicitArgs {
+		name := ast.GetArgNameFromCompCallArg(arg)
+		if !util.InSliceString(name, definedParams) {
+			undefined = appendUniqueStrings(undefined, name)
+		}
+	}
+	for _, arg := range boundArgs {
+		name := ast.GetArgNameFromCompCallArg(arg)
+		if !util.InSliceString(name, definedParams) {
+			undefined = appendUniqueStrings(undefined, name)
+		}
+	}
+	if len(undefined) > 0 {
+		return "Unknown parameter", undefinedParamNamesMsg(undefined), true
+	}
+
+	supplied := []string{}
+	for _, arg := range explicitArgs {
+		supplied = appendUniqueStrings(supplied, ast.GetArgNameFromCompCallArg(arg))
+	}
+	for _, arg := range boundArgs {
+		supplied = appendUniqueStrings(supplied, ast.GetArgNameFromCompCallArg(arg))
+	}
+
+	missing := missingArgNames(getRequiredParamNames(compDef), supplied)
+	if len(missing) > 0 {
+		return "Missing argument", missingArgNamesMsg(value.Raw, missing), true
+	}
+
+	paramTypeMap := getCompDefParamTypeMap(compDef)
+	wrongType := []string{}
+	for _, arg := range explicitArgs {
+		argName := ast.GetArgNameFromCompCallArg(arg)
+		expectedType, ok := paramTypeMap[argName]
+		if !ok || expectedType == "" {
+			continue
+		}
+
+		actualType := ast.GetTypeFromCompCallArg(arg)
+		if actualType == "context" {
+			actualType = ast.ResolveCompCallArgValue(root, arg, invokerAncestors, paramRef).Type
+		}
+		if actualType == "" || actualType == "param" || actualType == expectedType {
+			continue
+		}
+
+		wrongType = appendUniqueStrings(wrongType, argName)
+	}
+	if len(wrongType) > 0 {
+		return "Wrong argument type", wrongArgTypeNamesMsg(wrongType), true
+	}
+
+	if value.Bound != nil {
+		for _, arg := range explicitArgs {
+			name := ast.GetArgNameFromCompCallArg(arg)
+			if value.Bound.Arg(name) == nil {
+				continue
+			}
+			return "Duplicate argument", duplicateArgumentMsg(name, value.Raw), true
+		}
+	}
+
 	return "", "", false
 }
