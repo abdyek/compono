@@ -1,6 +1,8 @@
 package parser
 
 import (
+	"os"
+	"path/filepath"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -158,6 +160,62 @@ func (s *parserTestSuite) TestParse() {
 
 func TestParserTestSuite(t *testing.T) {
 	suite.Run(t, new(parserTestSuite))
+}
+
+func TestParseSetsRanges(t *testing.T) {
+	p := DefaultParser(logger.NewLogger())
+
+	root := p.Parse([]byte("a\n\n{{ FOO }}"), ast.DefaultRootNode())
+
+	assert.Equal(t, ast.Range{Start: 0, End: 12}, root.Range())
+
+	blockCompCalls := ast.FilterNodesInTree(root, func(node ast.Node) bool {
+		return ast.IsRuleName(node, "block-comp-call")
+	})
+	require.Len(t, blockCompCalls, 1)
+
+	blockCompCall := blockCompCalls[0]
+	assert.Equal(t, ast.Range{Start: 3, End: 12}, blockCompCall.Range())
+	assert.Equal(t, []byte("{{ FOO }}"), blockCompCall.Raw())
+}
+
+func TestParseRangesMatchRaw(t *testing.T) {
+	p := DefaultParser(logger.NewLogger())
+
+	assertRanges := func(t *testing.T, path string, source []byte, node ast.Node) {
+		var walk func(ast.Node)
+		walk = func(n ast.Node) {
+			r := n.Range()
+			assert.Equal(t, string(n.Raw()), string(source[r.Start:r.End]), "at %q", path)
+			for _, child := range n.Children() {
+				walk(child)
+			}
+		}
+		walk(node)
+	}
+
+	rootFiles, err := filepath.Glob("../testdata/input/*.comp")
+	require.NoError(t, err)
+	for _, path := range rootFiles {
+		source, err := os.ReadFile(path)
+		require.NoError(t, err)
+
+		node := p.Parse(source, ast.DefaultRootNode())
+		assertRanges(t, path, source, node)
+	}
+
+	globalFiles, err := filepath.Glob("../testdata/input/global/*/*.comp")
+	require.NoError(t, err)
+	for _, path := range globalFiles {
+		source, err := os.ReadFile(path)
+		require.NoError(t, err)
+
+		node := ast.DefaultEmptyNode()
+		node.SetRule(rule.NewGlobalCompDef())
+
+		node = p.Parse(source, node)
+		assertRanges(t, path, source, node)
+	}
 }
 
 type tree struct {

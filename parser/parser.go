@@ -24,6 +24,7 @@ type parser struct {
 func (p *parser) Parse(source []byte, root ast.Node) ast.Node {
 	cp := &parser{logger: logger.Scoped(p.logger)}
 	cp.logger.Enter(logger.Parser, "Parser started")
+	root.SetRange(ast.Range{Start: 0, End: len(source)})
 	node := cp.parse(source, root)
 	cp.logger.Exit(logger.Parser, "Parser finished")
 	return node
@@ -97,6 +98,7 @@ func (p *parser) parse(source []byte, parentNode ast.Node) ast.Node {
 		nodeForm.SetRule(f.rule)
 		nodeForm.SetRaw(source[f.start:f.end])
 		nodeForm.SetParent(parentNode)
+		nodeForm.SetRange(ast.Range{Start: parentNode.Range().Start + f.start, End: parentNode.Range().Start + f.end})
 		children = append(children, nodeForm)
 	}
 

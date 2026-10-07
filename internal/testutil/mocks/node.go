@@ -10,6 +10,7 @@ type node struct {
 	parent   ast.Node
 	children []ast.Node
 	raw      []byte
+	rng      ast.Range
 }
 
 func newNode(rule rulepkg.Rule, parent ast.Node, children []ast.Node, raw []byte) ast.Node {
@@ -58,6 +59,14 @@ func (n *node) Raw() []byte {
 
 func (n *node) SetRaw(raw []byte) {
 	n.raw = raw
+}
+
+func (n *node) Range() ast.Range {
+	return n.rng
+}
+
+func (n *node) SetRange(rng ast.Range) {
+	n.rng = rng
 }
 
 type nodeBuilder struct {
