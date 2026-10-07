@@ -1,0 +1,10 @@
+{{ W c = X }}
+
+~ W c = NO_MATTER
+{{ c }}
+
+~ X
+{{ W c = Y }}
+
+~ Y
+leaf
