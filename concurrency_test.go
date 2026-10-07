@@ -38,7 +38,8 @@ func TestConcurrentConvert(t *testing.T) {
 		src, opts := caseOpts(i)
 
 		var buf bytes.Buffer
-		require.NoError(t, New().Convert(src, &buf, opts...))
+		_, err := New().Convert(src, &buf, opts...)
+		require.NoError(t, err)
 		expected[i] = buf.Bytes()
 
 		assert.Contains(t, string(expected[i]), "Title "+v)
@@ -61,7 +62,7 @@ func TestConcurrentConvert(t *testing.T) {
 			src, opts := caseOpts(k % n)
 
 			var buf bytes.Buffer
-			errs[k] = shared.Convert(src, &buf, opts...)
+			_, errs[k] = shared.Convert(src, &buf, opts...)
 			outputs[k] = buf.Bytes()
 		}(k)
 	}

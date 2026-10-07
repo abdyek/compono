@@ -57,7 +57,7 @@ func (s *componoTestSuite) TestGolden() {
 		}
 
 		var buf bytes.Buffer
-		err = comp.Convert([]byte(strings.TrimSpace(string(input))), &buf, opts...)
+		_, err = comp.Convert([]byte(strings.TrimSpace(string(input))), &buf, opts...)
 		assert.Nil(s.T(), err)
 
 		goldenPath := filepath.Join(
@@ -99,7 +99,7 @@ func (s *componoTestSuite) TestGoldenForWithGlobalComponent() {
 		opts = append(opts, WithGlobalComponent(strings.TrimSuffix(name, ".comp"), []byte(strings.TrimSpace(string(input)))))
 
 		var buf bytes.Buffer
-		err = comp.Convert(
+		_, err = comp.Convert(
 			[]byte(`{{ `+strings.TrimSuffix(name, ".comp")+` }}`),
 			&buf,
 			opts...,
@@ -122,7 +122,7 @@ func (s *componoTestSuite) TestConvertWithContextErrUnsupportedType() {
 	compono := New()
 
 	var buf bytes.Buffer
-	err := compono.Convert([]byte("context"), &buf, WithContext(map[string]any{
+	_, err := compono.Convert([]byte("context"), &buf, WithContext(map[string]any{
 		"value": func() {},
 	}))
 
@@ -138,7 +138,7 @@ func (s *componoTestSuite) TestConvertWithContextErrUnsupportedKeyNotation() {
 	compono := New()
 
 	var buf bytes.Buffer
-	err := compono.Convert([]byte("context"), &buf, WithContext(map[string]any{
+	_, err := compono.Convert([]byte("context"), &buf, WithContext(map[string]any{
 		"value": invalidContextKeyNotation{Title: "Hello"},
 	}))
 
@@ -163,7 +163,7 @@ const (
 
 func (s *componoTestSuite) TestWithErrorStylesheetBlockError() {
 	var buf bytes.Buffer
-	err := New().Convert([]byte(`{{ FOO }}`), &buf, WithErrorStylesheet("/_umono/error.css"))
+	_, err := New().Convert([]byte(`{{ FOO }}`), &buf, WithErrorStylesheet("/_umono/error.css"))
 	require.Nil(s.T(), err)
 
 	assert.Equal(s.T(),
@@ -174,7 +174,7 @@ func (s *componoTestSuite) TestWithErrorStylesheetBlockError() {
 
 func (s *componoTestSuite) TestWithErrorStylesheetInlineErrorInParagraph() {
 	var buf bytes.Buffer
-	err := New().Convert([]byte(`Hello {{ FOO }} world`), &buf, WithErrorStylesheet("/_umono/error.css"))
+	_, err := New().Convert([]byte(`Hello {{ FOO }} world`), &buf, WithErrorStylesheet("/_umono/error.css"))
 	require.Nil(s.T(), err)
 
 	assert.Equal(s.T(),
@@ -185,7 +185,7 @@ func (s *componoTestSuite) TestWithErrorStylesheetInlineErrorInParagraph() {
 
 func (s *componoTestSuite) TestWithoutErrorStylesheetHasNoLink() {
 	var buf bytes.Buffer
-	err := New().Convert([]byte(`{{ FOO }}`), &buf)
+	_, err := New().Convert([]byte(`{{ FOO }}`), &buf)
 	require.Nil(s.T(), err)
 
 	assert.Equal(s.T(), errorBlockHead+unknownFooBlockBody+errorBlockTail, buf.String())
@@ -194,14 +194,14 @@ func (s *componoTestSuite) TestWithoutErrorStylesheetHasNoLink() {
 
 func (s *componoTestSuite) TestWithErrorStylesheetEmptyStringHasNoLink() {
 	var buf bytes.Buffer
-	err := New().Convert([]byte(`{{ FOO }}`), &buf, WithErrorStylesheet(""))
+	_, err := New().Convert([]byte(`{{ FOO }}`), &buf, WithErrorStylesheet(""))
 	require.Nil(s.T(), err)
 
 	assert.Equal(s.T(), errorBlockHead+unknownFooBlockBody+errorBlockTail, buf.String())
 	assert.NotContains(s.T(), buf.String(), "<link")
 
 	buf.Reset()
-	err = New().Convert([]byte(`Hello {{ FOO }}`), &buf, WithErrorStylesheet(""))
+	_, err = New().Convert([]byte(`Hello {{ FOO }}`), &buf, WithErrorStylesheet(""))
 	require.Nil(s.T(), err)
 
 	assert.Equal(s.T(), `<p>Hello `+errorInlineHead+unknownFooInlineBody+errorInlineTail+`</p>`, buf.String())
@@ -210,7 +210,7 @@ func (s *componoTestSuite) TestWithErrorStylesheetEmptyStringHasNoLink() {
 
 func (s *componoTestSuite) TestWithErrorStylesheetEscapesHref() {
 	var buf bytes.Buffer
-	err := New().Convert([]byte(`{{ FOO }}`), &buf, WithErrorStylesheet(`/a"b&c`))
+	_, err := New().Convert([]byte(`{{ FOO }}`), &buf, WithErrorStylesheet(`/a"b&c`))
 	require.Nil(s.T(), err)
 
 	assert.Equal(s.T(),
@@ -221,7 +221,7 @@ func (s *componoTestSuite) TestWithErrorStylesheetEscapesHref() {
 
 func (s *componoTestSuite) TestWithErrorStylesheetDoesNotValidateURL() {
 	var buf bytes.Buffer
-	err := New().Convert([]byte(`{{ FOO }}`), &buf, WithErrorStylesheet(`not a url <x>'`))
+	_, err := New().Convert([]byte(`{{ FOO }}`), &buf, WithErrorStylesheet(`not a url <x>'`))
 	require.Nil(s.T(), err)
 
 	assert.Equal(s.T(),
@@ -232,7 +232,7 @@ func (s *componoTestSuite) TestWithErrorStylesheetDoesNotValidateURL() {
 
 func (s *componoTestSuite) TestWithErrorStylesheetAppliesToEveryError() {
 	var buf bytes.Buffer
-	err := New().Convert([]byte("{{ FOO }}\n\nHello {{ FOO }}"), &buf, WithErrorStylesheet("/e.css"))
+	_, err := New().Convert([]byte("{{ FOO }}\n\nHello {{ FOO }}"), &buf, WithErrorStylesheet("/e.css"))
 	require.Nil(s.T(), err)
 
 	link := `<link rel="stylesheet" href="/e.css">`
@@ -245,7 +245,7 @@ func (s *componoTestSuite) TestWithErrorStylesheetAppliesToEveryError() {
 
 func (s *componoTestSuite) TestConvertWithErrorStylesheetErrErrorStylesheetAlreadySet() {
 	var buf bytes.Buffer
-	err := New().Convert([]byte(`{{ FOO }}`), &buf,
+	_, err := New().Convert([]byte(`{{ FOO }}`), &buf,
 		WithErrorStylesheet("/a.css"),
 		WithErrorStylesheet("/b.css"),
 	)
@@ -261,7 +261,7 @@ func (s *componoTestSuite) TestConvertWithErrorStylesheetErrErrorStylesheetAlrea
 
 func (s *componoTestSuite) TestConvertWithErrorStylesheetTwiceErrEvenWhenEmpty() {
 	var buf bytes.Buffer
-	err := New().Convert([]byte(`{{ FOO }}`), &buf,
+	_, err := New().Convert([]byte(`{{ FOO }}`), &buf,
 		WithErrorStylesheet("/a.css"),
 		WithErrorStylesheet(""),
 	)
@@ -277,17 +277,17 @@ func (s *componoTestSuite) TestWithErrorStylesheetIsPerConversion() {
 	comp := New()
 
 	var first bytes.Buffer
-	err := comp.Convert([]byte(`{{ FOO }}`), &first, WithErrorStylesheet("/a.css"))
+	_, err := comp.Convert([]byte(`{{ FOO }}`), &first, WithErrorStylesheet("/a.css"))
 	require.Nil(s.T(), err)
 	assert.Contains(s.T(), first.String(), `href="/a.css"`)
 
 	var second bytes.Buffer
-	err = comp.Convert([]byte(`{{ FOO }}`), &second)
+	_, err = comp.Convert([]byte(`{{ FOO }}`), &second)
 	require.Nil(s.T(), err)
 	assert.Equal(s.T(), errorBlockHead+unknownFooBlockBody+errorBlockTail, second.String())
 
 	var third bytes.Buffer
-	err = comp.Convert([]byte(`{{ FOO }}`), &third, WithErrorStylesheet("/b.css"))
+	_, err = comp.Convert([]byte(`{{ FOO }}`), &third, WithErrorStylesheet("/b.css"))
 	require.Nil(s.T(), err)
 	assert.Contains(s.T(), third.String(), `href="/b.css"`)
 	assert.NotContains(s.T(), third.String(), `/a.css`)
@@ -295,7 +295,7 @@ func (s *componoTestSuite) TestWithErrorStylesheetIsPerConversion() {
 
 func (s *componoTestSuite) TestWithErrorStylesheetAppliesToWithGlobalComponentError() {
 	var buf bytes.Buffer
-	err := New().Convert([]byte(`{{ GREETING }}`), &buf,
+	_, err := New().Convert([]byte(`{{ GREETING }}`), &buf,
 		WithGlobalComponent("GREETING", []byte(`{{ MISSING }}`)),
 		WithErrorStylesheet("/_umono/error.css"),
 	)
@@ -309,7 +309,7 @@ func (s *componoTestSuite) TestWithErrorStylesheetAppliesToWithGlobalComponentEr
 
 func (s *componoTestSuite) TestWithErrorStylesheetAppliesToInlineErrorInGlobalComponent() {
 	var buf bytes.Buffer
-	err := New().Convert([]byte(`{{ GREETING }}`), &buf,
+	_, err := New().Convert([]byte(`{{ GREETING }}`), &buf,
 		WithErrorStylesheet("/_umono/error.css"),
 		WithGlobalComponent("GREETING", []byte(`Hello {{ MISSING }}`)),
 	)
@@ -343,7 +343,7 @@ func (s *componoTestSuite) TestGoldenForScopes() {
 		opts := buildScopeOpts(s.T(), filepath.Join(caseDir, "global"))
 
 		var buf bytes.Buffer
-		err = comp.Convert([]byte(strings.TrimSpace(string(input))), &buf, opts...)
+		_, err = comp.Convert([]byte(strings.TrimSpace(string(input))), &buf, opts...)
 		assert.Nil(s.T(), err)
 
 		assert.Equal(s.T(), strings.TrimSpace(string(golden)), buf.String(), "case %s", caseName)
@@ -378,7 +378,7 @@ func buildScopeOpts(t *testing.T, dir string) []ConvertOption {
 }
 
 func (s *componoTestSuite) TestErrConversionOptionInGlobal() {
-	err := New().Convert([]byte(`{{ G }}`), io.Discard,
+	_, err := New().Convert([]byte(`{{ G }}`), io.Discard,
 		WithGlobalComponent("G", []byte(`hi`), WithContext(map[string]any{"k": "v"})),
 	)
 	require.Error(s.T(), err)
@@ -386,28 +386,28 @@ func (s *componoTestSuite) TestErrConversionOptionInGlobal() {
 	require.ErrorAs(s.T(), err, &compErr)
 	assert.Equal(s.T(), ErrConversionOptionInGlobal, compErr.Code)
 
-	err = New().Convert([]byte(`{{ G }}`), io.Discard,
+	_, err = New().Convert([]byte(`{{ G }}`), io.Discard,
 		WithGlobalComponent("G", []byte(`hi`), WithErrorStylesheet("/a.css")),
 	)
 	require.Error(s.T(), err)
 	require.ErrorAs(s.T(), err, &compErr)
 	assert.Equal(s.T(), ErrConversionOptionInGlobal, compErr.Code)
 
-	err = New().Convert([]byte(`{{ G }}`), io.Discard,
+	_, err = New().Convert([]byte(`{{ G }}`), io.Discard,
 		WithGlobalComponent("G", []byte(`hi`), WithContext(nil)),
 	)
 	require.Error(s.T(), err)
 	require.ErrorAs(s.T(), err, &compErr)
 	assert.Equal(s.T(), ErrConversionOptionInGlobal, compErr.Code)
 
-	err = New().Convert([]byte(`{{ G }}`), io.Discard,
+	_, err = New().Convert([]byte(`{{ G }}`), io.Discard,
 		WithGlobalComponent("G", []byte(`hi`), WithErrorStylesheet("")),
 	)
 	require.Error(s.T(), err)
 	require.ErrorAs(s.T(), err, &compErr)
 	assert.Equal(s.T(), ErrConversionOptionInGlobal, compErr.Code)
 
-	err = New().Convert([]byte(`{{ G }}`), io.Discard,
+	_, err = New().Convert([]byte(`{{ G }}`), io.Discard,
 		WithGlobalComponent("G", []byte(`hi`),
 			WithGlobalComponent("SUB", []byte(`sub`), WithContext(map[string]any{})),
 		),
@@ -416,7 +416,7 @@ func (s *componoTestSuite) TestErrConversionOptionInGlobal() {
 	require.ErrorAs(s.T(), err, &compErr)
 	assert.Equal(s.T(), ErrConversionOptionInGlobal, compErr.Code)
 
-	err = New().Convert([]byte(`{{ G }}`), io.Discard,
+	_, err = New().Convert([]byte(`{{ G }}`), io.Discard,
 		WithGlobalComponent("G", []byte(`hi`), WithAttributeHook(nil)),
 	)
 	require.Error(s.T(), err)
@@ -425,7 +425,7 @@ func (s *componoTestSuite) TestErrConversionOptionInGlobal() {
 }
 
 func (s *componoTestSuite) TestErrIsolatedScopeInConvert() {
-	err := New().Convert([]byte(`hello`), io.Discard, WithIsolatedScope())
+	_, err := New().Convert([]byte(`hello`), io.Discard, WithIsolatedScope())
 	require.Error(s.T(), err)
 	var compErr *ComponoError
 	require.ErrorAs(s.T(), err, &compErr)
@@ -433,7 +433,7 @@ func (s *componoTestSuite) TestErrIsolatedScopeInConvert() {
 }
 
 func (s *componoTestSuite) TestErrDuplicateSubComponent() {
-	err := New().Convert([]byte(`{{ G }}`), io.Discard,
+	_, err := New().Convert([]byte(`{{ G }}`), io.Discard,
 		WithGlobalComponent("G", []byte(`{{ A }}`),
 			WithGlobalComponent("A", []byte(`first`)),
 			WithGlobalComponent("A", []byte(`second`)),
@@ -444,7 +444,7 @@ func (s *componoTestSuite) TestErrDuplicateSubComponent() {
 	require.ErrorAs(s.T(), err, &compErr)
 	assert.Equal(s.T(), ErrDuplicateSubComponent, compErr.Code)
 
-	err = New().Convert([]byte(`{{ G }}`), io.Discard,
+	_, err = New().Convert([]byte(`{{ G }}`), io.Discard,
 		WithGlobalComponent("G", []byte(`{{ H }}`),
 			WithGlobalComponent("H", []byte(`{{ A }}`),
 				WithGlobalComponent("A", []byte(`first`)),
@@ -458,7 +458,7 @@ func (s *componoTestSuite) TestErrDuplicateSubComponent() {
 }
 
 func (s *componoTestSuite) TestErrDuplicateGlobalComponent() {
-	err := New().Convert([]byte(`{{ A }}`), io.Discard,
+	_, err := New().Convert([]byte(`{{ A }}`), io.Discard,
 		WithGlobalComponent("A", []byte(`first`)),
 		WithGlobalComponent("A", []byte(`second`)),
 	)
@@ -467,7 +467,7 @@ func (s *componoTestSuite) TestErrDuplicateGlobalComponent() {
 	require.ErrorAs(s.T(), err, &compErr)
 	assert.Equal(s.T(), ErrDuplicateGlobalComponent, compErr.Code)
 
-	err = New().Convert([]byte(`{{ A }}`), io.Discard,
+	_, err = New().Convert([]byte(`{{ A }}`), io.Discard,
 		WithGlobalComponent("A", []byte(`first`)),
 		WithGlobalComponent("B", []byte(`other`)),
 		WithGlobalComponent("A", []byte(`second`)),
@@ -477,7 +477,7 @@ func (s *componoTestSuite) TestErrDuplicateGlobalComponent() {
 	assert.Equal(s.T(), ErrDuplicateGlobalComponent, compErr.Code)
 
 	var buf bytes.Buffer
-	err = New().Convert([]byte("{{ A }}\n\n{{ G }}"), &buf,
+	_, err = New().Convert([]byte("{{ A }}\n\n{{ G }}"), &buf,
 		WithGlobalComponent("A", []byte(`root`)),
 		WithGlobalComponent("G", []byte(`{{ A }}`),
 			WithGlobalComponent("A", []byte(`inner`)),
@@ -491,14 +491,14 @@ func (s *componoTestSuite) TestIsolatedScopeTwiceSameAsOnce() {
 	var once, twice bytes.Buffer
 
 	c1 := New()
-	err := c1.Convert([]byte(`{{ G }}`), &once,
+	_, err := c1.Convert([]byte(`{{ G }}`), &once,
 		WithGlobalComponent("R", []byte(`root`)),
 		WithGlobalComponent("G", []byte(`{{ R }}`), WithIsolatedScope()),
 	)
 	require.Nil(s.T(), err)
 
 	c2 := New()
-	err = c2.Convert([]byte(`{{ G }}`), &twice,
+	_, err = c2.Convert([]byte(`{{ G }}`), &twice,
 		WithGlobalComponent("R", []byte(`root`)),
 		WithGlobalComponent("G", []byte(`{{ R }}`), WithIsolatedScope(), WithIsolatedScope()),
 	)
