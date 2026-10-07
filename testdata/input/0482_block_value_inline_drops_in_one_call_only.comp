@@ -1,0 +1,12 @@
+{{ W c = IN }}
+
+{{ W c = BL }}
+
+~ W c = NO_MATTER
+Hello {{ c }}
+
+~ IN
+inline
+
+~ BL
+# block
