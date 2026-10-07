@@ -260,3 +260,11 @@ func TestConvertEmptySourceReturnsNoDiagnostics(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Nil(t, diags)
 }
+
+func TestConvertDroppedUnitRendersNothing(t *testing.T) {
+	var buf bytes.Buffer
+	diags, err := New().Convert([]byte("{{ FOO }}\n\nHello {{ FOO }} world"), &buf, WithErrorStylesheet("/e.css"))
+	require.NoError(t, err)
+	assert.Equal(t, "<p>Hello  world</p>", buf.String())
+	assert.Len(t, diags, 2)
+}

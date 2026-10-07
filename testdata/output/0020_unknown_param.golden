@@ -1,1 +1,1 @@
-<p><compono-error-inline><template shadowrootmode="closed"><span class="title">Unknown parameter</span><span class="description">The parameter <strong>not-defined</strong> is not defined for this component.</span></template></compono-error-inline>. Parameters must be defined in the comp-def-head.</p>
+<p>. Parameters must be defined in the comp-def-head.</p>

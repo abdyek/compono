@@ -1,1 +1,1 @@
-<p>Text <compono-error-inline><template shadowrootmode="closed"><span class="title">Duplicate argument</span><span class="description">The parameter <strong>title</strong> of component <strong>CARD</strong> is already bound.</span></template></compono-error-inline> more.</p>
+<p>Text  more.</p>

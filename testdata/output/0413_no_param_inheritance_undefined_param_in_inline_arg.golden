@@ -1,1 +1,1 @@
-<p>Hello <compono-error-inline><template shadowrootmode="closed"><span class="title">Unknown parameter</span><span class="description">The parameter <strong>missing</strong> is not defined for this component.</span></template></compono-error-inline>!</p>
+<p>Hello !</p>

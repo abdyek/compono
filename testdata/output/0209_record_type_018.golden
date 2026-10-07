@@ -1,1 +1,1 @@
-<h1><compono-error-inline><template shadowrootmode="closed"><span class="title">Invalid component usage</span><span class="description">The component <strong>TITLE</strong> is a block component and cannot be used inline.</span></template></compono-error-inline></h1><p><em>content</em></p>
+<h1></h1><p><em>content</em></p>
