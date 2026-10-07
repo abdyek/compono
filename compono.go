@@ -34,6 +34,7 @@ const (
 	ErrAttributeHookAlreadySet
 	ErrInvalidAttributeName
 	ErrAttributeConflict
+	ErrDuplicateGlobalComponent
 )
 
 type Compono interface {
@@ -194,6 +195,13 @@ func (c *compono) newConvertConfig(opts ...ConvertOption) (*convertConfig, error
 		if err := opt.applyConvert(c, cfg); err != nil {
 			return nil, err
 		}
+	}
+	seen := make(map[string]bool)
+	for _, comp := range cfg.globalComponents {
+		if seen[comp.name] {
+			return nil, NewComponoError(ErrDuplicateGlobalComponent, fmt.Sprintf("duplicate global component %q in the root scope", comp.name))
+		}
+		seen[comp.name] = true
 	}
 	return cfg, nil
 }
