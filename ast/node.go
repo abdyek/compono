@@ -2,6 +2,13 @@ package ast
 
 import "github.com/umono-cms/compono/rule"
 
+// Range is the [Start, End) byte range of a node in the source it was
+// parsed from. Nodes that were not parsed have the zero Range.
+type Range struct {
+	Start int
+	End   int
+}
+
 type Node interface {
 	Rule() rule.Rule
 	SetRule(rule.Rule)
@@ -12,6 +19,8 @@ type Node interface {
 	HasChildren() bool
 	Raw() []byte
 	SetRaw([]byte)
+	Range() Range
+	SetRange(Range)
 }
 
 func DefaultRootNode() Node {
@@ -29,6 +38,7 @@ type node struct {
 	parent   Node
 	children []Node
 	raw      []byte
+	rng      Range
 }
 
 func (n *node) Rule() rule.Rule {
@@ -68,4 +78,12 @@ func (n *node) Raw() []byte {
 
 func (n *node) SetRaw(raw []byte) {
 	n.raw = raw
+}
+
+func (n *node) Range() Range {
+	return n.rng
+}
+
+func (n *node) SetRange(rng Range) {
+	n.rng = rng
 }
