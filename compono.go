@@ -40,15 +40,10 @@ const (
 type Compono interface {
 	Convert(source []byte, writer io.Writer, opts ...ConvertOption) error
 	Parser() parser.Parser
-	SetParser(parser.Parser)
 	Renderer() renderer.Renderer
-	SetRenderer(renderer.Renderer)
 	Validator() validator.Validator
-	SetValidator(validator.Validator)
 	ErrorWrapper() errwrap.ErrorWrapper
-	SetErrorWrapper(errwrap.ErrorWrapper)
 	Logger() logger.Logger
-	SetLogger(logger.Logger)
 }
 
 func New() Compono {
@@ -139,40 +134,20 @@ func (c *compono) Parser() parser.Parser {
 	return c.parser
 }
 
-func (c *compono) SetParser(parser parser.Parser) {
-	c.parser = parser
-}
-
 func (c *compono) Renderer() renderer.Renderer {
 	return c.renderer
-}
-
-func (c *compono) SetRenderer(renderer renderer.Renderer) {
-	c.renderer = renderer
 }
 
 func (c *compono) Validator() validator.Validator {
 	return c.validator
 }
 
-func (c *compono) SetValidator(vldtr validator.Validator) {
-	c.validator = vldtr
-}
-
 func (c *compono) ErrorWrapper() errwrap.ErrorWrapper {
 	return c.errorWrapper
 }
 
-func (c *compono) SetErrorWrapper(ew errwrap.ErrorWrapper) {
-	c.errorWrapper = ew
-}
-
 func (c *compono) Logger() logger.Logger {
 	return c.logger
-}
-
-func (c *compono) SetLogger(logger logger.Logger) {
-	c.logger = logger
 }
 
 func (c *compono) newConvertConfig(opts ...ConvertOption) (*convertConfig, error) {
