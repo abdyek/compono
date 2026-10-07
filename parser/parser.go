@@ -25,9 +25,78 @@ func (p *parser) Parse(source []byte, root ast.Node) ast.Node {
 	cp := &parser{logger: logger.Scoped(p.logger)}
 	cp.logger.Enter(logger.Parser, "Parser started")
 	root.SetRange(ast.Range{Start: 0, End: len(source)})
-	node := cp.parse(source, root)
+
+	parseSource := source
+	var offsets []int
+	if lineRemover, ok := root.Rule().(rule.LineRemover); ok {
+		if removed := lineRemover.RemovedLines(source); len(removed) > 0 {
+			parseSource, offsets = stripRemovedLines(source, removed)
+		}
+	}
+
+	node := cp.parse(parseSource, root)
+
+	if offsets != nil {
+		remapRanges(node, offsets, len(source))
+		root.SetRange(ast.Range{Start: 0, End: len(source)})
+	}
+
 	cp.logger.Exit(logger.Parser, "Parser finished")
 	return node
+}
+
+// stripRemovedLines returns the source without the given removed [start, end)
+// ranges and an offsets slice where offsets[i] is the original offset of byte i
+// of the stripped source.
+func stripRemovedLines(source []byte, removed [][2]int) ([]byte, []int) {
+	ranges := make([][2]int, len(removed))
+	copy(ranges, removed)
+	sort.Slice(ranges, func(i, j int) bool {
+		return ranges[i][0] < ranges[j][0]
+	})
+
+	stripped := make([]byte, 0, len(source))
+	offsets := make([]int, 0, len(source))
+
+	pos := 0
+	for _, rem := range ranges {
+		if rem[0] < pos || rem[1] > len(source) {
+			continue
+		}
+		for i := pos; i < rem[0]; i++ {
+			offsets = append(offsets, i)
+			stripped = append(stripped, source[i])
+		}
+		pos = rem[1]
+	}
+	for i := pos; i < len(source); i++ {
+		offsets = append(offsets, i)
+		stripped = append(stripped, source[i])
+	}
+
+	return stripped, offsets
+}
+
+// remapRanges maps the ranges of every descendant of node from the stripped
+// source back to the original source. node itself keeps its range.
+func remapRanges(node ast.Node, offsets []int, sourceLen int) {
+	for _, child := range node.Children() {
+		remapRange(child, offsets, sourceLen)
+		remapRanges(child, offsets, sourceLen)
+	}
+}
+
+func remapRange(node ast.Node, offsets []int, sourceLen int) {
+	rng := node.Range()
+	start := sourceLen
+	if rng.Start < len(offsets) {
+		start = offsets[rng.Start]
+	}
+	end := start
+	if rng.End > rng.Start {
+		end = offsets[rng.End-1] + 1
+	}
+	node.SetRange(ast.Range{Start: start, End: end})
 }
 
 func (p *parser) parse(source []byte, parentNode ast.Node) ast.Node {
