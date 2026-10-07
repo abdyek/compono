@@ -40,16 +40,15 @@ func (s *componoTestSuite) TestGolden() {
 		comp := New()
 		comp.Logger().SetLogLevel(logger.All)
 
+		opts := []ConvertOption{}
 		for _, gPath := range globalFiles {
 			globalCompName := filepath.Base(gPath)
 			globalInput, err := os.ReadFile(gPath)
 			require.Nil(s.T(), err)
 
-			err = comp.RegisterGlobalComponent(strings.TrimSuffix(globalCompName, ".comp"), []byte(strings.TrimSpace(string(globalInput))))
-			assert.Nil(s.T(), err)
+			opts = append(opts, WithGlobalComponent(strings.TrimSuffix(globalCompName, ".comp"), []byte(strings.TrimSpace(string(globalInput)))))
 		}
 
-		opts := []ConvertOption{}
 		contextPath := filepath.Join("testdata/input/context", strings.TrimSuffix(name, ".comp")+".json")
 		if _, err := os.Stat(contextPath); err == nil {
 			contextValues, err := readContextFixture(contextPath)
@@ -89,20 +88,21 @@ func (s *componoTestSuite) TestGoldenForWithGlobalComponent() {
 		comp := New()
 		comp.Logger().SetLogLevel(logger.All)
 
+		opts := []ConvertOption{}
 		for _, gPath := range globalFiles {
 			globalCompName := filepath.Base(gPath)
 			globalInput, err := os.ReadFile(gPath)
 			require.Nil(s.T(), err)
 
-			err = comp.RegisterGlobalComponent(strings.TrimSuffix(globalCompName, ".comp"), []byte(strings.TrimSpace(string(globalInput))))
-			assert.Nil(s.T(), err)
+			opts = append(opts, WithGlobalComponent(strings.TrimSuffix(globalCompName, ".comp"), []byte(strings.TrimSpace(string(globalInput)))))
 		}
+		opts = append(opts, WithGlobalComponent(strings.TrimSuffix(name, ".comp"), []byte(strings.TrimSpace(string(input)))))
 
 		var buf bytes.Buffer
 		err = comp.Convert(
 			[]byte(`{{ `+strings.TrimSuffix(name, ".comp")+` }}`),
 			&buf,
-			WithGlobalComponent(strings.TrimSuffix(name, ".comp"), []byte(strings.TrimSpace(string(input)))),
+			opts...,
 		)
 		assert.Nil(s.T(), err)
 
@@ -116,15 +116,6 @@ func (s *componoTestSuite) TestGoldenForWithGlobalComponent() {
 
 		assert.Equal(s.T(), strings.TrimSpace(string(golden)), buf.String(), "from %s", inputPath)
 	}
-}
-
-func (s *componoTestSuite) TestUnregisterGlobalComponent() {
-	compono := New().(*compono)
-	err := compono.RegisterGlobalComponent("SAY_HELLO", []byte("# Hello"))
-	require.Nil(s.T(), err)
-	err = compono.UnregisterGlobalComponent("SAY_HELLO")
-	require.Nil(s.T(), err)
-	assert.Equal(s.T(), 0, len(compono.globalWrapper.Children()))
 }
 
 func (s *componoTestSuite) TestConvertWithContextErrUnsupportedType() {
@@ -302,20 +293,6 @@ func (s *componoTestSuite) TestWithErrorStylesheetIsPerConversion() {
 	assert.NotContains(s.T(), third.String(), `/a.css`)
 }
 
-func (s *componoTestSuite) TestWithErrorStylesheetAppliesToRegisteredGlobalComponentError() {
-	comp := New()
-	require.Nil(s.T(), comp.RegisterGlobalComponent("GREETING", []byte(`{{ MISSING }}`)))
-
-	var buf bytes.Buffer
-	err := comp.Convert([]byte(`{{ GREETING }}`), &buf, WithErrorStylesheet("/_umono/error.css"))
-	require.Nil(s.T(), err)
-
-	assert.Equal(s.T(),
-		errorBlockHead+`<link rel="stylesheet" href="/_umono/error.css">`+unknownMissingBlock+errorBlockTail,
-		buf.String(),
-	)
-}
-
 func (s *componoTestSuite) TestWithErrorStylesheetAppliesToWithGlobalComponentError() {
 	var buf bytes.Buffer
 	err := New().Convert([]byte(`{{ GREETING }}`), &buf,
@@ -362,16 +339,6 @@ func (s *componoTestSuite) TestGoldenForScopes() {
 
 		comp := New()
 		comp.Logger().SetLogLevel(logger.All)
-
-		registeredFiles, err := filepath.Glob(filepath.Join(caseDir, "registered", "*.comp"))
-		require.Nil(s.T(), err)
-		for _, rPath := range registeredFiles {
-			rName := strings.TrimSuffix(filepath.Base(rPath), ".comp")
-			rSrc, err := os.ReadFile(rPath)
-			require.Nil(s.T(), err)
-			err = comp.RegisterGlobalComponent(rName, []byte(strings.TrimSpace(string(rSrc))))
-			require.Nil(s.T(), err)
-		}
 
 		opts := buildScopeOpts(s.T(), filepath.Join(caseDir, "global"))
 
@@ -490,19 +457,49 @@ func (s *componoTestSuite) TestErrDuplicateSubComponent() {
 	assert.Equal(s.T(), ErrDuplicateSubComponent, compErr.Code)
 }
 
+func (s *componoTestSuite) TestErrDuplicateGlobalComponent() {
+	err := New().Convert([]byte(`{{ A }}`), io.Discard,
+		WithGlobalComponent("A", []byte(`first`)),
+		WithGlobalComponent("A", []byte(`second`)),
+	)
+	require.Error(s.T(), err)
+	var compErr *ComponoError
+	require.ErrorAs(s.T(), err, &compErr)
+	assert.Equal(s.T(), ErrDuplicateGlobalComponent, compErr.Code)
+
+	err = New().Convert([]byte(`{{ A }}`), io.Discard,
+		WithGlobalComponent("A", []byte(`first`)),
+		WithGlobalComponent("B", []byte(`other`)),
+		WithGlobalComponent("A", []byte(`second`)),
+	)
+	require.Error(s.T(), err)
+	require.ErrorAs(s.T(), err, &compErr)
+	assert.Equal(s.T(), ErrDuplicateGlobalComponent, compErr.Code)
+
+	var buf bytes.Buffer
+	err = New().Convert([]byte("{{ A }}\n\n{{ G }}"), &buf,
+		WithGlobalComponent("A", []byte(`root`)),
+		WithGlobalComponent("G", []byte(`{{ A }}`),
+			WithGlobalComponent("A", []byte(`inner`)),
+		),
+	)
+	require.Nil(s.T(), err)
+	assert.Equal(s.T(), `<p>root</p><p>inner</p>`, buf.String())
+}
+
 func (s *componoTestSuite) TestIsolatedScopeTwiceSameAsOnce() {
 	var once, twice bytes.Buffer
 
 	c1 := New()
-	require.Nil(s.T(), c1.RegisterGlobalComponent("R", []byte(`root`)))
 	err := c1.Convert([]byte(`{{ G }}`), &once,
+		WithGlobalComponent("R", []byte(`root`)),
 		WithGlobalComponent("G", []byte(`{{ R }}`), WithIsolatedScope()),
 	)
 	require.Nil(s.T(), err)
 
 	c2 := New()
-	require.Nil(s.T(), c2.RegisterGlobalComponent("R", []byte(`root`)))
 	err = c2.Convert([]byte(`{{ G }}`), &twice,
+		WithGlobalComponent("R", []byte(`root`)),
 		WithGlobalComponent("G", []byte(`{{ R }}`), WithIsolatedScope(), WithIsolatedScope()),
 	)
 	require.Nil(s.T(), err)

@@ -120,28 +120,26 @@ John
 
 ### Global Components
 
-Global components can be registered once and used across multiple conversions:
+Global components are given to `Convert` with `WithGlobalComponent` and exist only in that conversion:
 
 ```go
 c := compono.New()
 
-// Register a global component
-c.RegisterGlobalComponent("FOOTER", []byte(`© 2026 My Company`))
-
-// Use it in any conversion
 c.Convert([]byte(`
 # Page Title
 Content here...
 {{ FOOTER }}
-`), &buf)
+`), &buf, compono.WithGlobalComponent("FOOTER", []byte(`© 2026 My Company`)))
 ```
+
+A `Compono` value does not store global components. Pass them again to every conversion that uses them.
 
 Global components can also have parameters:
 
 ```go
-c.RegisterGlobalComponent("BLOG_PAGE", []byte(`title="" content=""
+c.Convert(source, &buf, compono.WithGlobalComponent("BLOG_PAGE", []byte(`title="" content=""
 ## {{ title }}
-{{ content }}`))
+{{ content }}`)))
 ```
 
 ### Global Component Scopes
@@ -167,7 +165,7 @@ There are two `CARD`s here and both work. A `CARD` call in the page resolves to 
 
 1. The local components of the source the call is written in.
 2. The global component's sub components.
-3. The scope the global component is defined in, then outward through the scopes of its owners, and finally the global components given to `Convert` and registered with `RegisterGlobalComponent`.
+3. The scope the global component is defined in, then outward through the scopes of its owners, and finally the global components given to `Convert` directly.
 4. Built-in components.
 
 A global component without sub components resolves exactly as before: `Local > Global > Built-in`. Nesting depth is unlimited and the same rules apply at every level.
@@ -182,7 +180,8 @@ A global component without sub components resolves exactly as before: `Local > G
 
 - a conversion option (`WithContext`, `WithErrorStylesheet`, `WithAttributeHook`) is given to a global component at any depth, even with an empty value (`ErrConversionOptionInGlobal`),
 - `WithIsolatedScope` is given directly to `Convert` (`ErrIsolatedScopeInConvert`),
-- two sub components of the same owner share a name (`ErrDuplicateSubComponent`).
+- two sub components of the same owner share a name (`ErrDuplicateSubComponent`),
+- two global components given to `Convert` directly share a name (`ErrDuplicateGlobalComponent`).
 
 ## Built-in Components
 
@@ -539,8 +538,8 @@ Pass the value explicitly instead:
 
 The same applies to global components:
 
-```
-c.RegisterGlobalComponent("PROFILE_PAGE", []byte(`
+```go
+c.Convert(source, &buf, compono.WithGlobalComponent("PROFILE_PAGE", []byte(`
 name="Guest"
 
 {{ PROFILE_CARD name = name }}
@@ -548,7 +547,7 @@ name="Guest"
 ~ PROFILE_CARD name = ""
 ## {{ name }}
 Welcome to the profile page.
-`))
+`)))
 ```
 
 Usage:
@@ -834,13 +833,7 @@ c := compono.New()
 // Convert source to HTML
 err := c.Convert(source []byte, writer io.Writer, opts ...compono.ConvertOption)
 
-// Register a global component
-err := c.RegisterGlobalComponent(name string, source []byte)
-
-// Unregister a global component
-err := c.UnregisterGlobalComponent(name string)
-
-// Inject a global component for a single conversion
+// Give a global component for a single conversion
 err := c.Convert(source, writer, compono.WithGlobalComponent(name, globalSource))
 
 // Give a global component its own sub components and isolate its scope
@@ -862,6 +855,10 @@ err := c.Convert(source, writer, compono.WithAttributeHook(func(builtin string, 
     return nil
 }))
 ```
+
+### Concurrency
+
+A `Compono` value is stateless. `Convert` depends only on the source and the options, and it changes nothing in the `Compono` value. Everything that belongs to a conversion (global components, context, attribute hook) is given to `Convert` as an option and applies only to that conversion. One `Compono` value can be shared and its `Convert` called from several goroutines at once, with different options. The configuration does not change after `New`.
 
 ## Component Naming Convention
 
@@ -905,10 +902,10 @@ This outputs `<p>I override the built-in LINK component!</p>` instead of an anch
 **Global overrides built-in:**
 
 ```go
-c.RegisterGlobalComponent("LINK", []byte(`Custom link behavior`))
+c.Convert(source, &buf, compono.WithGlobalComponent("LINK", []byte(`Custom link behavior`)))
 ```
 
-Now all `{{ LINK }}` calls will use your global definition instead of the built-in one.
+Now all `{{ LINK }}` calls in that conversion will use your global definition instead of the built-in one.
 
 This allows you to customize or extend built-in components without modifying the library.
 

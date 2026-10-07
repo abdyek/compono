@@ -9,6 +9,13 @@ func NewLogger() Logger {
 	return &logger{}
 }
 
+// Scoped returns a logger for a single Parse or Render call. A logger created
+// by NewLogger keeps its indentation per call, so concurrent calls do not share
+// it.
+func Scoped(l Logger) Logger {
+	return l
+}
+
 func (*logger) SetLogLevel(LogLevel)                          {}
 func (*logger) Log(LogLevel, string, ...interface{})          {}
 func (*logger) LogMultiline(LogLevel, string, ...interface{}) {}

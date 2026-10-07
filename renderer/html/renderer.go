@@ -5,8 +5,15 @@ import (
 	"strings"
 
 	"github.com/umono-cms/compono/ast"
+	"github.com/umono-cms/compono/internal/attrhook"
 	"github.com/umono-cms/compono/logger"
 )
+
+// Options holds the settings of a single Render call.
+type Options struct {
+	AttributeHook   attrhook.AttributeHookFunc
+	ErrorStylesheet string
+}
 
 type renderer struct {
 	logger          logger.Logger
@@ -60,14 +67,15 @@ func NewRenderer(log logger.Logger) *renderer {
 	return r
 }
 
-func (r *renderer) Render(writer io.Writer, root ast.Node) error {
-	r.root = root
-	r.frameStack = nil
-	r.attrErr = nil
+func (r *renderer) Render(writer io.Writer, root ast.Node, opts Options) error {
+	cr := NewRenderer(logger.Scoped(r.logger))
+	cr.root = root
+	cr.attributeHook = opts.AttributeHook
+	cr.errorStylesheet = opts.ErrorStylesheet
 
-	out := r.render(root)
-	if r.attrErr != nil {
-		return r.attrErr
+	out := cr.render(root)
+	if cr.attrErr != nil {
+		return cr.attrErr
 	}
 
 	_, err := writer.Write([]byte(out))
@@ -128,8 +136,4 @@ func (r *renderer) findBuiltinComp(name string) builtinComponent {
 
 func (r *renderer) findBuiltinCompDef(name string) ast.Node {
 	return ast.FindBuiltinCompDef(r.root, name)
-}
-
-func (r *renderer) SetErrorStylesheet(url string) {
-	r.errorStylesheet = url
 }

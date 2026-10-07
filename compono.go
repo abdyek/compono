@@ -21,8 +21,8 @@ type ErrorCode int
 
 const (
 	ErrInvalidGlobalName ErrorCode = iota + 1
-	ErrGlobalAlreadyRegistered
-	ErrGlobalNotExist
+	_                              // 2: ErrGlobalAlreadyRegistered, removed in v0.7
+	_                              // 3: ErrGlobalNotExist, removed in v0.7
 	ErrInvalidAST
 	ErrRender
 	ErrUnsupportedType
@@ -34,22 +34,16 @@ const (
 	ErrAttributeHookAlreadySet
 	ErrInvalidAttributeName
 	ErrAttributeConflict
+	ErrDuplicateGlobalComponent
 )
 
 type Compono interface {
 	Convert(source []byte, writer io.Writer, opts ...ConvertOption) error
-	RegisterGlobalComponent(string, []byte) error
-	UnregisterGlobalComponent(string) error
 	Parser() parser.Parser
-	SetParser(parser.Parser)
 	Renderer() renderer.Renderer
-	SetRenderer(renderer.Renderer)
 	Validator() validator.Validator
-	SetValidator(validator.Validator)
 	ErrorWrapper() errwrap.ErrorWrapper
-	SetErrorWrapper(errwrap.ErrorWrapper)
 	Logger() logger.Logger
-	SetLogger(logger.Logger)
 }
 
 func New() Compono {
@@ -60,35 +54,23 @@ func New() Compono {
 	v := validator.DefaultValidator()
 	ew := errwrap.DefaultErrorWrapper()
 
-	gw := ast.DefaultEmptyNode()
-	gw.SetRule(rule.NewGlobalCompDefWrapper())
-
-	bw := ast.DefaultEmptyNode()
-	bw.SetRule(rule.NewDynamic("builtin-comp-wrapper"))
-
 	c := &compono{
-		parser:         p,
-		renderer:       r,
-		validator:      v,
-		errorWrapper:   ew,
-		logger:         log,
-		globalWrapper:  gw,
-		builtinWrapper: bw,
+		parser:       p,
+		renderer:     r,
+		validator:    v,
+		errorWrapper: ew,
+		logger:       log,
 	}
-
-	c.fillBuiltins()
 
 	return c
 }
 
 type compono struct {
-	parser         parser.Parser
-	renderer       renderer.Renderer
-	validator      validator.Validator
-	errorWrapper   errwrap.ErrorWrapper
-	logger         logger.Logger
-	globalWrapper  ast.Node
-	builtinWrapper ast.Node
+	parser       parser.Parser
+	renderer     renderer.Renderer
+	validator    validator.Validator
+	errorWrapper errwrap.ErrorWrapper
+	logger       logger.Logger
 }
 
 func (c *compono) Convert(source []byte, writer io.Writer, opts ...ConvertOption) error {
@@ -113,8 +95,11 @@ func (c *compono) Convert(source []byte, writer io.Writer, opts ...ConvertOption
 	globalWrapper.SetParent(root)
 	root.SetChildren(append(root.Children(), globalWrapper))
 
-	c.builtinWrapper.SetParent(root)
-	root.SetChildren(append(root.Children(), c.builtinWrapper))
+	builtinWrapper := ast.DefaultEmptyNode()
+	builtinWrapper.SetRule(rule.NewDynamic("builtin-comp-wrapper"))
+	builtinWrapper.SetParent(root)
+	builtinWrapper.SetChildren(builtin.BuildASTNodes(builtinWrapper))
+	root.SetChildren(append(root.Children(), builtinWrapper))
 
 	err = c.validator.Validate(root)
 	if err != nil {
@@ -123,19 +108,15 @@ func (c *compono) Convert(source []byte, writer io.Writer, opts ...ConvertOption
 
 	c.errorWrapper.Wrap(root)
 
-	if es, ok := c.renderer.(renderer.ErrorStylesheetSetter); ok {
-		stylesheet := ""
-		if cfg.errorStylesheet != nil {
-			stylesheet = *cfg.errorStylesheet
-		}
-		es.SetErrorStylesheet(stylesheet)
+	stylesheet := ""
+	if cfg.errorStylesheet != nil {
+		stylesheet = *cfg.errorStylesheet
 	}
 
-	if hs, ok := c.renderer.(renderer.AttributeHookSetter); ok {
-		hs.SetAttributeHook(cfg.attributeHook)
-	}
-
-	err = c.renderer.Render(writer, root)
+	err = c.renderer.Render(writer, root, renderer.Options{
+		AttributeHook:   cfg.attributeHook,
+		ErrorStylesheet: stylesheet,
+	})
 	if err != nil {
 		switch {
 		case errors.Is(err, attrhook.ErrInvalidAttributeName):
@@ -149,126 +130,24 @@ func (c *compono) Convert(source []byte, writer io.Writer, opts ...ConvertOption
 	return nil
 }
 
-func (c *compono) RegisterGlobalComponent(name string, source []byte) error {
-	if registered := c.getGlobalCompDefByName(name); registered != nil {
-		return NewComponoError(ErrGlobalAlreadyRegistered, fmt.Sprintf("cannot register global component %q: already registered", name))
-	}
-
-	parsed, err := c.newGlobalComponentNode(name, source)
-	if err != nil {
-		return err
-	}
-
-	c.globalWrapper.SetChildren(append([]ast.Node{parsed}, c.globalWrapper.Children()...))
-
-	return nil
-}
-
-func (c *compono) UnregisterGlobalComponent(name string) error {
-	if registered := c.getGlobalCompDefByName(name); registered == nil {
-		return NewComponoError(ErrGlobalNotExist, fmt.Sprintf("cannot unregister global component %q: does not exist", name))
-	}
-
-	globalComps := ast.FilterNodes(c.globalWrapper.Children(), func(gc ast.Node) bool {
-		globalCompName := ast.FindNodeByRuleName(gc.Children(), "global-comp-name")
-		if string(globalCompName.Raw()) == name {
-			return false
-		}
-		return true
-	})
-
-	c.globalWrapper.SetChildren(globalComps)
-	return nil
-}
-
 func (c *compono) Parser() parser.Parser {
 	return c.parser
-}
-
-func (c *compono) SetParser(parser parser.Parser) {
-	c.parser = parser
 }
 
 func (c *compono) Renderer() renderer.Renderer {
 	return c.renderer
 }
 
-func (c *compono) SetRenderer(renderer renderer.Renderer) {
-	c.renderer = renderer
-}
-
 func (c *compono) Validator() validator.Validator {
 	return c.validator
-}
-
-func (c *compono) SetValidator(vldtr validator.Validator) {
-	c.validator = vldtr
 }
 
 func (c *compono) ErrorWrapper() errwrap.ErrorWrapper {
 	return c.errorWrapper
 }
 
-func (c *compono) SetErrorWrapper(ew errwrap.ErrorWrapper) {
-	c.errorWrapper = ew
-}
-
 func (c *compono) Logger() logger.Logger {
 	return c.logger
-}
-
-func (c *compono) SetLogger(logger logger.Logger) {
-	c.logger = logger
-}
-
-func (c *compono) getGlobalCompDefByName(name string) ast.Node {
-	for _, gcd := range c.globalWrapper.Children() {
-		if gcd.Rule().Name() != "global-comp-def" {
-			continue
-		}
-		for _, child := range gcd.Children() {
-			if child.Rule().Name() == "global-comp-name" && name == string(child.Raw()) {
-				return gcd
-			}
-		}
-	}
-	return nil
-}
-
-func (c *compono) cloneGlobalComponents() []ast.Node {
-	children := c.globalWrapper.Children()
-	if len(children) == 0 {
-		return nil
-	}
-
-	cloned := make([]ast.Node, len(children))
-	for i, child := range children {
-		cloned[i] = c.cloneNode(child)
-	}
-	return cloned
-}
-
-func (c *compono) cloneNode(node ast.Node) ast.Node {
-	if node == nil {
-		return nil
-	}
-
-	clone := ast.DefaultEmptyNode()
-	clone.SetRule(node.Rule())
-	clone.SetRaw(node.Raw())
-
-	children := node.Children()
-	if len(children) > 0 {
-		clonedChildren := make([]ast.Node, len(children))
-		for i, child := range children {
-			clonedChild := c.cloneNode(child)
-			clonedChild.SetParent(clone)
-			clonedChildren[i] = clonedChild
-		}
-		clone.SetChildren(clonedChildren)
-	}
-
-	return clone
 }
 
 func (c *compono) newConvertConfig(opts ...ConvertOption) (*convertConfig, error) {
@@ -284,6 +163,13 @@ func (c *compono) newConvertConfig(opts ...ConvertOption) (*convertConfig, error
 			return nil, err
 		}
 	}
+	seen := make(map[string]bool)
+	for _, comp := range cfg.globalComponents {
+		if seen[comp.name] {
+			return nil, NewComponoError(ErrDuplicateGlobalComponent, fmt.Sprintf("duplicate global component %q in the root scope", comp.name))
+		}
+		seen[comp.name] = true
+	}
 	return cfg, nil
 }
 
@@ -296,7 +182,6 @@ func (c *compono) newGlobalWrapper(injected []*globalComponentNode) ast.Node {
 		c.buildGlobalCompDefNode(node)
 		children = append(children, node.node)
 	}
-	children = append(children, c.cloneGlobalComponents()...)
 	gw.SetChildren(children)
 
 	for _, child := range gw.Children() {
@@ -351,10 +236,6 @@ func (c *compono) newGlobalComponentNode(name string, source []byte) (ast.Node, 
 
 	parsed.SetChildren(append([]ast.Node{globalCompName}, parsed.Children()...))
 	return parsed, nil
-}
-
-func (c *compono) fillBuiltins() {
-	c.builtinWrapper.SetChildren(builtin.BuildASTNodes(c.builtinWrapper))
 }
 
 type ComponoError struct {

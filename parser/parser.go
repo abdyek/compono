@@ -22,9 +22,10 @@ type parser struct {
 }
 
 func (p *parser) Parse(source []byte, root ast.Node) ast.Node {
-	p.logger.Enter(logger.Parser, "Parser started")
-	node := p.parse(source, root)
-	p.logger.Exit(logger.Parser, "Parser finished")
+	cp := &parser{logger: logger.Scoped(p.logger)}
+	cp.logger.Enter(logger.Parser, "Parser started")
+	node := cp.parse(source, root)
+	cp.logger.Exit(logger.Parser, "Parser finished")
 	return node
 }
 
