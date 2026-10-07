@@ -150,36 +150,6 @@ func (s *componoTestSuite) TestConvertWithContextErrUnsupportedKeyNotation() {
 	assert.Contains(s.T(), compErr.Message, `invalid compono struct tag "invalid_key"`)
 }
 
-func (s *componoTestSuite) TestConvertWithErrorStylesheetErrErrorStylesheetAlreadySet() {
-	var buf bytes.Buffer
-	_, err := New().Convert([]byte(`{{ FOO }}`), &buf,
-		WithErrorStylesheet("/a.css"),
-		WithErrorStylesheet("/b.css"),
-	)
-
-	require.Error(s.T(), err)
-
-	var compErr *ComponoError
-	require.ErrorAs(s.T(), err, &compErr)
-	assert.Equal(s.T(), ErrErrorStylesheetAlreadySet, compErr.Code)
-	assert.Contains(s.T(), compErr.Message, "error stylesheet")
-	assert.Empty(s.T(), buf.String())
-}
-
-func (s *componoTestSuite) TestConvertWithErrorStylesheetTwiceErrEvenWhenEmpty() {
-	var buf bytes.Buffer
-	_, err := New().Convert([]byte(`{{ FOO }}`), &buf,
-		WithErrorStylesheet("/a.css"),
-		WithErrorStylesheet(""),
-	)
-
-	require.Error(s.T(), err)
-
-	var compErr *ComponoError
-	require.ErrorAs(s.T(), err, &compErr)
-	assert.Equal(s.T(), ErrErrorStylesheetAlreadySet, compErr.Code)
-}
-
 func (s *componoTestSuite) TestGoldenForScopes() {
 	caseDirs, err := filepath.Glob("testdata/scope/*")
 	require.Nil(s.T(), err)
@@ -244,21 +214,7 @@ func (s *componoTestSuite) TestErrConversionOptionInGlobal() {
 	assert.Equal(s.T(), ErrConversionOptionInGlobal, compErr.Code)
 
 	_, err = New().Convert([]byte(`{{ G }}`), io.Discard,
-		WithGlobalComponent("G", []byte(`hi`), WithErrorStylesheet("/a.css")),
-	)
-	require.Error(s.T(), err)
-	require.ErrorAs(s.T(), err, &compErr)
-	assert.Equal(s.T(), ErrConversionOptionInGlobal, compErr.Code)
-
-	_, err = New().Convert([]byte(`{{ G }}`), io.Discard,
 		WithGlobalComponent("G", []byte(`hi`), WithContext(nil)),
-	)
-	require.Error(s.T(), err)
-	require.ErrorAs(s.T(), err, &compErr)
-	assert.Equal(s.T(), ErrConversionOptionInGlobal, compErr.Code)
-
-	_, err = New().Convert([]byte(`{{ G }}`), io.Discard,
-		WithGlobalComponent("G", []byte(`hi`), WithErrorStylesheet("")),
 	)
 	require.Error(s.T(), err)
 	require.ErrorAs(s.T(), err, &compErr)
