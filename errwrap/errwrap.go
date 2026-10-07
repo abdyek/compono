@@ -21,8 +21,7 @@ type errorWrapper struct {
 
 func (ew *errorWrapper) Wrap(root ast.Node) {
 	ctx := &wrapContext{
-		root:           root,
-		compCallChains: ew.getCompCallChains(root),
+		root: root,
 	}
 
 	ew.scanAndWrap(ctx, root)
@@ -49,60 +48,6 @@ func (ew *errorWrapper) wrap(ctx *wrapContext, node ast.Node) (wrapped bool) {
 	}
 
 	return false
-}
-
-func (ew *errorWrapper) getCompCallChains(root ast.Node) [][]ast.Node {
-	rootContent := ast.FindNodeByRuleName(root.Children(), "root-content")
-	compCalls := ast.FilterNodesInTree(rootContent, func(node ast.Node) bool {
-		return ast.IsRuleNameOneOf(node, []string{"block-comp-call", "inline-comp-call"})
-	})
-
-	chains := [][]ast.Node{}
-
-	for _, compCall := range compCalls {
-		chain := []ast.Node{}
-		addLinkToChain(root, &chain, compCall)
-		chains = append(chains, chain)
-	}
-
-	return chains
-}
-
-func addLinkToChain(root ast.Node, chain *[]ast.Node, compCall ast.Node) {
-	stop := false
-	for _, existing := range *chain {
-		if existing == compCall {
-			stop = true
-		}
-	}
-
-	*chain = append(*chain, compCall)
-	if stop {
-		return
-	}
-
-	compCallName := getCompCallNameStr(compCall)
-	if compCallName == "" {
-		return
-	}
-
-	compDef := ast.FindCompDef(root, compCall, compCallName)
-	if compDef == nil {
-		return
-	}
-
-	compDefContent := getCompDefContent(compDef)
-	if compDefContent == nil {
-		return
-	}
-
-	compCalls := ast.FilterNodesInDefContent(compDefContent, func(child ast.Node) bool {
-		return ast.IsRuleNameOneOf(child, []string{"block-comp-call", "inline-comp-call"})
-	})
-
-	for _, cc := range compCalls {
-		addLinkToChain(root, chain, cc)
-	}
 }
 
 func (ew *errorWrapper) wrapWithErr(self ast.Node, title, msg string, block bool) {

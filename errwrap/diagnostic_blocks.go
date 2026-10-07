@@ -6,8 +6,7 @@ import (
 	"github.com/umono-cms/compono/ast"
 )
 
-func alwaysBlock(_ *wrapContext, _ ast.Node) bool { return true }
-func neverBlock(_ *wrapContext, _ ast.Node) bool  { return false }
+func neverBlock(_ *wrapContext, _ ast.Node) bool { return false }
 
 func blockFromRuleName(_ *wrapContext, node ast.Node) bool {
 	return strings.HasPrefix(node.Rule().Name(), "block-")

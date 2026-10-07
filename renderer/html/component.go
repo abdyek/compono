@@ -52,10 +52,15 @@ func (cc *compCall) Render() string {
 		if localCompDefContent == nil {
 			return ""
 		}
+		signature := errwrap.CallSignature(cc.renderer.root, cc.Node(), localCompDef, invokerChain(cc.Invoker()))
+		if cc.renderer.isRendering(localCompDef, signature) {
+			title, message := errwrap.InfiniteCallError(strings.TrimSpace(string(compCallName.Raw())))
+			return cc.renderer.recordDiagnostic(cc.Node(), title, message, ast.IsRuleName(cc.Node(), "block-comp-call"))
+		}
 		if title, message, ok := errwrap.CallArgTypeError(cc.renderer.root, cc.Node(), localCompDef, invokerChain(cc.Invoker())); ok {
 			return cc.renderer.recordDiagnostic(cc.Node(), title, message, ast.IsRuleName(cc.Node(), "block-comp-call"))
 		}
-		cc.renderer.pushLocalFrame(strings.TrimSpace(string(compCallName.Raw())), cc.Node())
+		cc.renderer.pushLocalFrame(strings.TrimSpace(string(compCallName.Raw())), localCompDef, signature, cc.Node())
 		defer cc.renderer.popFrame()
 		if inlineCompCall {
 			return cc.renderInlineCompCall(strings.TrimSpace(string(compCallName.Raw())), localCompDefContent)
@@ -69,10 +74,15 @@ func (cc *compCall) Render() string {
 		if globalCompDefContent == nil {
 			return ""
 		}
+		signature := errwrap.CallSignature(cc.renderer.root, cc.Node(), globalCompDef, invokerChain(cc.Invoker()))
+		if cc.renderer.isRendering(globalCompDef, signature) {
+			title, message := errwrap.InfiniteCallError(strings.TrimSpace(string(compCallName.Raw())))
+			return cc.renderer.recordDiagnostic(cc.Node(), title, message, ast.IsRuleName(cc.Node(), "block-comp-call"))
+		}
 		if title, message, ok := errwrap.CallArgTypeError(cc.renderer.root, cc.Node(), globalCompDef, invokerChain(cc.Invoker())); ok {
 			return cc.renderer.recordDiagnostic(cc.Node(), title, message, ast.IsRuleName(cc.Node(), "block-comp-call"))
 		}
-		cc.renderer.pushGlobalFrame(strings.TrimSpace(string(compCallName.Raw())), globalCompDef, cc.Node())
+		cc.renderer.pushGlobalFrame(strings.TrimSpace(string(compCallName.Raw())), globalCompDef, signature, cc.Node())
 		defer cc.renderer.popFrame()
 		if inlineCompCall {
 			return cc.renderInlineCompCall(strings.TrimSpace(string(compCallName.Raw())), globalCompDefContent)

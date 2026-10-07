@@ -24,9 +24,6 @@ func renderCompParamCall(r *renderer, rn renderableNode, paramRefName string) st
 		return ""
 	}
 	target := resolvedCompTarget{name: resolved.Raw, scope: resolved.Scope}
-	if isCompTargetInInvokerChain(r, rn, target.name) {
-		return ""
-	}
 
 	inlineCall := isInlineCompParamRef(rn.Node())
 
@@ -49,6 +46,11 @@ func renderCompParamCall(r *renderer, rn renderableNode, paramRefName string) st
 		if localCompDefContent == nil {
 			return ""
 		}
+		signature := errwrap.CallSignature(r.root, rn.Node(), localCompDef, getAncestorsByInvoker(rn))
+		if r.isRendering(localCompDef, signature) {
+			title, message := errwrap.InfiniteCallError(target.name)
+			return r.recordDiagnostic(rn.Node(), title, message, !inlineCall)
+		}
 		if title, message, ok := errwrap.ParamCompCallError(r.root, rn.Node(), resolved, localCompDef, getAncestorsByInvoker(rn)); ok {
 			return r.recordDiagnostic(rn.Node(), title, message, !inlineCall)
 		}
@@ -57,7 +59,7 @@ func renderCompParamCall(r *renderer, rn renderableNode, paramRefName string) st
 				return r.recordDiagnostic(rn.Node(), title, message, false)
 			}
 		}
-		r.pushLocalFrame(target.name, rn.Node())
+		r.pushLocalFrame(target.name, localCompDef, signature, rn.Node())
 		defer r.popFrame()
 		if inlineCall {
 			return renderInlineCompDefContent(r, rn, localCompDefContent)
@@ -71,6 +73,11 @@ func renderCompParamCall(r *renderer, rn renderableNode, paramRefName string) st
 		if globalCompDefContent == nil {
 			return ""
 		}
+		signature := errwrap.CallSignature(r.root, rn.Node(), globalCompDef, getAncestorsByInvoker(rn))
+		if r.isRendering(globalCompDef, signature) {
+			title, message := errwrap.InfiniteCallError(target.name)
+			return r.recordDiagnostic(rn.Node(), title, message, !inlineCall)
+		}
 		if title, message, ok := errwrap.ParamCompCallError(r.root, rn.Node(), resolved, globalCompDef, getAncestorsByInvoker(rn)); ok {
 			return r.recordDiagnostic(rn.Node(), title, message, !inlineCall)
 		}
@@ -79,7 +86,7 @@ func renderCompParamCall(r *renderer, rn renderableNode, paramRefName string) st
 				return r.recordDiagnostic(rn.Node(), title, message, false)
 			}
 		}
-		r.pushGlobalFrame(target.name, globalCompDef, rn.Node())
+		r.pushGlobalFrame(target.name, globalCompDef, signature, rn.Node())
 		defer r.popFrame()
 		if inlineCall {
 			return renderInlineCompDefContent(r, rn, globalCompDefContent)
@@ -348,30 +355,6 @@ func standaloneCompParamRefInParagraph(pContent ast.Node) ast.Node {
 		return nil
 	}
 	return paramRef
-}
-
-func isCompTargetInInvokerChain(r *renderer, rn renderableNode, targetName string) bool {
-	ancestors := getAncestorsByInvoker(rn)
-	for i, anc := range ancestors {
-		if ast.IsRuleNameOneOf(anc, []string{"block-comp-call", "inline-comp-call"}) {
-			compCallName := ast.FindNodeByRuleName(anc.Children(), "comp-call-name")
-			if compCallName != nil && strings.TrimSpace(string(compCallName.Raw())) == targetName {
-				return true
-			}
-			continue
-		}
-
-		if !ast.IsRuleName(anc, "param-ref") {
-			continue
-		}
-
-		resolved := ast.ResolveFrameCompValue(r.root, anc, ancestors[i+1:])
-		if resolved.Type == "comp" && resolved.Raw == targetName {
-			return true
-		}
-	}
-
-	return false
 }
 
 func shouldTreatParamRefAsCompCall(compParam ast.Node, rn renderableNode, r *renderer, paramRefName string) bool {

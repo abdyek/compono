@@ -125,16 +125,6 @@ func isLegacyNotCompStandalone() func(*wrapContext, ast.Node) bool {
 	}
 }
 
-func isCompParamRefNode() func(*wrapContext, ast.Node) bool {
-	return func(_ *wrapContext, node ast.Node) bool {
-		compDef := findEnclosingCompDef(node)
-		if compDef == nil {
-			return false
-		}
-		return isCompParamRefInCompDef(compDef, node)
-	}
-}
-
 func isCompParamRefInCompDef(compDef ast.Node, node ast.Node) bool {
 	if !ast.IsRuleName(node, "param-ref") {
 		return false

@@ -10,22 +10,6 @@ func staticTitle(s string) func(*wrapContext, ast.Node) string {
 	return func(_ *wrapContext, _ ast.Node) string { return s }
 }
 
-func infiniteCompCallMsg(_ *wrapContext, node ast.Node) string {
-	name := getCompCallNameStr(node)
-	return "The call to component **" + name + "** creates an infinite loop and was skipped."
-}
-
-func infiniteParamCompCallMsg(ctx *wrapContext, node ast.Node) string {
-	name := getClosingParamCompCallTargetName(ctx, node)
-	if name == "" {
-		name = getParamCompCallNameStr(node)
-	}
-	if strings.HasPrefix(name, "NODE_") {
-		name = strings.TrimPrefix(name, "NODE_")
-	}
-	return "The call to component **" + name + "** creates an infinite loop and was skipped."
-}
-
 func unknownCompCallMsg(_ *wrapContext, node ast.Node) string {
 	name := getCompCallNameStr(node)
 	return "The component **" + name + "** is not defined or not registered."
