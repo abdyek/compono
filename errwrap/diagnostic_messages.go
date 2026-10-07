@@ -157,7 +157,7 @@ func undefinedParamRefMsg(_ *wrapContext, node ast.Node) string {
 }
 
 func undefinedParamRefsInLinkMsg(ctx *wrapContext, node ast.Node) string {
-	refNames := getUndefinedParamRefNamesInLink(ctx, node)
+	refNames := getUndefinedParamRefNamesInLinkURL(ctx, node)
 	if len(refNames) == 1 {
 		return "The parameter **" + refNames[0] + "** is not defined for this component."
 	}

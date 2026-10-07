@@ -835,6 +835,8 @@ A diagnostic has these fields:
 
 The part an error drops renders nothing; the rest of the output is written. For example, `Hello {{ FOO }} world` with an undefined `FOO` renders `<p>Hello  world</p>`.
 
+In a markdown link, an error of a `{{ }}` unit in the text drops only that unit, and an error in the address drops the whole link: `[Docs {{ x }}](/docs)` renders `<a href="/docs">Docs </a>` when `x` cannot be used.
+
 `Convert` returns one diagnostic for each dropped part, in output order. A global component called 10 times with an error inside returns 10 diagnostics, each with its own `Calls`; grouping them is up to the application. An error that is never rendered, such as one inside a component that is never called, returns no diagnostic. The same source and options always return the same diagnostics in the same order.
 
 ### Error Stylesheet
