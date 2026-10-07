@@ -477,14 +477,14 @@ func (s *componoTestSuite) TestErrDuplicateGlobalComponent() {
 	assert.Equal(s.T(), ErrDuplicateGlobalComponent, compErr.Code)
 
 	var buf bytes.Buffer
-	err = New().Convert([]byte(`{{ A }} {{ G }}`), &buf,
+	err = New().Convert([]byte("{{ A }}\n\n{{ G }}"), &buf,
 		WithGlobalComponent("A", []byte(`root`)),
 		WithGlobalComponent("G", []byte(`{{ A }}`),
 			WithGlobalComponent("A", []byte(`inner`)),
 		),
 	)
 	require.Nil(s.T(), err)
-	assert.Equal(s.T(), `<p>root inner</p>`, buf.String())
+	assert.Equal(s.T(), `<p>root</p><p>inner</p>`, buf.String())
 }
 
 func (s *componoTestSuite) TestIsolatedScopeTwiceSameAsOnce() {
