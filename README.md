@@ -66,6 +66,30 @@ fmt.Println("Hello")
 ```
 ~~~
 
+### Comments
+
+A line that starts with `//` is a comment line. Leading spaces and tabs are ignored. Comment lines are removed from the source, with their line breaks, before anything else is read, and they write nothing to the output:
+
+```
+# About
+// TODO: confirm the founding year
+Umono was founded in 2024.
+```
+
+Output:
+
+```html
+<h1>About</h1><p>Umono was founded in 2024.</p>
+```
+
+- A comment line is not an empty line, so it does not split a paragraph. `First line`, `// note`, `Second line` give `<p>First line<br>Second line</p>`.
+- Comment lines are not lines of a component body. A component whose body is a comment line and one paragraph line is still inline.
+- The content of a comment is not read. A call on a comment line is not called and produces no error, so `// {{ CARD }}` disables a line.
+- There are no inline, multi-line or block comments. `Text // note`, `/* note */` and `<!-- note -->` are plain text.
+- `//` does not start a comment inside a code block, inside a `{{ }}` unit that spans several lines, or after a heading's `# `.
+
+Comments work in the converted source, in local components and in global components.
+
 ### Components
 
 Components are the core feature of Compono. They allow you to create reusable content blocks.

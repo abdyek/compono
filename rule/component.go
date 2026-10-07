@@ -1392,6 +1392,10 @@ func NewGlobalCompDef() Rule {
 	return &globalCompDef{}
 }
 
+func (_ *globalCompDef) RemovedLines(source []byte) [][2]int {
+	return commentLines(source)
+}
+
 func (_ *globalCompDef) Name() string {
 	return "global-comp-def"
 }

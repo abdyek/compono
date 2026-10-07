@@ -12,6 +12,10 @@ func NewRoot() Rule {
 	return &root{}
 }
 
+func (_ *root) RemovedLines(source []byte) [][2]int {
+	return commentLines(source)
+}
+
 func (_ *root) Selectors() []selector.Selector {
 	return []selector.Selector{}
 }

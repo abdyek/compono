@@ -1,0 +1,5 @@
+Merhaba, {{ USERNAME }}!
+
+~ USERNAME
+// Oturum açan kullanıcının adı
+{{ context(current-user/first-name) }}

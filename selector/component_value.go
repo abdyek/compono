@@ -588,6 +588,11 @@ func hasContextKeywordAt(source []byte, offset int) bool {
 	return offset+7 <= len(source) && string(source[offset:offset+7]) == "context"
 }
 
+// MustacheCallEnd returns the end of the component call that starts at start, and false if no valid call starts there.
+func MustacheCallEnd(source []byte, start int) (int, bool) {
+	return scanMustacheCall(source, start, false)
+}
+
 func scanMustacheCall(source []byte, offset int, paramRefName bool) (int, bool) {
 	if offset+1 >= len(source) || source[offset] != '{' || source[offset+1] != '{' {
 		return 0, false
