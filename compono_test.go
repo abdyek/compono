@@ -457,6 +457,36 @@ func (s *componoTestSuite) TestErrDuplicateSubComponent() {
 	assert.Equal(s.T(), ErrDuplicateSubComponent, compErr.Code)
 }
 
+func (s *componoTestSuite) TestErrDuplicateGlobalComponent() {
+	err := New().Convert([]byte(`{{ A }}`), io.Discard,
+		WithGlobalComponent("A", []byte(`first`)),
+		WithGlobalComponent("A", []byte(`second`)),
+	)
+	require.Error(s.T(), err)
+	var compErr *ComponoError
+	require.ErrorAs(s.T(), err, &compErr)
+	assert.Equal(s.T(), ErrDuplicateGlobalComponent, compErr.Code)
+
+	err = New().Convert([]byte(`{{ A }}`), io.Discard,
+		WithGlobalComponent("A", []byte(`first`)),
+		WithGlobalComponent("B", []byte(`other`)),
+		WithGlobalComponent("A", []byte(`second`)),
+	)
+	require.Error(s.T(), err)
+	require.ErrorAs(s.T(), err, &compErr)
+	assert.Equal(s.T(), ErrDuplicateGlobalComponent, compErr.Code)
+
+	var buf bytes.Buffer
+	err = New().Convert([]byte(`{{ A }} {{ G }}`), &buf,
+		WithGlobalComponent("A", []byte(`root`)),
+		WithGlobalComponent("G", []byte(`{{ A }}`),
+			WithGlobalComponent("A", []byte(`inner`)),
+		),
+	)
+	require.Nil(s.T(), err)
+	assert.Equal(s.T(), `<p>root inner</p>`, buf.String())
+}
+
 func (s *componoTestSuite) TestIsolatedScopeTwiceSameAsOnce() {
 	var once, twice bytes.Buffer
 
