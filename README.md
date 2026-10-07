@@ -202,7 +202,7 @@ A global component without sub components resolves exactly as before: `Local > G
 
 **Errors:** `Convert` returns an error when:
 
-- a conversion option (`WithContext`, `WithErrorStylesheet`, `WithAttributeHook`) is given to a global component at any depth, even with an empty value (`ErrConversionOptionInGlobal`),
+- a conversion option (`WithContext`, `WithAttributeHook`) is given to a global component at any depth, even with an empty value (`ErrConversionOptionInGlobal`),
 - `WithIsolatedScope` is given directly to `Convert` (`ErrIsolatedScopeInConvert`),
 - two sub components of the same owner share a name (`ErrDuplicateSubComponent`),
 - two global components given to `Convert` directly share a name (`ErrDuplicateGlobalComponent`).
@@ -853,10 +853,6 @@ renders `<p>Item: 1</p><p>Item: </p>` and returns one `array-index-out-of-range`
 A call that enters a component already being rendered with the same component values never ends. It is an `infinite-component-call` and drops where it is written, so in a cycle only the call that closes it drops. A component that calls itself with other component values is not a loop.
 
 `Convert` returns one diagnostic for each dropped part, in output order. A global component called 10 times with an error inside returns 10 diagnostics, each with its own `Calls`; grouping them is up to the application. An error that is never rendered, such as one inside a component that is never called, returns no diagnostic. The same source and options always return the same diagnostics in the same order.
-
-### Error Stylesheet
-
-`compono.WithErrorStylesheet` no longer has an effect, since error elements are not rendered. It will be removed. Using it twice in a conversion still makes `Convert` return a `*compono.ComponoError` with code `ErrErrorStylesheetAlreadySet`.
 
 ## API Reference
 
