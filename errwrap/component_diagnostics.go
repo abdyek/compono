@@ -215,20 +215,16 @@ func getUnknownResolvedCompArgs(ctx *wrapContext, compCall ast.Node, compDef ast
 		if _, used := usedCompParamNames[info.name]; !used {
 			continue
 		}
+		if _, ok := explicitCompArgs[info.name]; !ok {
+			continue
+		}
 
 		value := resolvedCompArgs[info.name]
 		if value == "" || strings.HasPrefix(value, "$") {
 			continue
 		}
 
-		lookupScope := compCall
-		if _, ok := explicitCompArgs[info.name]; !ok && ast.IsRuleName(compDef, "global-comp-def") {
-			if globalCompContent := getCompDefContent(compDef); globalCompContent != nil {
-				lookupScope = globalCompContent
-			}
-		}
-
-		if ast.FindCompDef(ctx.root, lookupScope, value) == nil && !util.InSliceString(value, unknowns) {
+		if ast.FindCompDef(ctx.root, compCall, value) == nil && !util.InSliceString(value, unknowns) {
 			unknowns = append(unknowns, value)
 		}
 	}

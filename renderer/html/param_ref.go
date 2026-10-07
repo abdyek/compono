@@ -49,6 +49,9 @@ func renderCompParamCall(r *renderer, rn renderableNode, paramRefName string) st
 		if localCompDefContent == nil {
 			return ""
 		}
+		if title, message, ok := errwrap.ParamCompCallError(r.root, rn.Node(), resolved, localCompDef, getAncestorsByInvoker(rn)); ok {
+			return r.recordDiagnostic(rn.Node(), title, message, !inlineCall)
+		}
 		if inlineCall {
 			if title, message, ok := errwrap.InlineCompValueError(target.name, localCompDef); ok {
 				return r.recordDiagnostic(rn.Node(), title, message, false)
@@ -68,6 +71,9 @@ func renderCompParamCall(r *renderer, rn renderableNode, paramRefName string) st
 		if globalCompDefContent == nil {
 			return ""
 		}
+		if title, message, ok := errwrap.ParamCompCallError(r.root, rn.Node(), resolved, globalCompDef, getAncestorsByInvoker(rn)); ok {
+			return r.recordDiagnostic(rn.Node(), title, message, !inlineCall)
+		}
 		if inlineCall {
 			if title, message, ok := errwrap.InlineCompValueError(target.name, globalCompDef); ok {
 				return r.recordDiagnostic(rn.Node(), title, message, false)
@@ -84,6 +90,10 @@ func renderCompParamCall(r *renderer, rn renderableNode, paramRefName string) st
 	builtinComp := r.findBuiltinComp(target.name)
 	if builtinComp != nil {
 		return builtinComp.Render(rn.Invoker(), rn.Node())
+	}
+
+	if title, message, ok := errwrap.ParamCompCallError(r.root, rn.Node(), resolved, nil, getAncestorsByInvoker(rn)); ok {
+		return r.recordDiagnostic(rn.Node(), title, message, !inlineCall)
 	}
 
 	return ""

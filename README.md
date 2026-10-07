@@ -406,12 +406,12 @@ This renders `Missing argument` with the message `The parameter **alt** of compo
 - The default value of a required parameter only declares its type. It is never used or resolved.
 - An empty value satisfies the requirement. `alt = ""` is a given argument. The component decides what an empty value means.
 - A required argument can be given in the call or bound with [Argument Binding](#argument-binding). Bound and given arguments are checked together.
-- The error is shown on the call that misses the argument. If the called component comes from a component parameter, it is shown on the topmost call where the component value is written.
+- The call that misses the argument is dropped. If the called component comes from a component parameter, the call through the parameter (`{{ content }}`) is checked every time it is rendered and dropped where it is written.
 - `!` is for local and global components. Required parameters of built-in components are checked by their own errors.
 
 ### Parameter Definition Errors
 
-A parameter definition must be `name = default` or `name! = default`. A definition without a default value (`~ X a`) or with any other shape (`~ X a ! = ""`, `~ X !a = ""`) renders `Invalid parameter definition` with the message `The parameter definition **[text]** of component **[component]** is invalid.` The error is shown on every call of the component, and the whole call is replaced by the error.
+A parameter definition must be `name = default` or `name! = default`. A definition without a default value (`~ X a`) or with any other shape (`~ X a ! = ""`, `~ X !a = ""`) renders `Invalid parameter definition` with the message `The parameter definition **[text]** of component **[component]** is invalid.` Every call of the component is dropped.
 
 ---
 
@@ -514,7 +514,7 @@ Output:
 - Binding a parameter that the component does not define renders `Unknown parameter`.
 - Binding a value of the wrong type renders `Wrong argument type`.
 - Required arguments of a bound component are validated with the bound and the given arguments together. This applies to built-in components and to [required parameters](#required-parameters) of local and global components.
-- Giving an argument to a parameter that is already bound renders `Duplicate argument` with the message `The parameter **[name]** of component **[component]** is already bound.` There is no precedence rule between a bound and a given argument.
+- Giving an argument to a parameter that is already bound is a `duplicate-argument` error with the message `The parameter **[name]** of component **[component]** is already bound.` The call that gives the argument is dropped. There is no precedence rule between a bound and a given argument.
 
 ```
 {{ WRAPPER content = CARD(title = "Bound") }}

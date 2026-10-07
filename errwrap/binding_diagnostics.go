@@ -96,34 +96,7 @@ func walkBindingFrames(ctx *wrapContext, chain []ast.Node) {
 			continue
 		}
 
-		if ast.IsRuleName(next, "param-ref") {
-			value := ast.ResolveFrameCompValue(ctx.root, next, chain)
-			if value.Type != "comp" || value.Raw == "" {
-				continue
-			}
-			checkDuplicateArgs(ctx, next, value)
-		}
-
 		walkBindingFrames(ctx, append([]ast.Node{next}, chain...))
-	}
-}
-
-func checkDuplicateArgs(ctx *wrapContext, paramCompCall ast.Node, value ast.ResolvedValue) {
-	if value.Bound == nil {
-		return
-	}
-
-	for _, arg := range ast.GetCompCallArgsFromCompCall(paramCompCall) {
-		name := ast.GetArgNameFromCompCallArg(arg)
-		if value.Bound.Arg(name) == nil {
-			continue
-		}
-
-		addBindingIssue(ctx, value, diagnostic{
-			title:   "Duplicate argument",
-			message: duplicateArgumentMsg(name, value.Raw),
-		})
-		return
 	}
 }
 

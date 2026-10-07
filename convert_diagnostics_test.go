@@ -298,6 +298,58 @@ func TestConvertDiagnosticBlockValueInlineDropsPerRender(t *testing.T) {
 	assert.Equal(t, want, diags)
 }
 
+func TestConvertDiagnosticParamCompCallDropsPerRender(t *testing.T) {
+	var buf bytes.Buffer
+	diags, err := New().Convert([]byte("{{ W c = A }}\n\n{{ W c = B }}\n\n~ W c = NO_MATTER\n{{ c x = \"hi\" }}\n\n~ A x = \"\"\nA {{ x }}\n\n~ B\nB"), &buf)
+	require.NoError(t, err)
+	assert.Equal(t, "<p>A hi</p>", buf.String())
+	want := []Diagnostic{{
+		Code:    CodeUnknownParameter,
+		Message: "The parameter **x** is not defined for this component.",
+		Source:  nil,
+		Range: Range{
+			Start: Position{Offset: 48, Line: 6, Column: 1},
+			End:   Position{Offset: 64, Line: 6, Column: 17},
+		},
+		Calls: []Call{{
+			Name:   "W",
+			Kind:   FrameLocal,
+			Source: nil,
+			Range: Range{
+				Start: Position{Offset: 15, Line: 3, Column: 1},
+				End:   Position{Offset: 28, Line: 3, Column: 14},
+			},
+		}},
+	}}
+	assert.Equal(t, want, diags)
+}
+
+func TestConvertDiagnosticDuplicateArgumentDropsCallGivingIt(t *testing.T) {
+	var buf bytes.Buffer
+	diags, err := New().Convert([]byte("{{ WRAP content = CARD(title = \"Bound\") }}\n\n~ WRAP content = NO_MATTER\n{{ content title = \"Caller\" }}\n\n~ CARD title = \"\"\n# {{ title }}"), &buf)
+	require.NoError(t, err)
+	assert.Equal(t, "", buf.String())
+	want := []Diagnostic{{
+		Code:    CodeDuplicateArgument,
+		Message: "The parameter **title** of component **CARD** is already bound.",
+		Source:  nil,
+		Range: Range{
+			Start: Position{Offset: 71, Line: 4, Column: 1},
+			End:   Position{Offset: 101, Line: 4, Column: 31},
+		},
+		Calls: []Call{{
+			Name:   "WRAP",
+			Kind:   FrameLocal,
+			Source: nil,
+			Range: Range{
+				Start: Position{Offset: 0, Line: 1, Column: 1},
+				End:   Position{Offset: 42, Line: 1, Column: 43},
+			},
+		}},
+	}}
+	assert.Equal(t, want, diags)
+}
+
 func TestConvertFatalErrorReturnsNoDiagnostics(t *testing.T) {
 	var buf bytes.Buffer
 	diags, err := New().Convert([]byte("{{ FOO }}"), &buf, WithIsolatedScope())

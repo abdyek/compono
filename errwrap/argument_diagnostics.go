@@ -95,7 +95,6 @@ func getUndefinedArgNames(ctx *wrapContext, compCall ast.Node) []string {
 
 	undefined = appendUniqueStrings(undefined, getUndefinedParamArgRefNames(compCall)...)
 	undefined = appendUniqueStrings(undefined, getUndefinedBoundArgNames(ctx.root, compCall)...)
-	undefined = appendUniqueStrings(undefined, getUndefinedArgNamesFromResolvedParamCompCalls(ctx, compCall)...)
 
 	return undefined
 }
@@ -110,9 +109,8 @@ func hasMissingArgs() func(*wrapContext, ast.Node) bool {
 // getMissingArgs returns the component whose required parameters are missing and
 // the missing parameter names in definition order. Required parameters of the
 // called definition are reduced by the arguments given by the caller and, for a
-// bound component value, by its bound arguments. The resolved param comp call
-// path keeps the diagnostic on the topmost call the component value is written
-// in. Built-in components are never checked.
+// bound component value, by its bound arguments. Built-in components are never
+// checked.
 func getMissingArgs(ctx *wrapContext, compCall ast.Node) (string, []string) {
 	compCallName := getCompCallNameStr(compCall)
 	if compCallName == "" {
@@ -127,53 +125,6 @@ func getMissingArgs(ctx *wrapContext, compCall ast.Node) (string, []string) {
 	missing := missingArgNames(getRequiredParamNames(compDef), getCallArgNames(compCall))
 	if len(missing) > 0 {
 		return compCallName, missing
-	}
-
-	return getMissingArgsFromResolvedParamCompCalls(ctx, compCall)
-}
-
-func getMissingArgsFromResolvedParamCompCalls(ctx *wrapContext, compCall ast.Node) (string, []string) {
-	compCallName := getCompCallNameStr(compCall)
-	if compCallName == "" {
-		return "", nil
-	}
-
-	compDef := ast.FindCompDef(ctx.root, compCall, compCallName)
-	if compDef == nil {
-		return "", nil
-	}
-
-	compDefContent := getCompDefContent(compDef)
-	if compDefContent == nil {
-		return "", nil
-	}
-
-	resolvedCompArgs := resolveCompArgValues(ctx, compCall)
-	if len(resolvedCompArgs) == 0 {
-		return "", nil
-	}
-
-	paramCompCalls := ast.FilterNodesInDefContent(compDefContent, func(node ast.Node) bool {
-		return isCompParamRefInCompDef(compDef, node)
-	})
-
-	for _, paramCompCall := range paramCompCalls {
-		paramName := getParamCompCallNameStr(paramCompCall)
-		if paramName == "" {
-			continue
-		}
-
-		targetCompName, targetCompDef := resolveParamCompCallTarget(ctx, compCall, paramCompCall, resolvedCompArgs)
-		if targetCompName == "" || targetCompDef == nil || ast.IsRuleName(targetCompDef, "builtin-comp") {
-			continue
-		}
-
-		supplied := getCallArgNames(paramCompCall)
-		supplied = appendUniqueStrings(supplied, getBoundArgNamesForParam(ctx.root, compCall, paramName)...)
-
-		if missing := missingArgNames(getRequiredParamNames(targetCompDef), supplied); len(missing) > 0 {
-			return targetCompName, missing
-		}
 	}
 
 	return "", nil
@@ -215,34 +166,6 @@ func missingArgNames(required []string, supplied []string) []string {
 		missing = appendUniqueStrings(missing, name)
 	}
 	return missing
-}
-
-// getBoundArgNamesForParam returns the names bound to the component value given
-// for the parameter, e.g. title in content = CARD(title = "Bound").
-func getBoundArgNamesForParam(root ast.Node, compCall ast.Node, paramName string) []string {
-	names := []string{}
-	for _, source := range getBindingSources(root, compCall) {
-		if !sourceMatchesParamName(source, paramName) {
-			continue
-		}
-
-		for _, value := range getBoundCompValues(root, source) {
-			for _, arg := range value.args {
-				names = appendUniqueStrings(names, ast.GetArgNameFromCompCallArg(arg))
-			}
-		}
-	}
-	return names
-}
-
-func sourceMatchesParamName(source ast.Node, paramName string) bool {
-	if ast.IsRuleName(source, "comp-call-arg") {
-		return ast.GetArgNameFromCompCallArg(source) == paramName
-	}
-	if ast.IsRuleName(source, "comp-param") {
-		return ast.GetParamNameFromCompParam(source) == paramName
-	}
-	return false
 }
 
 func hasWrongTypeArgs() func(*wrapContext, ast.Node) bool {
@@ -525,7 +448,6 @@ func getWrongTypeArgNames(ctx *wrapContext, compCall ast.Node) []string {
 	}
 
 	wrongTypeArgNames = appendUniqueStrings(wrongTypeArgNames, getWrongTypeBoundArgNames(ctx.root, compCall)...)
-	wrongTypeArgNames = appendUniqueStrings(wrongTypeArgNames, getWrongTypeArgNamesFromResolvedParamCompCalls(ctx, compCall)...)
 	wrongTypeArgNames = appendUniqueStrings(wrongTypeArgNames, getWrongTypeArgNamesFromNestedCompCalls(ctx, compCall)...)
 
 	return wrongTypeArgNames
@@ -608,56 +530,6 @@ func getBuiltinSchemaMismatchArgNamesFromNestedCompCalls(ctx *wrapContext, compC
 	}
 
 	return result
-}
-
-func getUndefinedArgNamesFromResolvedParamCompCalls(ctx *wrapContext, compCall ast.Node) []string {
-	return collectFromResolvedParamCompCalls(ctx, compCall, func(paramCompCall ast.Node, _ string, targetCompDef ast.Node) []string {
-		targetParamNames := getCompDefParamNames(targetCompDef)
-
-		result := []string{}
-		for _, arg := range ast.GetCompCallArgsFromCompCall(paramCompCall) {
-			if !ast.IsRuleName(arg, "comp-call-arg") {
-				continue
-			}
-
-			argName := ast.GetArgNameFromCompCallArg(arg)
-			if util.InSliceString(argName, targetParamNames) {
-				continue
-			}
-
-			result = appendUniqueStrings(result, argName)
-		}
-
-		return result
-	})
-}
-
-func getWrongTypeArgNamesFromResolvedParamCompCalls(ctx *wrapContext, compCall ast.Node) []string {
-	return collectFromResolvedParamCompCalls(ctx, compCall, func(paramCompCall ast.Node, _ string, targetCompDef ast.Node) []string {
-		targetParamTypeMap := getCompDefParamTypeMap(targetCompDef)
-
-		result := []string{}
-		for _, arg := range ast.GetCompCallArgsFromCompCall(paramCompCall) {
-			if !ast.IsRuleName(arg, "comp-call-arg") {
-				continue
-			}
-
-			argName := ast.GetArgNameFromCompCallArg(arg)
-			expectedType, ok := targetParamTypeMap[argName]
-			if !ok || expectedType == "" {
-				continue
-			}
-
-			actualType := getResolvedArgTypeForNestedParamCompCall(ctx, compCall, arg)
-			if actualType == "" || actualType == expectedType {
-				continue
-			}
-
-			result = appendUniqueStrings(result, argName)
-		}
-
-		return result
-	})
 }
 
 func getBuiltinSchemaMismatchArgNamesFromResolvedParamCompCalls(ctx *wrapContext, compCall ast.Node) []string {

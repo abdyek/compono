@@ -65,16 +65,19 @@ func blockCompInsideInlineMsg(_ *wrapContext, node ast.Node) string {
 }
 
 func undefinedParamMsg(ctx *wrapContext, node ast.Node) string {
-	undefinedArgNames := getUndefinedArgNames(ctx, node)
-	if len(undefinedArgNames) == 0 {
+	return undefinedParamNamesMsg(getUndefinedArgNames(ctx, node))
+}
+
+func undefinedParamNamesMsg(names []string) string {
+	if len(names) == 0 {
 		return "One or more parameters are not defined for this component."
 	}
 
-	if len(undefinedArgNames) == 1 {
-		return "The parameter **" + undefinedArgNames[0] + "** is not defined for this component."
+	if len(names) == 1 {
+		return "The parameter **" + names[0] + "** is not defined for this component."
 	}
 
-	return "The parameters **" + strings.Join(undefinedArgNames, "**, **") + "** are not defined for this component."
+	return "The parameters **" + strings.Join(names, "**, **") + "** are not defined for this component."
 }
 
 func invalidParamDefMsg(ctx *wrapContext, node ast.Node) string {
@@ -84,15 +87,19 @@ func invalidParamDefMsg(ctx *wrapContext, node ast.Node) string {
 
 func missingArgMsg(ctx *wrapContext, node ast.Node) string {
 	compName, missingArgNames := getMissingArgs(ctx, node)
-	if len(missingArgNames) == 0 {
+	return missingArgNamesMsg(compName, missingArgNames)
+}
+
+func missingArgNamesMsg(compName string, names []string) string {
+	if len(names) == 0 {
 		return "One or more parameters are required for this component."
 	}
 
-	if len(missingArgNames) == 1 {
-		return "The parameter **" + missingArgNames[0] + "** of component **" + compName + "** is required."
+	if len(names) == 1 {
+		return "The parameter **" + names[0] + "** of component **" + compName + "** is required."
 	}
 
-	return "The parameters **" + strings.Join(missingArgNames, "**, **") + "** of component **" + compName + "** are required."
+	return "The parameters **" + strings.Join(names, "**, **") + "** of component **" + compName + "** are required."
 }
 
 func wrongArgTypeMsg(ctx *wrapContext, node ast.Node) string {
