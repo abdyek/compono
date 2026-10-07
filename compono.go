@@ -59,30 +59,23 @@ func New() Compono {
 	v := validator.DefaultValidator()
 	ew := errwrap.DefaultErrorWrapper()
 
-	bw := ast.DefaultEmptyNode()
-	bw.SetRule(rule.NewDynamic("builtin-comp-wrapper"))
-
 	c := &compono{
-		parser:         p,
-		renderer:       r,
-		validator:      v,
-		errorWrapper:   ew,
-		logger:         log,
-		builtinWrapper: bw,
+		parser:       p,
+		renderer:     r,
+		validator:    v,
+		errorWrapper: ew,
+		logger:       log,
 	}
-
-	c.fillBuiltins()
 
 	return c
 }
 
 type compono struct {
-	parser         parser.Parser
-	renderer       renderer.Renderer
-	validator      validator.Validator
-	errorWrapper   errwrap.ErrorWrapper
-	logger         logger.Logger
-	builtinWrapper ast.Node
+	parser       parser.Parser
+	renderer     renderer.Renderer
+	validator    validator.Validator
+	errorWrapper errwrap.ErrorWrapper
+	logger       logger.Logger
 }
 
 func (c *compono) Convert(source []byte, writer io.Writer, opts ...ConvertOption) error {
@@ -107,8 +100,11 @@ func (c *compono) Convert(source []byte, writer io.Writer, opts ...ConvertOption
 	globalWrapper.SetParent(root)
 	root.SetChildren(append(root.Children(), globalWrapper))
 
-	c.builtinWrapper.SetParent(root)
-	root.SetChildren(append(root.Children(), c.builtinWrapper))
+	builtinWrapper := ast.DefaultEmptyNode()
+	builtinWrapper.SetRule(rule.NewDynamic("builtin-comp-wrapper"))
+	builtinWrapper.SetParent(root)
+	builtinWrapper.SetChildren(builtin.BuildASTNodes(builtinWrapper))
+	root.SetChildren(append(root.Children(), builtinWrapper))
 
 	err = c.validator.Validate(root)
 	if err != nil {
@@ -117,19 +113,15 @@ func (c *compono) Convert(source []byte, writer io.Writer, opts ...ConvertOption
 
 	c.errorWrapper.Wrap(root)
 
-	if es, ok := c.renderer.(renderer.ErrorStylesheetSetter); ok {
-		stylesheet := ""
-		if cfg.errorStylesheet != nil {
-			stylesheet = *cfg.errorStylesheet
-		}
-		es.SetErrorStylesheet(stylesheet)
+	stylesheet := ""
+	if cfg.errorStylesheet != nil {
+		stylesheet = *cfg.errorStylesheet
 	}
 
-	if hs, ok := c.renderer.(renderer.AttributeHookSetter); ok {
-		hs.SetAttributeHook(cfg.attributeHook)
-	}
-
-	err = c.renderer.Render(writer, root)
+	err = c.renderer.Render(writer, root, renderer.Options{
+		AttributeHook:   cfg.attributeHook,
+		ErrorStylesheet: stylesheet,
+	})
 	if err != nil {
 		switch {
 		case errors.Is(err, attrhook.ErrInvalidAttributeName):
@@ -269,10 +261,6 @@ func (c *compono) newGlobalComponentNode(name string, source []byte) (ast.Node, 
 
 	parsed.SetChildren(append([]ast.Node{globalCompName}, parsed.Children()...))
 	return parsed, nil
-}
-
-func (c *compono) fillBuiltins() {
-	c.builtinWrapper.SetChildren(builtin.BuildASTNodes(c.builtinWrapper))
 }
 
 type ComponoError struct {

@@ -16,10 +16,6 @@ type attributeHookFunc = attrhook.AttributeHookFunc
 
 var attributeNamePattern = regexp.MustCompile(`^[a-z][a-z0-9-]*$`)
 
-func (r *renderer) SetAttributeHook(fn attrhook.AttributeHookFunc) {
-	r.attributeHook = fn
-}
-
 func (r *renderer) pushLocalFrame(name string) {
 	r.frameStack = append(r.frameStack, frame{Name: name, Kind: attrhook.FrameLocal})
 }
