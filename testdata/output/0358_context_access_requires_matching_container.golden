@@ -1,1 +1,1 @@
-<p><compono-error-inline><template shadowrootmode="closed"><span class="title">Invalid context access</span><span class="description">The context value <strong>app/version</strong> is not an array and cannot be indexed.</span></template></compono-error-inline></p><p><compono-error-inline><template shadowrootmode="closed"><span class="title">Invalid context access</span><span class="description">The context value <strong>stats/numbers</strong> is not a record and cannot be accessed by key.</span></template></compono-error-inline></p>
+<p></p><p></p>

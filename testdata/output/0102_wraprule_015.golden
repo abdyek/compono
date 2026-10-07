@@ -1,1 +1,1 @@
-<p>calling self</p><compono-error-block><template shadowrootmode="closed"><div class="title">Infinite component call</div><div class="description">The call to component <strong>LINK</strong> creates an infinite loop and was skipped.</div></template></compono-error-block>
+<p>calling self</p>

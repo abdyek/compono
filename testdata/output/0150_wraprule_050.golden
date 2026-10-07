@@ -1,1 +1,1 @@
-<p>rendered</p><compono-error-block><template shadowrootmode="closed"><div class="title">Unknown parameter</div><div class="description">The parameter <strong>comp</strong> is not defined for this component.</div></template></compono-error-block>
+<p>rendered</p>

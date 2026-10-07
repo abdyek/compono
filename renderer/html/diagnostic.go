@@ -3,6 +3,7 @@ package html
 import (
 	"regexp"
 	"strconv"
+	"strings"
 
 	"github.com/umono-cms/compono/ast"
 	"github.com/umono-cms/compono/internal/attrhook"
@@ -27,9 +28,19 @@ type Call struct {
 	Node ast.Node
 }
 
-var diagnosticMarkerPattern = regexp.MustCompile("\x00compono-diagnostic-([0-9]+)\x00")
+const blockDiagnosticMarkerPrefix = "\x00compono-diagnostic-block-"
 
-func (r *renderer) recordDiagnostic(node ast.Node, title, message string) string {
+var diagnosticMarkerPattern = regexp.MustCompile("\x00compono-diagnostic-(?:block-)?([0-9]+)\x00")
+
+func hasBlockErrorPrefix(rendered string) bool {
+	return strings.HasPrefix(rendered, blockDiagnosticMarkerPrefix)
+}
+
+func containsBlockError(rendered string) bool {
+	return strings.Contains(rendered, blockDiagnosticMarkerPrefix)
+}
+
+func (r *renderer) recordDiagnostic(node ast.Node, title, message string, block bool) string {
 	var calls []Call
 	if len(r.frameStack) > 0 {
 		calls = make([]Call, len(r.frameStack))
@@ -49,7 +60,11 @@ func (r *renderer) recordDiagnostic(node ast.Node, title, message string) string
 		Calls:   calls,
 	})
 
-	return "\x00compono-diagnostic-" + strconv.Itoa(len(r.diagnostics)-1) + "\x00"
+	prefix := "\x00compono-diagnostic-"
+	if block {
+		prefix = blockDiagnosticMarkerPrefix
+	}
+	return prefix + strconv.Itoa(len(r.diagnostics)-1) + "\x00"
 }
 
 func (r *renderer) takeDiagnostics(out string) (string, []Diagnostic) {

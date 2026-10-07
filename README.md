@@ -343,13 +343,13 @@ Supported mime types:
 - all variants must preserve the same aspect ratio as the main `media`.
 - duplicate `mime-type` + `width` pairs are invalid.
 
-When validation fails, Compono renders an error placeholder instead of silently producing invalid markup. Common IMAGE-specific errors include:
+When validation fails, the IMAGE call renders nothing instead of producing invalid markup, and `Convert` returns a diagnostic. Common IMAGE-specific diagnostic codes include:
 
-- `Invalid built-in arguments`
-- `Unsupported mime-type`
-- `Invalid dimension`
-- `Duplicate variant`
-- `Inconsistent aspect ratio`
+- `invalid-built-in-arguments`
+- `unsupported-mime-type`
+- `invalid-dimension`
+- `duplicate-variant`
+- `inconsistent-aspect-ratio`
 
 ### Removed Built-in Components
 
@@ -730,16 +730,15 @@ Notes:
 
 ### Missing Keys and Errors
 
-If a referenced key is not injected, Compono renders an error placeholder with:
+If a referenced key is not injected, `Convert` returns a diagnostic with:
 
-- Title: `Unknown key`
+- Code: `unknown-key`
 - Message: `The key **[key]** is not injected.`
 
-Error placement depends on how `context(...)` is used:
+What renders nothing depends on how `context(...)` is used:
 
-- direct usage always renders an inline error
-- using it in a block component call renders a block error at the call site
-- using it in an inline component call renders an inline error at the call site
+- direct usage drops the `{{ context(...) }}` unit
+- using it in a component call drops the call
 - default values are resolved lazily, so no error is produced unless that parameter is actually used
 
 ## Attribute Hook
@@ -774,7 +773,7 @@ For a `LINK` call in the body of `MAIN_MENU`, the hook receives `"LINK"` and thi
 
 - Only for real built-in calls. A call that resolves to a local or global component is not a built-in call, even if its name is a built-in name. Markdown elements never call the hook.
 - Once per call, before the built-in's output is written, in render order, on the goroutine running `Convert`.
-- Never for a call that is replaced by an error element. Error elements never get attributes.
+- Never for a call that an error drops.
 
 ### The Chain
 
@@ -834,41 +833,13 @@ A diagnostic has these fields:
 - `Range`: the `[Start, End)` range of the error in `Source`. Each end has a 0-based byte `Offset`, a 1-based `Line` and a 1-based `Column` counted in runes. Positions are relative to the source as given: comment lines, a global's parameter line and leading blank lines are counted.
 - `Calls`: the component calls around the error, outermost first, each with its `Name`, `Kind` (`builtin`, `global` or `local`), `Source` and `Range`. It is empty when the error is in the converted source itself.
 
-`Convert` returns one diagnostic for each error element written to the output, in output order. A global component called 10 times with an error inside returns 10 diagnostics, each with its own `Calls`; grouping them is up to the application. An error that is never rendered, such as one inside a component that is never called, returns no diagnostic. The same source and options always return the same diagnostics in the same order.
+The part an error drops renders nothing; the rest of the output is written. For example, `Hello {{ FOO }} world` with an undefined `FOO` renders `<p>Hello  world</p>`.
 
-### Error Elements
-
-An error placeholder is rendered as a custom element that holds a closed [Declarative Shadow DOM](https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements/template#shadowrootmode). For example, `{{ FOO }}` on its own line, when `FOO` is not defined, renders (shown on multiple lines here, a single line in reality):
-
-```html
-<compono-error-block>
-  <template shadowrootmode="closed">
-    <link rel="stylesheet" href="/_umono/error.css">
-    <div class="title">Unknown component</div>
-    <div class="description">The component <strong>FOO</strong> is not defined or not registered.</div>
-  </template>
-</compono-error-block>
-```
-
-Inline errors use `compono-error-inline` with `span` elements instead of `div`. Block errors are rendered between blocks; inline errors are rendered where the error occurs, inside the surrounding paragraph or heading.
-
-The text lives in a closed shadow root, so page stylesheets cannot select or style it. Styling comes only from the stylesheet linked inside the shadow root.
-
-Title and description text is HTML-escaped. The `<strong>` emphasis is part of Compono's own structure.
+`Convert` returns one diagnostic for each dropped part, in output order. A global component called 10 times with an error inside returns 10 diagnostics, each with its own `Calls`; grouping them is up to the application. An error that is never rendered, such as one inside a component that is never called, returns no diagnostic. The same source and options always return the same diagnostics in the same order.
 
 ### Error Stylesheet
 
-`compono.WithErrorStylesheet` sets the stylesheet URL used by error elements:
-
-```go
-_, err := c.Convert(source, writer, compono.WithErrorStylesheet("/_umono/error.css"))
-```
-
-`/_umono/error.css` is only an example path. Compono does not serve or ship a stylesheet, so your application must serve one at the URL it passes.
-
-- without the option, or with an empty string, no `<link>` is rendered
-- the URL is not validated; it is HTML-escaped into `href`
-- the option can be used once per conversion. A second `WithErrorStylesheet` makes `Convert` return a `*compono.ComponoError` with code `ErrErrorStylesheetAlreadySet`, even if one of the values is empty
+`compono.WithErrorStylesheet` no longer has an effect, since error elements are not rendered. It will be removed. Using it twice in a conversion still makes `Convert` return a `*compono.ComponoError` with code `ErrErrorStylesheetAlreadySet`.
 
 ## API Reference
 
@@ -894,9 +865,6 @@ _, err := c.Convert(source, writer, compono.WithGlobalComponent(name, globalSour
 _, err := c.Convert(source, writer, compono.WithContext(map[string]any{
     "app/version": "1.2.0",
 }))
-
-// Set the stylesheet URL linked inside error elements (once per conversion)
-_, err := c.Convert(source, writer, compono.WithErrorStylesheet("/_umono/error.css"))
 
 // Add attributes to built-in component calls (once per conversion)
 _, err := c.Convert(source, writer, compono.WithAttributeHook(func(builtin string, chain []compono.Frame) map[string]string {

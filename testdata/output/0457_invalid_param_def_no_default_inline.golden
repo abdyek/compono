@@ -1,1 +1,1 @@
-<p>Hello <compono-error-inline><template shadowrootmode="closed"><span class="title">Invalid parameter definition</span><span class="description">The parameter definition <strong>title</strong> of component <strong>CARD</strong> is invalid.</span></template></compono-error-inline> world.</p>
+<p>Hello  world.</p>

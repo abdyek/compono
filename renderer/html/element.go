@@ -2,6 +2,7 @@ package html
 
 import (
 	"regexp"
+	"strconv"
 	"strings"
 
 	"github.com/umono-cms/compono/ast"
@@ -92,12 +93,12 @@ func (nvec *nonVoidElementContent) Render() string {
 			return renderParagraphWithBlockLikeChildren(nvec)
 		}
 		if ast.FindNodeByRuleName(nvec.Node().Children(), "soft-break") != nil &&
-			strings.Contains(rendered, "<compono-error-block>") {
+			containsBlockError(rendered) {
 			return splitParagraphByBreakWithBlockErr(rendered)
 		}
 
 		if standaloneParamRef := standaloneCompParamRefInParagraph(nvec.Node()); standaloneParamRef != nil {
-			if isBlockLikeRendered(rendered) || strings.HasPrefix(rendered, "<compono-error-block>") {
+			if isBlockLikeRendered(rendered) || hasBlockErrorPrefix(rendered) {
 				return rendered
 			}
 		}
@@ -107,7 +108,7 @@ func (nvec *nonVoidElementContent) Render() string {
 		return "<p>" + rendered + "</p>"
 	}
 
-	if strings.HasPrefix(rendered, "<compono-error-block>") {
+	if hasBlockErrorPrefix(rendered) {
 		return rendered
 	}
 	return "<" + tag + ">" + rendered + "</" + tag + ">"
@@ -150,7 +151,7 @@ func renderParagraphWithBlockLikeChildren(nvec *nonVoidElementContent) string {
 		rendered := nvec.renderer.renderChildren(nvec, []ast.Node{child})
 		if isBlockLikeRendered(rendered) {
 			flush()
-			if shouldOverridePreviousParagraph(rendered) {
+			if nvec.renderer.shouldOverridePreviousParagraph(rendered) {
 				result = rendered
 				inlineChunk = []ast.Node{}
 				continue
@@ -176,7 +177,7 @@ func isBlockLikeRendered(rendered string) bool {
 		strings.HasPrefix(rendered, "<p>") ||
 		strings.HasPrefix(rendered, "<img ") ||
 		strings.HasPrefix(rendered, "<picture>") ||
-		strings.HasPrefix(rendered, "<compono-error-block>")
+		hasBlockErrorPrefix(rendered)
 }
 
 func normalizeRenderedMarkup(rendered string) string {
@@ -184,11 +185,26 @@ func normalizeRenderedMarkup(rendered string) string {
 	return re.ReplaceAllString(rendered, "<strong>$1</strong>")
 }
 
-func shouldOverridePreviousParagraph(rendered string) bool {
-	if !strings.HasPrefix(rendered, "<compono-error-block>") {
+func (r *renderer) shouldOverridePreviousParagraph(rendered string) bool {
+	if !hasBlockErrorPrefix(rendered) {
 		return false
 	}
-	return strings.Contains(rendered, "<div class=\"title\">Invalid component usage</div>")
+	for _, m := range diagnosticMarkerPattern.FindAllStringSubmatch(rendered, -1) {
+		if !strings.HasPrefix(m[0], blockDiagnosticMarkerPrefix) {
+			continue
+		}
+		if len(m) < 2 {
+			continue
+		}
+		idx, err := strconv.Atoi(m[1])
+		if err != nil || idx < 0 || idx >= len(r.diagnostics) {
+			continue
+		}
+		if r.diagnostics[idx].Title == "Invalid component usage" {
+			return true
+		}
+	}
+	return false
 }
 
 func renderParagraphWithBlockErrors(nvec *nonVoidElementContent) string {
@@ -239,7 +255,7 @@ func splitParagraphByBreakWithBlockErr(rendered string) string {
 		if part == "" {
 			continue
 		}
-		if strings.HasPrefix(part, "<compono-error-block>") {
+		if hasBlockErrorPrefix(part) {
 			result += part
 			continue
 		}
