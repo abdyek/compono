@@ -1,8 +1,8 @@
 # Compono
 
-Compono is a **platform-agnostic**, component-based domain-specific language (DSL) that extends Markdown syntax with reusable components.
+Compono is a Markdown-based domain-specific language (DSL) for semantic HTML. It extends a restricted Markdown syntax with reusable components and built-in components that produce semantic HTML elements.
 
-Originally developed for [Umono CMS](https://github.com/umono-cms/umono), Compono can be used in any Go project that needs a flexible templating solution.
+Compono is developed for [Umono CMS](https://github.com/umono-cms/umono), and its design follows Umono's needs. It is a Go library and can be used in other Go projects, but HTML is its only output target.
 
 ## Installation
 
