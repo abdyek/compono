@@ -1,0 +1,7 @@
+> {{ ARTICLE }}
+
+> Önce {{ FOO }} sonra
+
+~ ARTICLE
+# Başlık
+Metin.

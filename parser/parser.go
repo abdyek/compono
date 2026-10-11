@@ -37,7 +37,7 @@ func (p *parser) Parse(source []byte, root ast.Node) ast.Node {
 	node := cp.parse(parseSource, root)
 
 	if offsets != nil {
-		remapRanges(node, offsets, len(source))
+		remapRanges(node, offsets, len(source), 0)
 		root.SetRange(ast.Range{Start: 0, End: len(source)})
 	}
 
@@ -78,23 +78,24 @@ func stripRemovedLines(source []byte, removed [][2]int) ([]byte, []int) {
 }
 
 // remapRanges maps the ranges of every descendant of node from the stripped
-// source back to the original source. node itself keeps its range.
-func remapRanges(node ast.Node, offsets []int, sourceLen int) {
+// source back to the original source, shifting each by base. node itself keeps
+// its range.
+func remapRanges(node ast.Node, offsets []int, sourceLen int, base int) {
 	for _, child := range node.Children() {
-		remapRange(child, offsets, sourceLen)
-		remapRanges(child, offsets, sourceLen)
+		remapRange(child, offsets, sourceLen, base)
+		remapRanges(child, offsets, sourceLen, base)
 	}
 }
 
-func remapRange(node ast.Node, offsets []int, sourceLen int) {
+func remapRange(node ast.Node, offsets []int, sourceLen int, base int) {
 	rng := node.Range()
-	start := sourceLen
+	start := base + sourceLen
 	if rng.Start < len(offsets) {
-		start = offsets[rng.Start]
+		start = base + offsets[rng.Start]
 	}
 	end := start
 	if rng.End > rng.Start {
-		end = offsets[rng.End-1] + 1
+		end = base + offsets[rng.End-1] + 1
 	}
 	node.SetRange(ast.Range{Start: start, End: end})
 }
@@ -172,7 +173,21 @@ func (p *parser) parse(source []byte, parentNode ast.Node) ast.Node {
 	}
 
 	for i := 0; i < len(children); i++ {
-		children[i] = p.parse(children[i].Raw(), children[i])
+		c := children[i]
+		rng := c.Range()
+		b, e := rng.Start, rng.End
+		raw := c.Raw()
+		if lineRemover, ok := c.Rule().(rule.LineRemover); ok {
+			if removed := lineRemover.RemovedLines(raw); len(removed) > 0 {
+				stripped, childOffsets := stripRemovedLines(raw, removed)
+				c.SetRange(ast.Range{Start: 0, End: len(stripped)})
+				p.parse(stripped, c)
+				remapRanges(c, childOffsets, len(raw), b)
+				c.SetRange(ast.Range{Start: b, End: e})
+				continue
+			}
+		}
+		p.parse(raw, c)
 	}
 
 	parentNode.SetChildren(children)

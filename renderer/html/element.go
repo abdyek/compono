@@ -193,6 +193,7 @@ func isBlockLikeRendered(rendered string) bool {
 		strings.HasPrefix(rendered, "<ul") ||
 		strings.HasPrefix(rendered, "<ol") ||
 		strings.HasPrefix(rendered, "<hr") ||
+		strings.HasPrefix(rendered, "<blockquote") ||
 		hasBlockErrorPrefix(rendered)
 }
 

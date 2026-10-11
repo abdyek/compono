@@ -198,19 +198,65 @@ func TestParseRangesMatchRaw(t *testing.T) {
 	}
 
 	assertRanges := func(t *testing.T, path string, source []byte, node ast.Node) {
-		lineRemover, ok := node.Rule().(rule.LineRemover)
-		require.True(t, ok, "rule %q must implement rule.LineRemover", node.Rule().Name())
-		removed := lineRemover.RemovedLines(source)
+		var walk func(n ast.Node, pathRemoved [][2]int)
+		walk = func(n ast.Node, pathRemoved [][2]int) {
+			currentRemoved := append([][2]int(nil), pathRemoved...)
+			if lineRemover, ok := n.Rule().(rule.LineRemover); ok {
+				r := n.Range()
 
-		var walk func(ast.Node)
-		walk = func(n ast.Node) {
+				type position struct{ origStart, origEnd int }
+				var positions []position
+				pStart := r.Start
+				for _, rem := range currentRemoved {
+					if rem[1] <= pStart || rem[0] >= r.End {
+						continue
+					}
+					start := rem[0]
+					if start < pStart {
+						start = pStart
+					}
+					end := rem[1]
+					if end > r.End {
+						end = r.End
+					}
+					for i := pStart; i < start; i++ {
+						positions = append(positions, position{i, i + 1})
+					}
+					pStart = end
+				}
+				for i := pStart; i < r.End; i++ {
+					positions = append(positions, position{i, i + 1})
+				}
+
+				S := make([]byte, len(positions))
+				for i, pp := range positions {
+					S[i] = source[pp.origStart]
+				}
+
+				innerRemoved := lineRemover.RemovedLines(S)
+				for _, rr := range innerRemoved {
+					var start, end int
+					if rr[0] >= len(positions) {
+						start = r.End
+					} else {
+						start = positions[rr[0]].origStart
+					}
+					if rr[1] > rr[0] && rr[1]-1 < len(positions) {
+						end = positions[rr[1]-1].origEnd
+					} else {
+						end = start
+					}
+					currentRemoved = append(currentRemoved, [2]int{start, end})
+				}
+			}
+
 			r := n.Range()
-			assert.Equal(t, string(cutRemoved(source, r, removed)), string(n.Raw()), "at %q", path)
+			assert.Equal(t, string(cutRemoved(source, r, currentRemoved)), string(n.Raw()), "at %q", path)
 			for _, child := range n.Children() {
-				walk(child)
+				walk(child, currentRemoved)
 			}
 		}
-		walk(node)
+		walk(node, [][2]int{})
 	}
 
 	rootFiles, err := filepath.Glob("../testdata/*/input.comp")
