@@ -62,6 +62,8 @@ This is a paragraph with **bold** and *italic* text.
 
 `` `code` `` renders `<code>` with its content as raw, escaped text. A single backtick pairs with the next backtick run on the same line; if that run is longer than one, the backtick is text, so ` `` ` and ` ``code`` ` are text. Code spans and `{{ }}` units are recognized first, whichever opens first: `` `{{ name }}` `` is a code span, and in ``{{ LINK text = "`a` [b](/c)" url = "/" }}`` the argument is plain text. Links come next, then strong, then em, and none of them can cut through a code span or a `{{ }}` unit.
 
+`[text](address)` renders `<a href="address">`. The text runs from `[` to the first `]` that the `[`s inside it do not balance, so `[[1]](#ref)` has the text `[1]` and `[[a](/b)](/c)` has the plain text `[a](/b)`: links do not nest. The address ends at the first `)`. A link is a single line, and `]` and `(` are written together. The text is trimmed and may hold strong, em, code spans and parameter references. A component call in the text or the address is an `invalid-component-usage` error, an empty text is `empty-text` and an empty address is `empty-url`; each drops the link. The address must pass the [URL scheme allowlist](#url-scheme-allowlist).
+
 Code blocks are also supported:
 
 ~~~

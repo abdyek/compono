@@ -46,6 +46,7 @@ func (_ *linkText) Rules() []Rule {
 		newInlineCode(),
 		newStrong(),
 		newEm(),
+		newInlineCompCall(),
 		newContextRef(),
 		newParamRef(),
 		newPlain(),
@@ -70,6 +71,7 @@ func (_ *linkURL) Selectors() []selector.Selector {
 
 func (_ *linkURL) Rules() []Rule {
 	return []Rule{
+		newInlineCompCall(),
 		newContextRef(),
 		newParamRef(),
 		newPlain(),

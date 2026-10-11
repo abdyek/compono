@@ -1,0 +1,15 @@
+{{ C }}
+
+~ C label = ""
+[{{ label }}](/docs)
+[x]({{ label }})
+[](/a)
+[a]()
+[ ](/a)
+[{{ LINK text = "x" url = "/y" }}](/z)
+[a]({{ Y }})
+[**{{ Y }}**](/a)
+Son
+
+~ Y
+y
