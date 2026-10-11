@@ -1,0 +1,8 @@
+{{ NAV label = " Ana menü " content = MENU }}
+
+~ MENU
+{{ LINK text = "a" url = "/a" }}
+{{ NAV content = SUB }}
+
+~ SUB
+{{ LINK text = "b" url = "/b" }}
