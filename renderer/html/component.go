@@ -54,7 +54,7 @@ func (cc *compCall) Render() string {
 			return ""
 		}
 		signature := errwrap.CallSignature(cc.renderer.root, cc.Node(), localCompDef, invokerChain(cc.Invoker()))
-		if cc.renderer.isRendering(localCompDef, signature) {
+		if cc.renderer.isRendering(localCompDef, signature) && !cc.renderer.isAllowedReentry(localCompDef, signature) {
 			title, message := errwrap.InfiniteCallError(strings.TrimSpace(string(compCallName.Raw())))
 			return cc.renderer.recordDiagnostic(cc.Node(), title, message, ast.IsRuleName(cc.Node(), "block-comp-call"))
 		}
@@ -76,7 +76,7 @@ func (cc *compCall) Render() string {
 			return ""
 		}
 		signature := errwrap.CallSignature(cc.renderer.root, cc.Node(), globalCompDef, invokerChain(cc.Invoker()))
-		if cc.renderer.isRendering(globalCompDef, signature) {
+		if cc.renderer.isRendering(globalCompDef, signature) && !cc.renderer.isAllowedReentry(globalCompDef, signature) {
 			title, message := errwrap.InfiniteCallError(strings.TrimSpace(string(compCallName.Raw())))
 			return cc.renderer.recordDiagnostic(cc.Node(), title, message, ast.IsRuleName(cc.Node(), "block-comp-call"))
 		}

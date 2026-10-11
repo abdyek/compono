@@ -1,6 +1,10 @@
 package ast
 
-import "strings"
+import (
+	"fmt"
+	"os"
+	"strings"
+)
 
 type ResolvedValue struct {
 	Type              string
@@ -97,6 +101,7 @@ func ResolveParamFromAncestors(root Node, paramName string, accessors []ValueAcc
 		if !IsFrameNode(anc) {
 			continue
 		}
+		fmt.Fprintf(os.Stderr, "DEBUG ResolveParamFromAncestors: param=%s found frame at i=%d rule=%q\n", paramName, i, anc.Rule().Name())
 		return ApplyAccessors(ResolveFrameParam(root, anc, paramName, invokerAncestors[i+1:]), accessors)
 	}
 
@@ -264,12 +269,10 @@ func resolveValueNode(root Node, node Node, invokerAncestors []Node, currentNode
 
 		referencedParamName, accessors := GetValuePathFromRaw(strings.TrimSpace(string(argValue.Raw())))
 
+		// The current call is skipped only when it starts the chain, because a re-entered call appears again further out.
 		remainingAncestors := invokerAncestors
-		for i, anc := range invokerAncestors {
-			if anc == currentNode {
-				remainingAncestors = invokerAncestors[i+1:]
-				break
-			}
+		if len(invokerAncestors) > 0 && invokerAncestors[0] == currentNode {
+			remainingAncestors = invokerAncestors[1:]
 		}
 
 		return ResolveParamFromAncestors(root, referencedParamName, accessors, remainingAncestors)

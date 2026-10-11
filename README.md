@@ -426,6 +426,18 @@ Output:
 - An element that is not a record is an `invalid-list-item` error and drops only that element. An element that renders nothing writes no `<li>`, and the numbers of an ordered list follow the written elements. A `LIST` without any `<li>`, for example with empty `items`, renders nothing.
 - While it renders its elements, `LIST` is a `builtin` frame of the attribute hook chain and of the diagnostics' call chains.
 
+Nested lists are built by an item component that calls `LIST` again with its own data and itself as the item component:
+
+```
+{{ LIST items = menu item = NAV_ITEM }}
+
+~ NAV_ITEM item = {}
+{{ LINK text = item.text url = item.url }}
+{{ LIST items = item.children item = NAV_ITEM }}
+```
+
+A component rendered again while it is being rendered is normally an `infinite-component-call` error. `LIST` allows it when the inner `LIST`'s `items` come from the current `item` of the outer `LIST` through at least one key or index access, also when passed through parameters. Every such step renders a smaller part of the data, so the recursion ends where the data ends. `{{ LIST items = menu item = NAV_ITEM(menu = menu) }}` inside `NAV_ITEM` does not shrink the data and is still an infinite call.
+
 ### HEADER, MAIN and FOOTER### HEADER, MAIN and FOOTER
 
 These built-ins wrap the component given by their required `content` parameter in a `<header>`, `<main>` or `<footer>` element. They are block components and take no other parameter. Together they form the landmarks of a page skeleton:

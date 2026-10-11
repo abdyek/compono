@@ -57,6 +57,9 @@ func (l *list) Render(invoker renderableNode, node ast.Node) string {
 	r.pushBuiltinFrame(l.Name(), node)
 	defer r.popFrame()
 
+	reentryAllowed := len(r.listItems) > 0 && isPartOf(items, r.listItems[len(r.listItems)-1])
+	r.rendering[len(r.rendering)-1].reentryAllowed = reentryAllowed
+
 	out := ""
 	wroteItem := false
 	for i, element := range items.Items {
@@ -65,7 +68,9 @@ func (l *list) Render(invoker renderableNode, node ast.Node) string {
 			continue
 		}
 		frame := ast.NewCompValueFrameWithArgs(itemValue, node, map[string]ast.ResolvedValue{"item": element})
+		r.listItems = append(r.listItems, element)
 		content := renderCompValue(r, newPassthroughRenderable(frame, invoker), itemValue, inline)
+		r.listItems = r.listItems[:len(r.listItems)-1]
 		if isEmptyRendered(content) {
 			out += content
 			continue
@@ -78,4 +83,39 @@ func (l *list) Render(invoker renderableNode, node ast.Node) string {
 		return out
 	}
 	return "<" + tag + formatHookAttributes(attrs) + ">" + out + "</" + tag + ">"
+}
+
+// isPartOf reports whether value is equal to a value found inside root by at
+// least one key or index access. Values are finite trees, so every LIST
+// re-entry this allows renders a strictly smaller part of the data.
+func isPartOf(value, root ast.ResolvedValue) bool {
+	for _, child := range root.Fields {
+		if equalValues(value, child) || isPartOf(value, child) {
+			return true
+		}
+	}
+	for _, child := range root.Items {
+		if equalValues(value, child) || isPartOf(value, child) {
+			return true
+		}
+	}
+	return false
+}
+
+// equalValues reports whether two values have the same type, raw value, items and fields.
+func equalValues(a, b ast.ResolvedValue) bool {
+	if a.Type != b.Type || a.Raw != b.Raw || len(a.Items) != len(b.Items) || len(a.Fields) != len(b.Fields) {
+		return false
+	}
+	for i := range a.Items {
+		if !equalValues(a.Items[i], b.Items[i]) {
+			return false
+		}
+	}
+	for k := range a.Fields {
+		if !equalValues(a.Fields[k], b.Fields[k]) {
+			return false
+		}
+	}
+	return true
 }

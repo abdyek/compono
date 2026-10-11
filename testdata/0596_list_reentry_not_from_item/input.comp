@@ -1,0 +1,5 @@
+{{ LIST items = [{ text: "a" }] item = NAV_ITEM(menu = [{ text: "a" }]) }}
+
+~ NAV_ITEM item = {} menu = []
+{{ item.text }}
+{{ LIST items = menu item = NAV_ITEM(menu = menu) }}
