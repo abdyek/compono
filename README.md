@@ -83,6 +83,20 @@ A line that starts with `> ` is a quote line, and a line that is only `>` is an 
 
 A quote interrupts a paragraph and ends at the first line that does not start with `>`. There is no lazy continuation and no nesting. A quote holds only paragraphs: `> > text`, `> # text`, `> - text` and `>text` are text. A block component call inside a quote is an invalid component usage. A blank line between two quotes renders two blockquotes.
 
+A line that starts with `- ` followed by content is a list item. Leading spaces and tabs are ignored. Consecutive item lines render a `<ul>` with one `<li>` per line, and the item content is not wrapped in `<p>`:
+
+```
+- Apple
+- Pear
+  - Quince
+```
+
+```html
+<ul><li>Apple</li><li>Pear</li><li>Quince</li></ul>
+```
+
+A list interrupts a paragraph and ends at the first line that does not start with `- `. There is no lazy continuation and no nesting: indentation and `- - text` make sibling items. Only `-` starts an item, so `+ text`, `* text`, `1. text`, `-text` and a lone `-` are text. An item is a single line of inline content, so a block component call inside it is an invalid component usage. An item that resolves empty renders no `<li>`. Ordered and nested lists are built with `LIST`.
+
 ### Comments
 
 A line that starts with `//` is a comment line. Leading spaces and tabs are ignored. Comment lines are removed from the source, with their line breaks, before anything else is read, and they write nothing to the output:
