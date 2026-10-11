@@ -398,7 +398,35 @@ When validation fails, the IMAGE call renders nothing instead of producing inval
 - `duplicate-variant`
 - `inconsistent-aspect-ratio`
 
-### HEADER, MAIN and FOOTER
+### LIST
+
+`LIST` renders its item component once for every record of `items` and wraps each result in an `<li>`, inside a `<ul>`, or an `<ol>` when `ordered = true`.
+
+```
+{{ LIST items = [{ text: "Apple" }, { text: "Pear" }] item = FRUIT }}
+
+~ FRUIT item = {}
+{{ item.text }}
+```
+
+Output:
+```html
+<ul><li>Apple</li><li>Pear</li></ul>
+```
+
+| Parameter | Type      | Required | Default | Description |
+| --------- | --------- | -------- | ------- | ----------- |
+| `items`   | Array     | Yes      |         | The records to iterate. Every element must be a record. |
+| `item`    | Component | Yes      |         | The **item component**, rendered for every element. |
+| `ordered` | Bool      | No       | `false` | `true` renders an `<ol>`, `false` a `<ul>`. |
+
+- The item component must define a record parameter named `item`. `LIST` gives it every element as `item`. A built-in or a component without such a parameter is an `invalid-item-component` error.
+- Other parameters of the item component are given with [argument binding](#argument-binding): `item = CARD(more = more)`. Binding `item` itself is a `duplicate-argument` error. A required parameter that is not bound is a `missing-argument` error, also when `items` is empty.
+- An inline item component is written in the `<li>` without a `<p>`. A component that delegates to an inline component or to `LINK` is inline too. A block item component is written like a block call.
+- An element that is not a record is an `invalid-list-item` error and drops only that element. An element that renders nothing writes no `<li>`, and the numbers of an ordered list follow the written elements. A `LIST` without any `<li>`, for example with empty `items`, renders nothing.
+- While it renders its elements, `LIST` is a `builtin` frame of the attribute hook chain and of the diagnostics' call chains.
+
+### HEADER, MAIN and FOOTER### HEADER, MAIN and FOOTER
 
 These built-ins wrap the component given by their required `content` parameter in a `<header>`, `<main>` or `<footer>` element. They are block components and take no other parameter. Together they form the landmarks of a page skeleton:
 
