@@ -1,0 +1,20 @@
+{{ LIST item = FRUIT }}
+{{ LIST items = [] item = NO_ITEM_PARAM }}
+{{ LIST items = [] item = BAD }}
+{{ LIST items = [] item = LINK(text = "a" url = "/a") }}
+{{ LIST items = [] item = FRUIT(item = { text: "x" }) }}
+{{ LIST items = [] item = NEEDS }}
+
+Önce {{ LIST items = [] item = FRUIT }} sonra
+
+~ FRUIT item = {}
+{{ item.text }}
+
+~ NO_ITEM_PARAM text = ""
+{{ text }}
+
+~ BAD item = ""
+{{ item }}
+
+~ NEEDS item = {} label! = ""
+{{ label }}: {{ item.text }}

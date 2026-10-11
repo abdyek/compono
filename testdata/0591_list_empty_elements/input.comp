@@ -1,0 +1,6 @@
+{{ LIST items = [] item = FRUIT }}
+{{ LIST items = [{ text: "" }] item = FRUIT }}
+{{ LIST ordered = true items = [{ text: "a" }, { text: "" }, { text: "b" }] item = FRUIT }}
+
+~ FRUIT item = {}
+{{ item.text }}

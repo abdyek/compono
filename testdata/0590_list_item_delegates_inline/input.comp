@@ -1,0 +1,11 @@
+{{ LIST items = [{ text: "a" }] item = ITEM }}
+{{ LIST items = [{ text: "b", url: "/b" }] item = LINK_ITEM }}
+
+~ ITEM item = {}
+{{ ITEM_TEXT text = item.text }}
+
+~ ITEM_TEXT text = ""
+{{ text }}
+
+~ LINK_ITEM item = {}
+{{ LINK text = item.text url = item.url }}
