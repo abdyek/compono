@@ -1,0 +1,7 @@
+{{ NAV label = "x" content = EMPTY }}
+{{ NAV label = "x" }}
+
+Önce {{ NAV content = EMPTY }} sonra
+
+~ EMPTY
+// boş

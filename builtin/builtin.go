@@ -113,6 +113,23 @@ func BuiltinComponents() []Definition {
 			},
 			InlineRenderable: false,
 		},
+		{
+			Name: "NAV",
+			Params: []Param{
+				{
+					Name:         "content",
+					Schema:       Component(),
+					DefaultValue: "NO_MATTER",
+					IsRequired:   true,
+				},
+				{
+					Name:         "label",
+					Schema:       String(),
+					DefaultValue: "",
+				},
+			},
+			InlineRenderable: false,
+		},
 	}
 }
 

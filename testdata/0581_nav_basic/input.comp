@@ -1,0 +1,4 @@
+{{ NAV content = FOOTER_LINKS }}
+
+~ FOOTER_LINKS
+{{ LINK text = "Gizlilik" url = "/gizlilik" }} · {{ LINK text = "İletişim" url = "/iletisim" }}
