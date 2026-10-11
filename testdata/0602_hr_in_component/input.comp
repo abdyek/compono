@@ -1,0 +1,11 @@
+{{ CHAPTER_END }}
+
+Önce {{ CHAPTER_END }} sonra
+
+{{ SEPARATOR mark = "---" }}
+
+~ CHAPTER_END
+---
+
+~ SEPARATOR mark = ""
+{{ mark }}
