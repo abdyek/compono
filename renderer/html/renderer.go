@@ -16,11 +16,6 @@ type Options struct {
 	URLReporter   urlreport.URLReporterFunc
 }
 
-type renderingFrame struct {
-	def       ast.Node
-	signature string
-}
-
 type renderer struct {
 	logger          logger.Logger
 	renderableNodes []renderableNode
@@ -34,6 +29,9 @@ type renderer struct {
 	attrErr         error
 	diagnostics     []Diagnostic
 	urlReports      []urlreport.URLReport
+	// listItems is the element each enclosing LIST is rendering, with the
+	// innermost (the record being emitted right now) last.
+	listItems []ast.ResolvedValue
 }
 
 func NewRenderer(log logger.Logger) *renderer {

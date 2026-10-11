@@ -14,6 +14,14 @@ import (
 type frame = attrhook.Frame
 type attributeHookFunc = attrhook.AttributeHookFunc
 
+type renderingFrame struct {
+	def       ast.Node
+	signature string
+	// reentryAllowed, for a LIST frame, reports whether its items come from
+	// the current item of the next LIST further out.
+	reentryAllowed bool
+}
+
 var attributeNamePattern = regexp.MustCompile(`^[a-z][a-z0-9-]*$`)
 
 func (r *renderer) pushLocalFrame(name string, def ast.Node, signature string, call ast.Node) {
@@ -54,6 +62,29 @@ func (r *renderer) isRendering(def ast.Node, signature string) bool {
 	for _, rf := range r.rendering {
 		if rf.def == def && rf.signature == signature {
 			return true
+		}
+	}
+	return false
+}
+
+// isAllowedReentry reports whether rendering def again with signature is a
+// re-entry that LIST allows: the nearest LIST frame after the previous entry
+// of def renders items that come from the current item of the next LIST
+// further out (LIST spec 4.4).
+func (r *renderer) isAllowedReentry(def ast.Node, signature string) bool {
+	prev := -1
+	for i := len(r.rendering) - 1; i >= 0; i-- {
+		if r.rendering[i].def == def && r.rendering[i].signature == signature {
+			prev = i
+			break
+		}
+	}
+	if prev == -1 {
+		return false
+	}
+	for i := len(r.frameStack) - 1; i > prev; i-- {
+		if r.frameStack[i].Kind == attrhook.FrameBuiltin && r.frameStack[i].Name == "LIST" {
+			return r.rendering[i].reentryAllowed
 		}
 	}
 	return false

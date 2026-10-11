@@ -54,7 +54,7 @@ func renderCompValue(r *renderer, rn renderableNode, resolved ast.ResolvedValue,
 			return ""
 		}
 		signature := errwrap.CallSignature(r.root, rn.Node(), localCompDef, getAncestorsByInvoker(rn))
-		if r.isRendering(localCompDef, signature) {
+		if r.isRendering(localCompDef, signature) && !r.isAllowedReentry(localCompDef, signature) {
 			title, message := errwrap.InfiniteCallError(target.name)
 			return r.recordDiagnostic(rn.Node(), title, message, !inlineCall)
 		}
@@ -81,7 +81,7 @@ func renderCompValue(r *renderer, rn renderableNode, resolved ast.ResolvedValue,
 			return ""
 		}
 		signature := errwrap.CallSignature(r.root, rn.Node(), globalCompDef, getAncestorsByInvoker(rn))
-		if r.isRendering(globalCompDef, signature) {
+		if r.isRendering(globalCompDef, signature) && !r.isAllowedReentry(globalCompDef, signature) {
 			title, message := errwrap.InfiniteCallError(target.name)
 			return r.recordDiagnostic(rn.Node(), title, message, !inlineCall)
 		}
