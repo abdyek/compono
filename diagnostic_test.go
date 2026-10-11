@@ -24,6 +24,8 @@ var diagnosticCodeTitles = []struct {
 	{CodeInvalidContextAccess, "Invalid context access"},
 	{CodeInvalidCurrentValue, "Invalid current value"},
 	{CodeInvalidDimension, "Invalid dimension"},
+	{CodeInvalidItemComponent, "Invalid item component"},
+	{CodeInvalidListItem, "Invalid list item"},
 	{CodeInvalidParameterAccess, "Invalid parameter access"},
 	{CodeInvalidParameterDefinition, "Invalid parameter definition"},
 	{CodeInvalidParameterUsage, "Invalid parameter usage"},

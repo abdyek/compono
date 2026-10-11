@@ -1,0 +1,4 @@
+{{ LIST items = [{ text: "a" }] item = CARD(more = "Devamı") }}
+
+~ CARD item = {} more = ""
+{{ item.text }} {{ FOO }} {{ more }}

@@ -258,6 +258,12 @@ func BuiltinCallError(root, call ast.Node, name string, invokerAncestors []ast.N
 		}
 	}
 
+	if name == "LIST" {
+		if title, message, ok := listValueError(root, call, invokerAncestors); ok {
+			return title, message, true
+		}
+	}
+
 	return "", "", false
 }
 

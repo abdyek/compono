@@ -132,6 +132,9 @@ func isBlockComponent(compDef ast.Node) bool {
 	return isBlockComponentSeen(compDef, map[ast.Node]bool{})
 }
 
+// IsBlockComponent reports whether the component compDef is a block component.
+func IsBlockComponent(compDef ast.Node) bool { return isBlockComponent(compDef) }
+
 func isBlockComponentSeen(compDef ast.Node, seen map[ast.Node]bool) bool {
 	if seen[compDef] {
 		return true

@@ -1,0 +1,7 @@
+invalid-built-in-arguments - 1:1-1:24 -
+invalid-item-component - 2:1-2:43 -
+invalid-item-component - 3:1-3:33 -
+invalid-item-component - 4:1-4:57 -
+duplicate-argument - 5:1-5:57 -
+missing-argument - 6:1-6:35 -
+invalid-component-usage - 8:6-8:40 -

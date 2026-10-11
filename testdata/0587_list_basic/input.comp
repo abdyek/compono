@@ -1,0 +1,7 @@
+{{ LIST items = [
+  { text: "Elma" },
+  { text: "Armut" }
+] item = FRUIT }}
+
+~ FRUIT item = {}
+{{ item.text }}

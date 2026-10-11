@@ -224,6 +224,11 @@ func Enum(values ...any) *ScalarSchema {
 	return (&ScalarSchema{valueKind: kind}).OneOf(values...)
 }
 
+// AnyArray is an array schema that accepts any elements.
+func AnyArray() *ArraySchema {
+	return &ArraySchema{ElementsMode: ArrayElementsHomogeneous, MinLen: -1, MaxLen: -1}
+}
+
 func ArrayOf(schema ValueSchema) *ArraySchema {
 	return &ArraySchema{
 		ElementSchemas: []ValueSchema{schema},

@@ -1,0 +1,4 @@
+{{ LIST ordered = true items = [{ step: "Derle" }, { step: "Kur" }] item = STEP }}
+
+~ STEP item = {}
+**{{ item.step }}**
