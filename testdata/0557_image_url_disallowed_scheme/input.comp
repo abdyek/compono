@@ -1,0 +1,3 @@
+{{ IMAGE media = { url: "data:image/png;base64,iVBORw0KGgo=", width: 10, height: 10, mime-type: "image/png" } alt = "a" }}
+{{ IMAGE media = { url: "/a.png", width: 10, height: 10, mime-type: "image/png", variants: [{ url: "javascript:x", width: 5, height: 5, mime-type: "image/webp" }] } alt = "a" }}
+{{ IMAGE media = { url: "JavaScript:x", width: 10, height: 10, mime-type: "image/png" } alt = "a" }}

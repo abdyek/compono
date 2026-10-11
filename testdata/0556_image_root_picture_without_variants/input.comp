@@ -1,0 +1,3 @@
+{{ IMAGE media = { url: "/a.png", width: 10, height: 10, mime-type: "image/png" } alt = "a" }}
+
+Önce {{ IMAGE media = { url: "/a.png", width: 10, height: 10, mime-type: "image/png" } alt = "a" }} sonra

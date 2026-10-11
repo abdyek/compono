@@ -1,0 +1,2 @@
+{{ IMAGE media = { url: "/a.png", width: 10, height: 10, mime-type: "image/png" } }}
+{{ IMAGE media = { url: "/b.png", width: 10, height: 10, mime-type: "image/png" } alt = "" }}
