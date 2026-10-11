@@ -49,6 +49,17 @@ outer:
 			}
 		}
 
+		empty := true
+		for _, b := range source[ind[0]+len(prefix) : ind[1]] {
+			if b != ' ' && b != '\t' && b != '\n' {
+				empty = false
+				break
+			}
+		}
+		if empty {
+			continue
+		}
+
 		filtered = append(filtered, ind)
 	}
 

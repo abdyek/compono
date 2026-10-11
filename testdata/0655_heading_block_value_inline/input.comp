@@ -1,0 +1,9 @@
+{{ POST content = BODY }}
+
+~ POST content = NO_MATTER
+# Başlık: {{ content }}
+# {{ content }}
+
+~ BODY
+## Giriş
+Metin.
