@@ -58,6 +58,8 @@ This is a paragraph with **bold** and *italic* text.
 [Link text](https://example.com)
 ```
 
+The Markdown surface is closed: the elements described in this section are all there is, and every other syntax, such as `_text_`, `~~text~~`, `![alt](url)`, `# Heading {#id}`, `~~~` fences or raw HTML, stays plain text. What Markdown does not cover is done with built-in components.
+
 `*text*` renders `<em>` and `**text**` renders `<strong>`. A delimiter is a run of `*`: a run of one opens and closes an em, a run of two a strong, and a run of three or more is text. An opener is not followed by a space and a closer is not preceded by one. An em opener pairs with the next run of `*` and a strong opener with the next run of two; if that run cannot close, the opener is text. Both ends are on the same line. em and strong do not nest: `**a *b* c**` is a strong whose text is `a *b* c`. `_` and `__` are text.
 
 `` `code` `` renders `<code>` with its content as raw, escaped text. A single backtick pairs with the next backtick run on the same line; if that run is longer than one, the backtick is text, so ` `` ` and ` ``code`` ` are text. Code spans and `{{ }}` units are recognized first, whichever opens first: `` `{{ name }}` `` is a code span, and in ``{{ LINK text = "`a` [b](/c)" url = "/" }}`` the argument is plain text. Links come next, then strong, then em, and none of them can cut through a code span or a `{{ }}` unit.
@@ -521,7 +523,7 @@ Nested lists are built by an item component that calls `LIST` again with its own
 
 A component rendered again while it is being rendered is normally an `infinite-component-call` error. `LIST` allows it when the inner `LIST`'s `items` come from the current `item` of the outer `LIST` through at least one key or index access, also when passed through parameters. Every such step renders a smaller part of the data, so the recursion ends where the data ends. `{{ LIST items = menu item = NAV_ITEM(menu = menu) }}` inside `NAV_ITEM` does not shrink the data and is still an infinite call.
 
-### HEADER, MAIN and FOOTER### HEADER, MAIN and FOOTER
+### HEADER, MAIN and FOOTER
 
 These built-ins wrap the component given by their required `content` parameter in a `<header>`, `<main>` or `<footer>` element. They are block components and take no other parameter. Together they form the landmarks of a page skeleton:
 
