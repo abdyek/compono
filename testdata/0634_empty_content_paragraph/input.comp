@@ -1,0 +1,21 @@
+{{ P }}
+
+{{ P a = "x" }}
+
+A
+*{{ UNKNOWN }}*
+B
+
+*{{ UNKNOWN }}*
+C
+**{{ UNKNOWN }}**
+
+D
+*{{ UNKNOWN }}*
+*{{ UNKNOWN }}*
+E
+
+~ P a = ""
+{{ a }}
+*{{ a }}*
+**{{ a }}**
