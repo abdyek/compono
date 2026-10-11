@@ -135,38 +135,17 @@ func (_ *inlineCode) Name() string {
 }
 
 func (_ *inlineCode) Selectors() []selector.Selector {
-	se, _ := selector.NewStartEnd("`", "`")
 	return []selector.Selector{
-		selector.NewFilter(se, func(source []byte, index [][2]int) [][2]int {
-			if len(index) == 0 {
-				return [][2]int{}
-			}
-
-			noMirage := filterOutMirage(index)
-			filtered := [][2]int{}
-
-			for _, ind := range noMirage {
-				start, end := ind[0], ind[1]
-
-				noNewline := true
-				for i := start; i < end; i++ {
-					if source[i] == '\n' {
-						noNewline = true
-						break
-					}
-				}
-
-				single := true
-				if (start > 0 && source[start-1] == '`') || (end < len(source) && source[end] == '`') {
-					single = false
-				}
-
-				if noNewline && single {
-					filtered = append(filtered, ind)
+		selector.NewFilter(selector.NewAll(), func(source []byte, index [][2]int) [][2]int {
+			result := [][2]int{}
+			for _, ind := range index {
+				s, e := ind[0], ind[1]
+				codes, _ := selector.InlineUnits(source[s:e])
+				for _, c := range codes {
+					result = append(result, [2]int{s + c[0], s + c[1]})
 				}
 			}
-
-			return filtered
+			return result
 		}),
 	}
 }
@@ -189,7 +168,14 @@ func (_ *inlineCodeContent) Name() string {
 
 func (_ *inlineCodeContent) Selectors() []selector.Selector {
 	return []selector.Selector{
-		selector.NewStartEndInner("`", "`"),
+		selector.NewFilter(selector.NewAll(), func(source []byte, index [][2]int) [][2]int {
+			result := [][2]int{}
+			for _, ind := range index {
+				s, e := ind[0], ind[1]
+				result = append(result, [2]int{s + 1, e - 1})
+			}
+			return result
+		}),
 	}
 }
 

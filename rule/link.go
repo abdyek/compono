@@ -43,9 +43,9 @@ func (_ *linkText) Selectors() []selector.Selector {
 
 func (_ *linkText) Rules() []Rule {
 	return []Rule{
+		newInlineCode(),
 		newStrong(),
 		newEm(),
-		newInlineCode(),
 		newContextRef(),
 		newParamRef(),
 		newPlain(),
