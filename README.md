@@ -400,7 +400,7 @@ If a parameter value is not provided during the call, the **default value is use
 
 Supported parameter types:
 
-- **String** → `name = "John"`
+- **String** → `name = "John"`. A `"` inside a string is written twice: `title = "Umono's ""theme"" system"`. This is the only escape. `""` is the empty string, `""""` is a string of one `"`, and `\` is a plain character (`"C:\Users"`).
 - **Integer** → `age = 25`
 - **Bool** → `active = true`
 - **Component** → `comp = COMP`
