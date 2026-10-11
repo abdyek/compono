@@ -30,6 +30,7 @@ const (
 	CodeInvalidParameterAccess     DiagnosticCode = "invalid-parameter-access"
 	CodeInvalidParameterDefinition DiagnosticCode = "invalid-parameter-definition"
 	CodeInvalidParameterUsage      DiagnosticCode = "invalid-parameter-usage"
+	CodeInvalidVariantURL          DiagnosticCode = "invalid-variant-url"
 	CodeMissingArgument            DiagnosticCode = "missing-argument"
 	CodeNotComponentParameter      DiagnosticCode = "not-component-parameter"
 	CodeUnknownComponent           DiagnosticCode = "unknown-component"

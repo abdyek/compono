@@ -43,6 +43,7 @@ func BuiltinComponents() []Definition {
 					Name:         "alt",
 					Schema:       String(),
 					DefaultValue: "",
+					IsRequired:   true,
 				},
 			},
 			InlineRenderable: true,
