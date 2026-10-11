@@ -73,6 +73,7 @@ func NewRenderer(log logger.Logger) *renderer {
 		newContentBuiltin(r, "FOOTER", "footer", false),
 		newContentBuiltin(r, "ARTICLE", "article", false),
 		newContentBuiltin(r, "ASIDE", "aside", true),
+		newContentBuiltin(r, "NAV", "nav", true),
 	}
 
 	for _, bc := range builtinComps {

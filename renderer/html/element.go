@@ -188,6 +188,7 @@ func isBlockLikeRendered(rendered string) bool {
 		strings.HasPrefix(rendered, "<footer") ||
 		strings.HasPrefix(rendered, "<article") ||
 		strings.HasPrefix(rendered, "<aside") ||
+		strings.HasPrefix(rendered, "<nav") ||
 		hasBlockErrorPrefix(rendered)
 }
 
