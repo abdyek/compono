@@ -2,10 +2,13 @@ package html
 
 import (
 	"html"
+	"regexp"
 	"strings"
 
 	"github.com/umono-cms/compono/ast"
 )
+
+var codeBlockLangPattern = regexp.MustCompile(`^[a-z0-9][a-z0-9+#._-]*$`)
 
 type codeBlock struct {
 	baseRenderable
@@ -27,19 +30,22 @@ func (_ *codeBlock) Condition(invoker renderableNode, node ast.Node) bool {
 }
 
 func (cb *codeBlock) Render() string {
-	langClass := "language-plaintext"
+	lang := ""
 	cbl := ast.FindNodeByRuleName(cb.Node().Children(), "code-block-lang")
 	if cbl != nil {
-		lang := html.EscapeString(strings.TrimSpace(string(cbl.Raw())))
-		if lang != "" {
-			langClass = "language-" + lang
-		}
+		lang = strings.TrimSpace(string(cbl.Raw()))
 	}
 	content := cb.renderer.renderChildren(cb, cb.Node().Children())
+	if lang != "" && (len(lang) > 32 || !codeBlockLangPattern.MatchString(lang)) {
+		return cb.renderer.recordDiagnostic(cb.Node(), "Invalid code block language", "The language **"+lang+"** is not valid. A language name contains only lowercase ASCII letters, digits and **+ # . _ -**, starts with a letter or digit and is at most 32 bytes.", true)
+	}
 	if strings.Trim(content, " \t\n") == "" {
 		return ""
 	}
-	return `<pre><code class="` + langClass + `">` + content + `</code></pre>`
+	if lang != "" {
+		return `<pre><code data-lang="` + html.EscapeString(lang) + `">` + content + `</code></pre>`
+	}
+	return `<pre><code>` + content + `</code></pre>`
 }
 
 type codeBlockContent struct {
