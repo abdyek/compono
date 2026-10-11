@@ -1,0 +1,5 @@
+> **Compono** semantic HTML DSL'dir. Kaynak: {{ LINK text = "compono.md" url = "https://compono.md" }}
+{{ QUOTE text = "Az olsun, öz olsun." }}
+
+~ QUOTE text = ""
+> {{ text }}
