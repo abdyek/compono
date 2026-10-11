@@ -240,6 +240,30 @@ Output:
 <a href="https://example.com" target="_blank" rel="noopener noreferrer">Visit us</a>
 ```
 
+| Parameter | Type   | Required | Default | Description |
+| --------- | ------ | -------- | ------- | ----------- |
+| `text`    | String | Yes      |         | The visible text. It is trimmed and cannot be empty (`empty-text`). |
+| `url`     | String | Yes      |         | The `href`. It cannot be empty (`empty-url`) and must pass the URL scheme allowlist. |
+| `new-tab` | Bool   | No       | `false` | Writes `target="_blank" rel="noopener noreferrer"`. |
+| `current` | String | No       | `""`    | Writes `aria-current` when it is not empty. One of `page`, `step`, `location`, `date`, `time` or `true`, otherwise `invalid-current-value`. |
+
+```
+{{ LINK text = "Home" url = "/" current = "page" }}
+```
+
+Output:
+```html
+<a href="/" aria-current="page">Home</a>
+```
+
+A missing `text` or `url` is an `invalid-built-in-arguments` error. The attributes are written in the order `href`, `target`, `rel`, `aria-current`.
+
+#### URL Scheme Allowlist
+
+The `url` of `LINK` and the URL of a markdown link must use `http`, `https`, `mailto` or `tel`, or be relative (`/docs`, `docs`, `#part`, `?page=2`, `//cdn.example.com`). Any other scheme, such as `javascript:` or `data:`, is a `disallowed-url-scheme` error and the link is dropped.
+
+The scheme is found the way browsers find it: leading and trailing control characters and spaces are trimmed, ASCII tabs and newlines inside the URL are removed, and the scheme is compared case-insensitively, so `java	script:` and `JavaScript:` are rejected. The `href` is the URL after this normalization. A relative path whose first segment contains `:` is read as a scheme. Write it as `./docs:intro`.
+
 ### IMAGE
 
 Creates a semantic web image output from a `media` record and optional responsive variants.

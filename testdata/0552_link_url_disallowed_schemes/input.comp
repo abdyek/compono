@@ -1,0 +1,8 @@
+{{ LINK text = "a" url = "javascript:alert(1)" }}
+{{ LINK text = "b" url = "JavaScript:alert(1)" }}
+{{ LINK text = "c" url = "java	script:alert(1)" }}
+{{ LINK text = "d" url = "data:text/html,x" }}
+{{ LINK text = "e" url = "docs:kurulum" }}
+{{ LINK text = "f" url = "  vbscript:x" }}
+{{ LINK text = "g" url = "javascript:x" }}
+{{ LINK text = "h" url = "file:///etc/passwd" }}

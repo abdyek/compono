@@ -9,16 +9,23 @@ func BuiltinComponents() []Definition {
 					Name:         "text",
 					Schema:       String(),
 					DefaultValue: "",
+					IsRequired:   true,
 				},
 				{
 					Name:         "url",
 					Schema:       String(),
 					DefaultValue: "",
+					IsRequired:   true,
 				},
 				{
 					Name:         "new-tab",
 					Schema:       Bool(),
 					DefaultValue: false,
+				},
+				{
+					Name:         "current",
+					Schema:       String(),
+					DefaultValue: "",
 				},
 			},
 			InlineRenderable: true,

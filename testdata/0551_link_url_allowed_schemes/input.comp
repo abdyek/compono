@@ -1,0 +1,10 @@
+{{ LINK text = "a" url = "http://a.com" }}
+{{ LINK text = "b" url = "HTTPS://b.com" }}
+{{ LINK text = "c" url = "mailto:x@y.z" }}
+{{ LINK text = "d" url = "tel:+90" }}
+{{ LINK text = "e" url = "/docs" }}
+{{ LINK text = "f" url = "kurulum" }}
+{{ LINK text = "g" url = "#bolum" }}
+{{ LINK text = "h" url = "?sayfa=2" }}
+{{ LINK text = "i" url = "//cdn.example.com" }}
+{{ LINK text = "j" url = "./docs:kurulum" }}

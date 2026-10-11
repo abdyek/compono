@@ -88,7 +88,7 @@ func TestFindDefinitionLink(t *testing.T) {
 	definition, ok := FindDefinition("LINK")
 	require.True(t, ok)
 	assert.Equal(t, "LINK", definition.Name)
-	assert.Len(t, definition.Params, 3)
+	assert.Len(t, definition.Params, 4)
 }
 
 func TestFindDefinitionImage(t *testing.T) {

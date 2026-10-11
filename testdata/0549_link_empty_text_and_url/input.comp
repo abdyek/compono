@@ -1,0 +1,4 @@
+{{ LINK text = "  " url = "/a" }}
+{{ LINK text = "a" url = " " }}
+{{ LINK text = "" url = "" }}
+{{ LINK text = "a" url = "	" }}

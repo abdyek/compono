@@ -216,6 +216,10 @@ func BuiltinCallError(root, call ast.Node, name string, invokerAncestors []ast.N
 	mismatches := []builtinSchemaMismatch{}
 	for _, param := range definition.Params {
 		_, given := ast.ResolveFrameArg(root, call, param.Name, invokerAncestors)
+		if !given && param.IsRequired {
+			mismatches = append(mismatches, builtinSchemaMismatch{name: param.Name})
+			continue
+		}
 		if !given && !param.IsRequired {
 			continue
 		}
@@ -240,6 +244,12 @@ func BuiltinCallError(root, call ast.Node, name string, invokerAncestors []ast.N
 			names = appendUniqueStrings(names, m.name)
 		}
 		return "Invalid built-in arguments", builtinSchemaMismatchNamesMsg(name, names), true
+	}
+
+	if name == "LINK" {
+		if title, message, ok := linkValueError(root, call, invokerAncestors); ok {
+			return title, message, true
+		}
 	}
 
 	return "", "", false
