@@ -220,7 +220,7 @@ A global component without sub components resolves exactly as before: `Local > G
 
 **Errors:** `Convert` returns an error when:
 
-- a conversion option (`WithContext`, `WithAttributeHook`) is given to a global component at any depth, even with an empty value (`ErrConversionOptionInGlobal`),
+- a conversion option (`WithContext`, `WithAttributeHook`, `WithURLReporter`) is given to a global component at any depth, even with an empty value (`ErrConversionOptionInGlobal`),
 - `WithIsolatedScope` is given directly to `Convert` (`ErrIsolatedScopeInConvert`),
 - two sub components of the same owner share a name (`ErrDuplicateSubComponent`),
 - two global components given to `Convert` directly share a name (`ErrDuplicateGlobalComponent`).
@@ -866,6 +866,25 @@ The chain is the call stack at the moment the built-in is rendered, ordered from
 
 Nothing is written to the writer in these cases. The hook cannot return an error. Validating the values is the job of the application that gives the hook.
 
+## URL Reporter
+
+`compono.WithURLReporter` registers a function that receives every URL the browser loads as a resource from the output. In v0.7 these are the URLs of `IMAGE`: the `src` of `<img>` and every candidate of the `srcset` of `<source>`. Links (`href`) are not reported. An application can derive, for example, the `img-src` origins of its Content-Security-Policy from them.
+
+```go
+var urls []compono.URLReport
+_, err := c.Convert(pageSource, w,
+	compono.WithURLReporter(func(r compono.URLReport) {
+		urls = append(urls, r)
+	}),
+)
+```
+
+- `URLReport` has `Element` (`img` or `source`), `Attribute` (`src` or `srcset`) and `URL`. A `srcset` candidate is reported without its width descriptor.
+- `URL` is the value written to the output after the [URL scheme allowlist](#url-scheme-allowlist) normalization and before HTML escaping. Compono does not extract origins or remove duplicates.
+- URLs are reported in output order, synchronously during `Convert`. A URL written twice is reported twice.
+- The URLs of a dropped call are not reported.
+- `WithURLReporter` may be given once per conversion (`ErrURLReporterAlreadySet`) and not to a global component (`ErrConversionOptionInGlobal`). A `nil` reporter is the same as no reporter. If `Convert` returns an error, the reported URLs should not be used.
+
 ## Error Handling
 
 There are two kinds of errors:
@@ -957,6 +976,9 @@ _, err := c.Convert(source, writer, compono.WithContext(map[string]any{
 _, err := c.Convert(source, writer, compono.WithAttributeHook(func(builtin string, chain []compono.Frame) map[string]string {
     return nil
 }))
+
+// Receive the image URLs written to the output (once per conversion)
+_, err := c.Convert(source, writer, compono.WithURLReporter(func(r compono.URLReport) {}))
 ```
 
 ### Concurrency
