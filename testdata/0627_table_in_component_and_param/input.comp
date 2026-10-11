@@ -1,0 +1,14 @@
+{{ PRICES personal = "0 ₺" team = "490 ₺" }}
+
+{{ PRICES }}
+
+{{ ROW value = "| a | b |" }}
+
+~ PRICES personal = "" team = ""
+| Plan    | Aylık fiyat     |
+| ------- | --------------- |
+| Kişisel | {{ personal }}  |
+| Ekip    | {{ team }}      |
+
+~ ROW value = ""
+{{ value }}
