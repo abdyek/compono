@@ -27,6 +27,7 @@ var diagnosticCodeTitles = []struct {
 	{CodeInvalidParameterAccess, "Invalid parameter access"},
 	{CodeInvalidParameterDefinition, "Invalid parameter definition"},
 	{CodeInvalidParameterUsage, "Invalid parameter usage"},
+	{CodeInvalidVariantURL, "Invalid variant URL"},
 	{CodeMissingArgument, "Missing argument"},
 	{CodeNotComponentParameter, "Not component parameter"},
 	{CodeUnknownComponent, "Unknown component"},

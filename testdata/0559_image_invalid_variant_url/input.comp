@@ -1,0 +1,4 @@
+{{ IMAGE media = { url: "/a.png", width: 10, height: 10, mime-type: "image/png", variants: [{ url: "/a b.webp", width: 5, height: 5, mime-type: "image/webp" }] } alt = "a" }}
+{{ IMAGE media = { url: "/a.png", width: 10, height: 10, mime-type: "image/png", variants: [{ url: ",/a.webp", width: 5, height: 5, mime-type: "image/webp" }] } alt = "a" }}
+{{ IMAGE media = { url: "/a.png", width: 10, height: 10, mime-type: "image/png", variants: [{ url: "/a.webp,", width: 5, height: 5, mime-type: "image/webp" }] } alt = "a" }}
+{{ IMAGE media = { url: "/a b.png", width: 10, height: 10, mime-type: "image/png" } alt = "a" }}

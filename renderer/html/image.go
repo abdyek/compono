@@ -41,13 +41,9 @@ func (img *image) Render(invoker renderableNode, node ast.Node) string {
 
 	variants := img.variants(media)
 
-	conflicts := imageConflictAttributes
-	if len(variants) > 0 {
-		conflicts = map[string]bool{}
-	}
-	attrs := img.renderer.callAttributeHook(img.Name(), conflicts)
+	attrs := img.renderer.callAttributeHook(img.Name(), map[string]bool{})
 
-	imgAttrs := ` src="` + html.EscapeString(img.recordField(media, "url")) + `"` +
+	imgAttrs := ` src="` + html.EscapeString(util.NormalizeURL(img.recordField(media, "url"))) + `"` +
 		` alt="` + html.EscapeString(util.TrimWhitespace(alt.Raw)) + `"` +
 		` width="` + html.EscapeString(img.recordField(media, "width")) + `"` +
 		` height="` + html.EscapeString(img.recordField(media, "height")) + `"`
@@ -55,8 +51,7 @@ func (img *image) Render(invoker renderableNode, node ast.Node) string {
 	renderedImg := `<img` + imgAttrs + `>`
 
 	if len(variants) == 0 {
-		return `<img` + imgAttrs +
-			formatHookAttributes(attrs, "sizes") + `>`
+		return `<picture` + formatHookAttributes(attrs, "sizes") + `>` + renderedImg + `</picture>`
 	}
 
 	grouped := map[string][]imageVariant{}
@@ -91,13 +86,6 @@ func (img *image) Render(invoker renderableNode, node ast.Node) string {
 	return `<picture` + formatHookAttributes(attrs, "sizes") + `>` + strings.Join(sources, "") + renderedImg + `</picture>`
 }
 
-var imageConflictAttributes = map[string]bool{
-	"src":    true,
-	"alt":    true,
-	"width":  true,
-	"height": true,
-}
-
 func (img *image) resolveArg(invoker renderableNode, compCall ast.Node, name string) ast.ResolvedValue {
 	return resolveBuiltinParam(img.renderer, invoker, compCall, name)
 }
@@ -129,7 +117,7 @@ func (img *image) variants(media ast.ResolvedValue) []imageVariant {
 		}
 
 		result = append(result, imageVariant{
-			url:      img.recordField(item, "url"),
+			url:      util.NormalizeURL(img.recordField(item, "url")),
 			width:    width,
 			widthRaw: widthRaw,
 			mimeType: img.recordField(item, "mime-type"),

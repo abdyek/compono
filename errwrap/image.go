@@ -2,6 +2,7 @@ package errwrap
 
 import (
 	"strconv"
+	"strings"
 
 	"github.com/umono-cms/compono/ast"
 	"github.com/umono-cms/compono/util"
@@ -56,6 +57,16 @@ func imageValueError(media, alt ast.ResolvedValue) imageError {
 			title:   "Unknown key",
 			message: "The key **" + key + "** is not injected.",
 		}
+	}
+
+	if err := getImageEmptyURLError(media); err.title != "" {
+		return err
+	}
+	if err := getImageDisallowedURLSchemeError(media); err.title != "" {
+		return err
+	}
+	if err := getImageInvalidVariantURLError(media); err.title != "" {
+		return err
 	}
 
 	if err := getImageUnsupportedMimeTypeError(media); err.title != "" {
@@ -192,6 +203,73 @@ func imagePreservesAspectRatio(mediaWidth, mediaHeight, variantWidth, variantHei
 
 func divideAndCeil(numerator, denominator int) int {
 	return (numerator + denominator - 1) / denominator
+}
+
+func getImageEmptyURLError(media ast.ResolvedValue) imageError {
+	if raw, ok := imageRecordURLField(media); ok && util.NormalizeURL(raw) == "" {
+		return imageError{
+			title:   "Empty URL",
+			message: "The value of **url** cannot be empty.",
+		}
+	}
+
+	for _, variant := range imageVariants(media) {
+		if raw, ok := imageRecordURLField(variant); ok && util.NormalizeURL(raw) == "" {
+			return imageError{
+				title:   "Empty URL",
+				message: "The value of **url** cannot be empty.",
+			}
+		}
+	}
+
+	return imageError{}
+}
+
+func getImageDisallowedURLSchemeError(media ast.ResolvedValue) imageError {
+	if raw, ok := imageRecordURLField(media); ok {
+		if scheme, disallowed := util.DisallowedURLScheme(raw); disallowed {
+			title, message := DisallowedURLSchemeError(scheme)
+			return imageError{title: title, message: message}
+		}
+	}
+
+	for _, variant := range imageVariants(media) {
+		if raw, ok := imageRecordURLField(variant); ok {
+			if scheme, disallowed := util.DisallowedURLScheme(raw); disallowed {
+				title, message := DisallowedURLSchemeError(scheme)
+				return imageError{title: title, message: message}
+			}
+		}
+	}
+
+	return imageError{}
+}
+
+func getImageInvalidVariantURLError(media ast.ResolvedValue) imageError {
+	for _, variant := range imageVariants(media) {
+		if raw, ok := imageRecordURLField(variant); ok {
+			url := util.NormalizeURL(raw)
+			if strings.ContainsAny(url, " \t\n\f\r") || strings.HasPrefix(url, ",") || strings.HasSuffix(url, ",") {
+				return imageError{
+					title:   "Invalid variant URL",
+					message: "The URL **" + url + "** cannot be used in srcset. It must not contain whitespace or start or end with a comma.",
+				}
+			}
+		}
+	}
+
+	return imageError{}
+}
+
+func imageRecordURLField(record ast.ResolvedValue) (string, bool) {
+	field, ok := record.Fields["url"]
+	if !ok {
+		return "", false
+	}
+	if field.Type != "string" {
+		return "", false
+	}
+	return field.Raw, true
 }
 
 func imageVariants(media ast.ResolvedValue) []ast.ResolvedValue {

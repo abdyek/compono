@@ -322,7 +322,7 @@ Output:
 <picture><source type="image/avif" srcset="https://cdn.example.com/my-photo-640.avif 640w, https://cdn.example.com/my-photo-1280.avif 1280w, https://cdn.example.com/my-photo-1600.avif 1600w"><source type="image/webp" srcset="https://cdn.example.com/my-photo-640.webp 640w, https://cdn.example.com/my-photo-1280.webp 1280w, https://cdn.example.com/my-photo-1600.webp 1600w"><img src="https://cdn.example.com/my-photo.jpg" alt="My photo" width="1600" height="900"></picture>
 ```
 
-Without variants, `IMAGE` renders a plain `img` element:
+Without variants, `IMAGE` still renders a `picture` element that holds only the `img`:
 
 ```
 {{ IMAGE media = {
@@ -335,7 +335,7 @@ Without variants, `IMAGE` renders a plain `img` element:
 
 Output:
 ```html
-<img src="https://cdn.example.com/avatar.png" alt="Profile avatar" width="512" height="512">
+<picture><img src="https://cdn.example.com/avatar.png" alt="Profile avatar" width="512" height="512"></picture>
 ```
 
 `IMAGE` can be used inline or as a block component depending on where it is called:
@@ -357,7 +357,7 @@ Gallery cover: {{ IMAGE media = {
   - `height`
   - `mime-type`
   - optional `variants`
-- `alt` is a string. Pass `alt=""` for decorative images.
+- `alt` is a required string. It may be empty: pass `alt = ""` for decorative images. An `IMAGE` without `alt` is an `invalid-built-in-arguments` error.
 
 Each item in `variants` must be a record with:
 
@@ -377,7 +377,9 @@ Supported mime types:
 #### IMAGE Behavior
 
 - `media` is always the fallback image source.
-- HTML output is a `picture` element when variants are given, otherwise a plain `img` element.
+- HTML output is always a `picture` element, with a `source` for every variant group and the fallback `img` last.
+- every `url` must pass the [URL scheme allowlist](#url-scheme-allowlist) and is written after its normalization. An empty `url` is an `empty-url` error.
+- a variant `url` must be usable in `srcset`: it cannot contain whitespace or start or end with a comma (`invalid-variant-url`).
 - variants are grouped by first-seen `mime-type`, preserving the original group order.
 - within each mime type group, `srcset` entries are sorted by ascending width.
 - an empty `variants` array is valid and renders only the fallback `img`.
@@ -388,6 +390,9 @@ Supported mime types:
 When validation fails, the IMAGE call renders nothing instead of producing invalid markup, and `Convert` returns a diagnostic. Common IMAGE-specific diagnostic codes include:
 
 - `invalid-built-in-arguments`
+- `empty-url`
+- `disallowed-url-scheme`
+- `invalid-variant-url`
 - `unsupported-mime-type`
 - `invalid-dimension`
 - `duplicate-variant`

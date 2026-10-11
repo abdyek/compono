@@ -515,7 +515,7 @@ func TestConvertDiagnosticImageDropsPerRender(t *testing.T) {
 	var buf bytes.Buffer
 	diags, err := New().Convert([]byte("{{ CARD m = \"image/jpeg\" }}\n\n{{ CARD m = \"image/svg+xml\" }}\n\n~ CARD m = \"\"\n{{ IMAGE media = { url: \"/a.jpg\", width: 1, height: 1, mime-type: m } alt = \"a\" }}"), &buf)
 	require.NoError(t, err)
-	assert.Equal(t, `<img src="/a.jpg" alt="a" width="1" height="1">`, buf.String())
+	assert.Equal(t, `<picture><img src="/a.jpg" alt="a" width="1" height="1"></picture>`, buf.String())
 	want := []Diagnostic{{
 		Code:    CodeUnsupportedMimeType,
 		Message: "The mime-type **image/svg+xml** is unsupported.",
