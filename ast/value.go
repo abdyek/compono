@@ -1,10 +1,6 @@
 package ast
 
-import (
-	"fmt"
-	"os"
-	"strings"
-)
+import "strings"
 
 type ResolvedValue struct {
 	Type              string
@@ -101,7 +97,6 @@ func ResolveParamFromAncestors(root Node, paramName string, accessors []ValueAcc
 		if !IsFrameNode(anc) {
 			continue
 		}
-		fmt.Fprintf(os.Stderr, "DEBUG ResolveParamFromAncestors: param=%s found frame at i=%d rule=%q\n", paramName, i, anc.Rule().Name())
 		return ApplyAccessors(ResolveFrameParam(root, anc, paramName, invokerAncestors[i+1:]), accessors)
 	}
 
