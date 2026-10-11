@@ -1,0 +1,5 @@
+{{ LINK text = "Ana sayfa" url = "/" current = "page" }}
+{{ LINK text = "Adım" url = "/s" current = " step " }}
+{{ LINK text = "Konum" url = "/k" current = "location" }}
+{{ LINK text = "Yok" url = "/y" current = "" }}
+{{ LINK text = "Yeni" url = "https://umono.io" new-tab = true current = "true" }}

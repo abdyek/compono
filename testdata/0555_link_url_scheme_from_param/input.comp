@@ -1,0 +1,6 @@
+{{ CARD url = "/ok" }}
+
+{{ CARD url = "javascript:x" }}
+
+~ CARD url = ""
+{{ LINK text = "a" url = url }}
