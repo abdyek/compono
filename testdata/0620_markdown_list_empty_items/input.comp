@@ -1,0 +1,7 @@
+{{ ITEMS a = "" b = "B" }}
+
+{{ ITEMS }}
+
+~ ITEMS a = "" b = ""
+- {{ a }}
+- {{ b }}
