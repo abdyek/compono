@@ -36,6 +36,9 @@ func (cb *codeBlock) Render() string {
 		}
 	}
 	content := cb.renderer.renderChildren(cb, cb.Node().Children())
+	if strings.Trim(content, " \t\n") == "" {
+		return ""
+	}
 	return `<pre><code class="` + langClass + `">` + content + `</code></pre>`
 }
 

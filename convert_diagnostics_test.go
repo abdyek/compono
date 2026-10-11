@@ -395,7 +395,7 @@ func TestConvertDiagnosticDropsLinkForURLUnit(t *testing.T) {
 	var buf bytes.Buffer
 	diags, err := New().Convert([]byte("{{ COMP }}\n\n~ COMP\n[{{ label }}]({{ target }})"), &buf)
 	require.NoError(t, err)
-	assert.Equal(t, "<p></p>", buf.String())
+	assert.Equal(t, "", buf.String())
 	want := []Diagnostic{{
 		Code:    CodeUnknownParameter,
 		Message: "The parameter **target** is not defined for this component.",
