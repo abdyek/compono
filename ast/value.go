@@ -191,6 +191,9 @@ func resolveCompParamDefault(root Node, compDef Node, paramName string, invokerA
 	return resolved
 }
 
+// quote is the character that is doubled to escape it inside a string.
+const quote = "\""
+
 func resolveValueNode(root Node, node Node, invokerAncestors []Node, currentNode Node) ResolvedValue {
 	if node == nil {
 		return ResolvedValue{}
@@ -222,7 +225,7 @@ func resolveValueNode(root Node, node Node, invokerAncestors []Node, currentNode
 		raw := strings.TrimSpace(string(node.Raw()))
 		if value != nil {
 			if node.Rule().Name() == "comp-string-param" {
-				raw = string(value.Raw())
+				raw = strings.ReplaceAll(string(value.Raw()), quote+quote, quote)
 			} else {
 				raw = strings.TrimSpace(string(value.Raw()))
 			}
@@ -236,7 +239,7 @@ func resolveValueNode(root Node, node Node, invokerAncestors []Node, currentNode
 		raw := strings.TrimSpace(string(node.Raw()))
 		if value != nil {
 			if node.Rule().Name() == "comp-call-string-arg" {
-				raw = string(value.Raw())
+				raw = strings.ReplaceAll(string(value.Raw()), quote+quote, quote)
 			} else {
 				raw = strings.TrimSpace(string(value.Raw()))
 			}

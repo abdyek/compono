@@ -670,6 +670,10 @@ func scanQuotedString(source []byte, offset int) (int, bool) {
 	offset++
 	for offset < len(source) {
 		if source[offset] == '"' {
+			if offset+1 < len(source) && source[offset+1] == '"' {
+				offset += 2
+				continue
+			}
 			return offset + 1, true
 		}
 		offset++
