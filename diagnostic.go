@@ -25,6 +25,7 @@ const (
 	CodeInconsistentAspectRatio    DiagnosticCode = "inconsistent-aspect-ratio"
 	CodeInfiniteComponentCall      DiagnosticCode = "infinite-component-call"
 	CodeInvalidBuiltinArguments    DiagnosticCode = "invalid-built-in-arguments"
+	CodeInvalidCodeBlockLanguage   DiagnosticCode = "invalid-code-block-language"
 	CodeInvalidComponentUsage      DiagnosticCode = "invalid-component-usage"
 	CodeInvalidContextAccess       DiagnosticCode = "invalid-context-access"
 	CodeInvalidCurrentValue        DiagnosticCode = "invalid-current-value"
