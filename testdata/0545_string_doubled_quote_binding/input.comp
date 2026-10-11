@@ -1,0 +1,7 @@
+{{ WRAP content = X(a = "" b = """" c = "C:\Users" d = "x\" e = "a""b") }}
+
+~ WRAP content = NO_MATTER
+{{ content }}
+
+~ X a = "-" b = "" c = "" d = "" e = ""
+[{{ a }}][{{ b }}][{{ c }}][{{ d }}][{{ e }}]

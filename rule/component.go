@@ -236,7 +236,7 @@ func (_ *compStringParam) Name() string {
 
 func (_ *compStringParam) Selectors() []selector.Selector {
 	return []selector.Selector{
-		selector.NewStartEndInner(`[\s\n\r]*"`, `"[\s\n\r]*`),
+		selector.NewQuotedStringInner(),
 	}
 }
 
@@ -989,7 +989,7 @@ func (_ *compCallStringArg) Name() string {
 
 func (_ *compCallStringArg) Selectors() []selector.Selector {
 	return []selector.Selector{
-		selector.NewStartEndInner(`[\s\n\r]*"`, `"[\s\n\r]*`),
+		selector.NewQuotedStringInner(),
 	}
 }
 
