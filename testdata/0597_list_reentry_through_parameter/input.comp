@@ -1,0 +1,8 @@
+{{ LIST items = [{ text: "a", children: [{ text: "b", children: [] }] }] item = NODE }}
+
+~ NODE item = {}
+{{ item.text }}
+{{ SUB kids = item.children }}
+
+~ SUB kids = []
+{{ LIST items = kids item = NODE }}

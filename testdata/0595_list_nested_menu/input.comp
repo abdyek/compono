@@ -1,0 +1,11 @@
+{{ LIST items = [
+  { text: "Home", url: "/", children: [] },
+  { text: "Docs", url: "/docs", children: [
+    { text: "Guide", url: "/docs/guide", children: [] },
+    { text: "API", url: "/docs/api", children: [] }
+  ] }
+] item = NAV_ITEM }}
+
+~ NAV_ITEM item = {}
+{{ LINK text = item.text url = item.url }}
+{{ LIST items = item.children item = NAV_ITEM }}
