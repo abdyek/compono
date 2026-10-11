@@ -1,4 +1,4 @@
-comp = NO_MATTER
+~ comp = NO_MATTER
 
 {{ WEB_GRID
   items = [

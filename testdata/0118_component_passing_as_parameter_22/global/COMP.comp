@@ -1,4 +1,4 @@
-comp = DEFAULT_LOCAL_COMP
+~ comp = DEFAULT_LOCAL_COMP
 {{ comp }}
 
 ~ DEFAULT_LOCAL_COMP

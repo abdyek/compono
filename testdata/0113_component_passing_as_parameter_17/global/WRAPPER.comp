@@ -1,2 +1,2 @@
-comp = BLOCK
+~ comp = BLOCK
 Here p {{ comp }}

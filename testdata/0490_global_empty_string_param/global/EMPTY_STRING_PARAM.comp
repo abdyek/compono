@@ -1,2 +1,2 @@
-str = ""
+~ str = ""
 **It must not panic** {{ str }}

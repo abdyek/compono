@@ -114,7 +114,7 @@ func buildGlobalOpts(t *testing.T, dir string) []ConvertOption {
 
 		subOpts := buildGlobalOpts(t, filepath.Join(dir, name))
 
-		opts = append(opts, WithGlobalComponent(name, []byte(strings.TrimSpace(string(src))), subOpts...))
+		opts = append(opts, WithGlobalComponent(name, []byte(strings.TrimRight(string(src), " \t\r\n")), subOpts...))
 	}
 	return opts
 }

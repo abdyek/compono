@@ -1,4 +1,4 @@
-name = ""
+~ name = ""
 {{ LOCAL_COMP }}
 ~ LOCAL_COMP
 Hello *{{ name }}*!

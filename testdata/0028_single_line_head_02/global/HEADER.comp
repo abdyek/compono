@@ -1,4 +1,4 @@
-name = ""
+~ name = ""
 # {{ name }}
 {{ LOCAL_COMP param = 123 }}
 

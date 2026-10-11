@@ -1,0 +1,5 @@
+// Kartın başlığı
+
+~ title = ""
+# {{ title }}
+{{ FOO }}

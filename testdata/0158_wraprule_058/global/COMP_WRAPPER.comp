@@ -1,4 +1,4 @@
-inline-comp = BLOCK
+~ inline-comp = BLOCK
 No render
 # {{ inline-comp }}
 
