@@ -1445,7 +1445,7 @@ func (_ *globalCompDefHead) Name() string {
 }
 
 func (_ *globalCompDefHead) Selectors() []selector.Selector {
-	p, _ := selector.NewStartEnd(`^([a-z][a-z0-9-]*)!?[ \t\r\n]*=[ \t\r\n]*(".*?"|\d+(?:\.\d+)?|true|false|\[|\{|[A-Z0-9]+(?:_[A-Z0-9]+)*|context\s*\()`, `\n|\z`)
+	p, _ := selector.NewStartEnd(`\A(?:[ \t]*\n)*~(?:[^ \t\n]|[ \t]+[^ \t\nA-Z0-9]|[ \t]*(?m:$))`, `\n|\z`)
 	return []selector.Selector{
 		p,
 	}
@@ -1469,7 +1469,7 @@ func (_ *globalCompDefContent) Name() string {
 }
 
 func (_ *globalCompDefContent) Selectors() []selector.Selector {
-	seli, _ := selector.NewStartEndLeftInner(`^`, `\n~\s+[A-Z0-9]+(?:_[A-Z0-9]+)*|\z`)
+	seli, _ := selector.NewStartEndLeftInner(`^`, `(?:\n|\A)~\s+[A-Z0-9]+(?:_[A-Z0-9]+)*|\z`)
 	return []selector.Selector{
 		seli,
 	}
