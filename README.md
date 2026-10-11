@@ -446,6 +446,24 @@ First post.
 
 Both behave like `HEADER`, `MAIN` and `FOOTER`: they are block components, render nothing when their content renders nothing, and can be nested. They have no placement rule of their own. A `MAIN` cannot be inside them, which is `MAIN`'s own rule.
 
+### NAV
+
+`NAV` wraps its required `content` in a `<nav>`, a navigation region. Its optional `label` is the accessible name of the region and is written as `aria-label` when its trimmed value is not empty. Give every `NAV` of a page a different `label`.
+
+```
+{{ NAV label = "Footer" content = FOOTER_LINKS }}
+
+~ FOOTER_LINKS
+{{ LINK text = "Privacy" url = "/privacy" }} · {{ LINK text = "Contact" url = "/contact" }}
+```
+
+Output:
+```html
+<nav aria-label="Footer"><p><a href="/privacy">Privacy</a> · <a href="/contact">Contact</a></p></nav>
+```
+
+`NAV` behaves like the other content built-ins: it is a block component, renders nothing when its content renders nothing and can be nested.
+
 ### Removed Built-in Components
 
 #### WEB_GRID
@@ -458,7 +476,7 @@ A `WEB_GRID` call is now an `unknown-component` error and renders nothing. Local
 
 `NAVIGATION` was removed in v0.7. It bundled a whole menu concept (`<nav>`, `<ul>`, `<li>` and `<a>`) into one built-in. It always produced an unordered list, so ordered navigations like breadcrumbs could not be expressed, and it could not carry attributes such as `aria-current` or `aria-label`. Its item records also used `label`/`target` instead of Compono's `text`/`url` naming.
 
-A `NAVIGATION` call is now an `unknown-component` error and renders nothing. Local or global components named `NAVIGATION` are not affected and work as regular components.
+A `NAVIGATION` call is now an `unknown-component` error and renders nothing. A menu is now built with [NAV](#nav) and `LINK`. Local or global components named `NAVIGATION` are not affected and work as regular components.
 
 ## Parameters
 
