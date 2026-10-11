@@ -61,6 +61,8 @@ func NewRenderer(log logger.Logger) *renderer {
 		newBr(r),
 		newHr(r),
 		newBlockquote(r),
+		newMarkdownList(r),
+		newMarkdownListItem(r),
 	}
 
 	r.builtinCompMap = make(map[string]builtinComponent)
