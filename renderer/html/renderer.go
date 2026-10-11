@@ -68,12 +68,13 @@ func NewRenderer(log logger.Logger) *renderer {
 	builtinComps := []builtinComponent{
 		newLink(r),
 		newImage(r),
-		newContentBuiltin(r, "HEADER", "header", false),
-		newContentBuiltin(r, "MAIN", "main", false),
-		newContentBuiltin(r, "FOOTER", "footer", false),
-		newContentBuiltin(r, "ARTICLE", "article", false),
-		newContentBuiltin(r, "ASIDE", "aside", true),
-		newContentBuiltin(r, "NAV", "nav", true),
+		newContentBuiltin(r, "HEADER", "header", false, false),
+		newContentBuiltin(r, "MAIN", "main", false, false),
+		newContentBuiltin(r, "FOOTER", "footer", false, false),
+		newContentBuiltin(r, "ARTICLE", "article", false, false),
+		newContentBuiltin(r, "ASIDE", "aside", true, false),
+		newContentBuiltin(r, "NAV", "nav", true, false),
+		newContentBuiltin(r, "DETAILS", "details", false, true),
 	}
 
 	for _, bc := range builtinComps {

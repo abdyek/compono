@@ -15,20 +15,22 @@ type contentBuiltin struct {
 	name     string
 	tag      string
 	label    bool
+	details  bool
 }
 
-func newContentBuiltin(rend *renderer, name, tag string, label bool) builtinComponent {
+func newContentBuiltin(rend *renderer, name, tag string, label, details bool) builtinComponent {
 	return &contentBuiltin{
 		renderer: rend,
 		name:     name,
 		tag:      tag,
 		label:    label,
+		details:  details,
 	}
 }
 
 // New returns a new instance of the built-in bound to the same renderer.
 func (cb *contentBuiltin) New() builtinComponent {
-	return newContentBuiltin(cb.renderer, cb.name, cb.tag, cb.label)
+	return newContentBuiltin(cb.renderer, cb.name, cb.tag, cb.label, cb.details)
 }
 
 // Name returns the name of the built-in component.
@@ -63,6 +65,10 @@ func (cb *contentBuiltin) Render(invoker renderableNode, node ast.Node) string {
 		}
 	}
 
+	if cb.details {
+		conflicts = map[string]bool{"open": true}
+	}
+
 	attrs := r.callAttributeHook(cb.name, conflicts)
 
 	r.pushBuiltinFrame(cb.name, node)
@@ -71,6 +77,16 @@ func (cb *contentBuiltin) Render(invoker renderableNode, node ast.Node) string {
 
 	if isEmptyRendered(content) {
 		return content
+	}
+
+	if cb.details {
+		openAttr := ""
+		if open, ok := getBoolArgValue(r, invoker, node, "open"); ok && open {
+			openAttr = " open"
+		}
+		text := getArgValueWithDefa(r, invoker, node, "text", "")
+		summary := "<summary>" + text + "</summary>"
+		return "<details" + openAttr + formatHookAttributes(attrs) + ">" + summary + content + "</details>"
 	}
 
 	return "<" + cb.tag + labelAttr + formatHookAttributes(attrs) + ">" + content + "</" + cb.tag + ">"

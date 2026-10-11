@@ -252,6 +252,12 @@ func BuiltinCallError(root, call ast.Node, name string, invokerAncestors []ast.N
 		}
 	}
 
+	if name == "DETAILS" {
+		if title, message, ok := detailsValueError(root, call, invokerAncestors); ok {
+			return title, message, true
+		}
+	}
+
 	return "", "", false
 }
 

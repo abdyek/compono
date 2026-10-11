@@ -464,6 +464,26 @@ Output:
 
 `NAV` behaves like the other content built-ins: it is a block component, renders nothing when its content renders nothing and can be nested.
 
+### DETAILS
+
+`DETAILS` renders a section that the visitor opens and closes: a `<details>` whose `<summary>` is the required `text` and whose body is the required `content`. `open = true` makes the section open when the page loads.
+
+```
+{{ DETAILS text = "How do I install a theme?" content = ANSWER open = true }}
+
+~ ANSWER
+Use the CLI.
+```
+
+Output:
+```html
+<details open><summary>How do I install a theme?</summary><p>Use the CLI.</p></details>
+```
+
+- `text` is trimmed and escaped. An empty `text` is an `empty-text` error.
+- If `content` renders nothing, `DETAILS` renders nothing, even with a `text`.
+- `DETAILS` can be given as the content of another built-in, for example a menu that opens on small screens: `{{ NAV label = "Main" content = DETAILS(text = "Menu" content = MAIN_MENU) }}`.
+
 ### Removed Built-in Components
 
 #### WEB_GRID

@@ -130,6 +130,29 @@ func BuiltinComponents() []Definition {
 			},
 			InlineRenderable: false,
 		},
+		{
+			Name: "DETAILS",
+			Params: []Param{
+				{
+					Name:         "text",
+					Schema:       String(),
+					DefaultValue: "",
+					IsRequired:   true,
+				},
+				{
+					Name:         "content",
+					Schema:       Component(),
+					DefaultValue: "NO_MATTER",
+					IsRequired:   true,
+				},
+				{
+					Name:         "open",
+					Schema:       Bool(),
+					DefaultValue: false,
+				},
+			},
+			InlineRenderable: false,
+		},
 	}
 }
 
