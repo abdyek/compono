@@ -12,13 +12,17 @@ var diagnosticCodeTitles = []struct {
 	title    string
 }{
 	{CodeArrayIndexOutOfRange, "Array index out of range"},
+	{CodeDisallowedURLScheme, "Disallowed URL scheme"},
 	{CodeDuplicateArgument, "Duplicate argument"},
 	{CodeDuplicateVariant, "Duplicate variant"},
+	{CodeEmptyText, "Empty text"},
+	{CodeEmptyURL, "Empty URL"},
 	{CodeInconsistentAspectRatio, "Inconsistent aspect ratio"},
 	{CodeInfiniteComponentCall, "Infinite component call"},
 	{CodeInvalidBuiltinArguments, "Invalid built-in arguments"},
 	{CodeInvalidComponentUsage, "Invalid component usage"},
 	{CodeInvalidContextAccess, "Invalid context access"},
+	{CodeInvalidCurrentValue, "Invalid current value"},
 	{CodeInvalidDimension, "Invalid dimension"},
 	{CodeInvalidParameterAccess, "Invalid parameter access"},
 	{CodeInvalidParameterDefinition, "Invalid parameter definition"},

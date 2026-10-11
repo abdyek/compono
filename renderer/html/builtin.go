@@ -37,14 +37,20 @@ func (l *link) Render(invoker renderableNode, node ast.Node) string {
 	if ok && newTab {
 		newTabStr = ` target="_blank" rel="noopener noreferrer"`
 	}
+	ariaCurrentStr := ""
+	current, ok := getArgValue(l.renderer, invoker, node, "current")
+	if ok && current != "" {
+		ariaCurrentStr = ` aria-current="` + current + `"`
+	}
 	attrs := l.renderer.callAttributeHook(l.Name(), linkConflictAttributes)
-	return "<a href=\"" + getArgValueWithDefa(l.renderer, invoker, node, "url", "url") + "\"" + newTabStr + formatHookAttributes(attrs) + ">" + getArgValueWithDefa(l.renderer, invoker, node, "text", "") + "</a>"
+	return "<a href=\"" + util.NormalizeURL(getArgValueWithDefa(l.renderer, invoker, node, "url", "url")) + "\"" + newTabStr + ariaCurrentStr + formatHookAttributes(attrs) + ">" + getArgValueWithDefa(l.renderer, invoker, node, "text", "") + "</a>"
 }
 
 var linkConflictAttributes = map[string]bool{
-	"href":   true,
-	"target": true,
-	"rel":    true,
+	"href":         true,
+	"target":       true,
+	"rel":          true,
+	"aria-current": true,
 }
 
 func getArgValueWithDefa(r *renderer, invoker renderableNode, compCall ast.Node, name string, defa string) string {

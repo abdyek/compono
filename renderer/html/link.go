@@ -5,6 +5,8 @@ import (
 	"strings"
 
 	"github.com/umono-cms/compono/ast"
+	"github.com/umono-cms/compono/errwrap"
+	"github.com/umono-cms/compono/util"
 )
 
 type linkElement struct {
@@ -39,6 +41,13 @@ func (l *linkElement) Render() string {
 
 	if linkURL != nil {
 		url = l.renderURL(linkURL)
+	}
+
+	url = util.NormalizeURL(url)
+
+	if scheme, disallowed := util.DisallowedURLScheme(url); disallowed {
+		title, message := errwrap.DisallowedURLSchemeError(scheme)
+		return l.renderer.recordDiagnostic(l.Node(), title, message, false)
 	}
 
 	return `<a href="` + url + `">` + text + `</a>`

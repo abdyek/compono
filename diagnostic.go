@@ -15,13 +15,17 @@ type DiagnosticCode string
 
 const (
 	CodeArrayIndexOutOfRange       DiagnosticCode = "array-index-out-of-range"
+	CodeDisallowedURLScheme        DiagnosticCode = "disallowed-url-scheme"
 	CodeDuplicateArgument          DiagnosticCode = "duplicate-argument"
 	CodeDuplicateVariant           DiagnosticCode = "duplicate-variant"
+	CodeEmptyText                  DiagnosticCode = "empty-text"
+	CodeEmptyURL                   DiagnosticCode = "empty-url"
 	CodeInconsistentAspectRatio    DiagnosticCode = "inconsistent-aspect-ratio"
 	CodeInfiniteComponentCall      DiagnosticCode = "infinite-component-call"
 	CodeInvalidBuiltinArguments    DiagnosticCode = "invalid-built-in-arguments"
 	CodeInvalidComponentUsage      DiagnosticCode = "invalid-component-usage"
 	CodeInvalidContextAccess       DiagnosticCode = "invalid-context-access"
+	CodeInvalidCurrentValue        DiagnosticCode = "invalid-current-value"
 	CodeInvalidDimension           DiagnosticCode = "invalid-dimension"
 	CodeInvalidParameterAccess     DiagnosticCode = "invalid-parameter-access"
 	CodeInvalidParameterDefinition DiagnosticCode = "invalid-parameter-definition"
