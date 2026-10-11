@@ -1,7 +1,7 @@
 <pre><code>valid
 </code></pre><pre><code>valid
-     </code></pre><pre><code>valid
-    </code></pre><pre><code data-lang="go">valid
+</code></pre><pre><code>valid
 </code></pre><pre><code data-lang="go">valid
-      </code></pre><pre><code data-lang="js">valid
-        </code></pre><p>b ```<br>invalid<br>```</p><p>```<br>invalid<br>c ```</p><p>a   ```<br>invalid<br>c  ```</p><p>``` a<br>invalid<br>```</p><p>```<br>invalid<br>``` a</p><p>```     d<br>invalid<br>```   t</p>
+</code></pre><pre><code data-lang="go">valid
+</code></pre><pre><code data-lang="js">valid
+</code></pre><p>b ```<br>invalid</p><p>invalid<br>c ```</p><p>a   ```<br>invalid<br>c  ```</p><p>``` a<br>invalid</p><p>invalid<br>``` a</p><p>```     d<br>invalid<br>```   t</p>
