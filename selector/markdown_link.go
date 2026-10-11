@@ -67,72 +67,72 @@ func scanMarkdownLinks(source []byte) []markdownLinkBounds {
 	ranges := append([]([2]int){}, codes...)
 	ranges = append(ranges, units...)
 
-	for i := 0; i < len(source)-1; {
-		if source[i] != ']' || source[i+1] != '(' {
-			i++
-			continue
-		}
-		if isInsideRanges(i, ranges) || isInsideRanges(i+1, ranges) {
-			i++
+	for i := 0; i < len(source); i++ {
+		if source[i] != '[' || isInsideRanges(i, ranges) {
 			continue
 		}
 
-		start, startFound := findMarkdownLinkStart(source, i, ranges)
-		if !startFound {
-			i++
+		depth := 0
+		textEnd := -1
+		failed := false
+		for j := i + 1; j < len(source); j++ {
+			if isInsideRanges(j, ranges) {
+				continue
+			}
+			switch source[j] {
+			case '\n':
+				failed = true
+				j = len(source)
+			case '[':
+				depth++
+			case ']':
+				if depth == 0 {
+					textEnd = j
+					break
+				}
+				depth--
+			}
+			if textEnd != -1 {
+				break
+			}
+		}
+
+		if failed || textEnd == -1 {
 			continue
 		}
 
-		end, endFound := findMarkdownLinkEnd(source, i+2, ranges)
-		if !endFound {
-			i++
+		if textEnd+1 >= len(source) || source[textEnd+1] != '(' || isInsideRanges(textEnd+1, ranges) {
+			continue
+		}
+
+		closingParen := -1
+		for k := textEnd + 2; k < len(source); k++ {
+			if isInsideRanges(k, ranges) {
+				continue
+			}
+			if source[k] == '\n' {
+				break
+			}
+			if source[k] == ')' {
+				closingParen = k
+				break
+			}
+		}
+
+		if closingParen == -1 {
 			continue
 		}
 
 		bounds = append(bounds, markdownLinkBounds{
-			start:    start,
-			textEnd:  i,
-			urlStart: i + 2,
-			end:      end,
+			start:    i,
+			textEnd:  textEnd,
+			urlStart: textEnd + 2,
+			end:      closingParen + 1,
 		})
-		i = end
+		i = closingParen
 	}
 
 	return bounds
-}
-
-func findMarkdownLinkStart(source []byte, textEnd int, ranges [][2]int) (int, bool) {
-	depth := 0
-
-	for i := textEnd - 1; i >= 0; i-- {
-		if isInsideRanges(i, ranges) {
-			continue
-		}
-		switch source[i] {
-		case ']':
-			depth++
-		case '[':
-			if depth == 0 {
-				return i, true
-			}
-			depth--
-		}
-	}
-
-	return 0, false
-}
-
-func findMarkdownLinkEnd(source []byte, urlStart int, ranges [][2]int) (int, bool) {
-	for i := urlStart; i < len(source); i++ {
-		if isInsideRanges(i, ranges) {
-			continue
-		}
-		if source[i] == ')' {
-			return i + 1, true
-		}
-	}
-
-	return 0, false
 }
 
 func isInsideRanges(pos int, ranges [][2]int) bool {
