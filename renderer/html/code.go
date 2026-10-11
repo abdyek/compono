@@ -92,7 +92,7 @@ func (_ *inlineCode) Condition(_ renderableNode, node ast.Node) bool {
 
 func (ic *inlineCode) Render() string {
 	content := ic.renderer.renderChildren(ic, ic.Node().Children())
-	return `<code style="white-space: pre">` + content + "</code>"
+	return "<code>" + content + "</code>"
 }
 
 type inlineCodeContent struct {

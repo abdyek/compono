@@ -1,1 +1,1 @@
-<table><thead><tr><th scope="col">a</th><th scope="col">b</th></tr></thead><tbody><tr><td>x</td><td></td></tr><tr><td><code style="white-space: pre">a|b</code></td><td><a href="/">c|d</a></td></tr><tr><td>tab</td><td></td></tr><tr><td>a\</td><td>b</td></tr></tbody></table>
+<table><thead><tr><th scope="col">a</th><th scope="col">b</th></tr></thead><tbody><tr><td>x</td><td></td></tr><tr><td><code>a|b</code></td><td><a href="/">c|d</a></td></tr><tr><td>tab</td><td></td></tr><tr><td>a\</td><td>b</td></tr></tbody></table>
