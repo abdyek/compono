@@ -407,6 +407,15 @@ Supported parameter types:
 - **Array** → `items = ["Jane", 22, true, COMP]`
 - **Record** → `config = { lang: "tr", for-admin: true }`
 
+### Whitespace
+
+Whitespace in Compono is only the space (U+0020) and the tab (U+0009). Other space characters, such as U+00A0 and U+3000, are content.
+
+- Values are never trimmed. A parameter value, a `context(...)` value, an array element and a record value are placed as they are: `Before[{{ t }}]after` with `t = "  a  "` gives `Before[  a  ]after`.
+- The content of a heading or a paragraph is trimmed at its edges after the values are placed. `# {{ t }}` with `t = " a "` gives the same output as `# a`.
+- The string arguments of built-in components, such as the `text` of `LINK` and the `alt` of `IMAGE`, are trimmed the same way.
+- A value of only U+00A0 is not empty. It renders in a heading and in the `text` of `LINK`.
+
 ### Required Parameters
 
 A parameter whose name is followed by `!` is required. A call that does not give it is dropped and returns a `missing-argument` diagnostic:
