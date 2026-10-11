@@ -1,1 +1,1 @@
-<img src="https://cdn.example.com/valid.jpg" alt="Valid image" width="800" height="450">
+<picture><img src="https://cdn.example.com/valid.jpg" alt="Valid image" width="800" height="450"></picture>
