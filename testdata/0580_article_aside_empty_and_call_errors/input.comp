@@ -1,0 +1,8 @@
+{{ ARTICLE content = EMPTY }}
+{{ ASIDE content = EMPTY label = "x" }}
+{{ ARTICLE }}
+
+Önce {{ ASIDE content = EMPTY }} sonra
+
+~ EMPTY
+// boş

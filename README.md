@@ -425,6 +425,27 @@ Output (with `site-name = "Umono"` and a `content` whose body is `# Hello`):
 - `MAIN` cannot be placed inside another built-in, and a conversion renders only its first `MAIN` call. `HEADER` and `FOOTER` cannot be placed inside a `HEADER` or a `FOOTER`. These rules look at where the call is, not at what it renders, and break with `invalid-component-usage`.
 - While these built-ins render their content, they are `builtin` frames of the [attribute hook](#attribute-hook) chain and of the call chain of [diagnostics](#diagnostics).
 
+### ARTICLE and ASIDE
+
+`ARTICLE` wraps its required `content` in an `<article>`: a self-contained piece such as a post or a comment. `ASIDE` wraps it in an `<aside>`: content that is related to its surroundings but can be removed, such as related posts. `ASIDE` takes an optional `label`, written as `aria-label` when its trimmed value is not empty.
+
+```
+{{ ARTICLE content = POST(title = "Hello") }}
+
+~ POST title = ""
+{{ HEADER content = POST_HEADER(title = title) }}
+Body.
+{{ ASIDE content = RELATED label = "Related posts" }}
+
+~ POST_HEADER title = ""
+# {{ title }}
+
+~ RELATED
+First post.
+```
+
+Both behave like `HEADER`, `MAIN` and `FOOTER`: they are block components, render nothing when their content renders nothing, and can be nested. They have no placement rule of their own. A `MAIN` cannot be inside them, which is `MAIN`'s own rule.
+
 ### Removed Built-in Components
 
 #### WEB_GRID

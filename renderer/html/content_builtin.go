@@ -14,19 +14,21 @@ type contentBuiltin struct {
 	renderer *renderer
 	name     string
 	tag      string
+	label    bool
 }
 
-func newContentBuiltin(rend *renderer, name, tag string) builtinComponent {
+func newContentBuiltin(rend *renderer, name, tag string, label bool) builtinComponent {
 	return &contentBuiltin{
 		renderer: rend,
 		name:     name,
 		tag:      tag,
+		label:    label,
 	}
 }
 
 // New returns a new instance of the built-in bound to the same renderer.
 func (cb *contentBuiltin) New() builtinComponent {
-	return newContentBuiltin(cb.renderer, cb.name, cb.tag)
+	return newContentBuiltin(cb.renderer, cb.name, cb.tag, cb.label)
 }
 
 // Name returns the name of the built-in component.
@@ -52,7 +54,16 @@ func (cb *contentBuiltin) Render(invoker renderableNode, node ast.Node) string {
 		return r.recordDiagnostic(node, "Unknown component", "The component **"+value.Raw+"** is not defined or not registered.", true)
 	}
 
-	attrs := r.callAttributeHook(cb.name, map[string]bool{})
+	conflicts := map[string]bool{}
+	labelAttr := ""
+	if cb.label {
+		conflicts = map[string]bool{"aria-label": true}
+		if label, ok := getArgValue(r, invoker, node, "label"); ok && label != "" {
+			labelAttr = " aria-label=\"" + label + "\""
+		}
+	}
+
+	attrs := r.callAttributeHook(cb.name, conflicts)
 
 	r.pushBuiltinFrame(cb.name, node)
 	content := renderCompValue(r, newPassthroughRenderable(ast.NewCompValueFrame(value, node), invoker), value, false)
@@ -62,7 +73,7 @@ func (cb *contentBuiltin) Render(invoker renderableNode, node ast.Node) string {
 		return content
 	}
 
-	return "<" + cb.tag + formatHookAttributes(attrs) + ">" + content + "</" + cb.tag + ">"
+	return "<" + cb.tag + labelAttr + formatHookAttributes(attrs) + ">" + content + "</" + cb.tag + ">"
 }
 
 // contentBuiltinPlacementError reports whether the built-in with name is placed

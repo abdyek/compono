@@ -1,0 +1,4 @@
+{{ COMMENT }}
+
+~ COMMENT
+{{ ARTICLE content = COMMENT }}

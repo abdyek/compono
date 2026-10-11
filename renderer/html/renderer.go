@@ -68,9 +68,11 @@ func NewRenderer(log logger.Logger) *renderer {
 	builtinComps := []builtinComponent{
 		newLink(r),
 		newImage(r),
-		newContentBuiltin(r, "HEADER", "header"),
-		newContentBuiltin(r, "MAIN", "main"),
-		newContentBuiltin(r, "FOOTER", "footer"),
+		newContentBuiltin(r, "HEADER", "header", false),
+		newContentBuiltin(r, "MAIN", "main", false),
+		newContentBuiltin(r, "FOOTER", "footer", false),
+		newContentBuiltin(r, "ARTICLE", "article", false),
+		newContentBuiltin(r, "ASIDE", "aside", true),
 	}
 
 	for _, bc := range builtinComps {
