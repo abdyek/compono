@@ -1,7 +1,6 @@
 package html
 
 import (
-	"regexp"
 	"strconv"
 	"strings"
 
@@ -86,7 +85,7 @@ func (nvec *nonVoidElementContent) Render() string {
 	}
 
 	tag := name[:idx]
-	rendered := normalizeRenderedMarkup(nvec.renderer.renderChildren(nvec, nvec.Node().Children()))
+	rendered := nvec.renderer.renderChildren(nvec, nvec.Node().Children())
 
 	switch tag {
 	case "p", "h1", "h2", "h3", "h4", "h5", "h6":
@@ -198,11 +197,6 @@ func isBlockLikeRendered(rendered string) bool {
 		strings.HasPrefix(rendered, "<hr") ||
 		strings.HasPrefix(rendered, "<blockquote") ||
 		hasBlockErrorPrefix(rendered)
-}
-
-func normalizeRenderedMarkup(rendered string) string {
-	re := regexp.MustCompile(`\*<em>(.*?)</em>\*`)
-	return re.ReplaceAllString(rendered, "<strong>$1</strong>")
 }
 
 func (r *renderer) shouldOverridePreviousParagraph(rendered string) bool {

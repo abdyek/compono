@@ -122,5 +122,5 @@ func (m *markdownTable) invalidDelimiter() string {
 }
 
 func (m *markdownTable) cellContent(cell ast.Node) string {
-	return util.TrimWhitespace(normalizeRenderedMarkup(m.renderer.renderChildren(m, cell.Children())))
+	return util.TrimWhitespace(m.renderer.renderChildren(m, cell.Children()))
 }
