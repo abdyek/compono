@@ -60,6 +60,8 @@ This is a paragraph with **bold** and *italic* text.
 
 `*text*` renders `<em>` and `**text**` renders `<strong>`. A delimiter is a run of `*`: a run of one opens and closes an em, a run of two a strong, and a run of three or more is text. An opener is not followed by a space and a closer is not preceded by one. An em opener pairs with the next run of `*` and a strong opener with the next run of two; if that run cannot close, the opener is text. Both ends are on the same line. em and strong do not nest: `**a *b* c**` is a strong whose text is `a *b* c`. `_` and `__` are text.
 
+`` `code` `` renders `<code>` with its content as raw, escaped text. A single backtick pairs with the next backtick run on the same line; if that run is longer than one, the backtick is text, so ` `` ` and ` ``code`` ` are text. Code spans and `{{ }}` units are recognized first, whichever opens first: `` `{{ name }}` `` is a code span, and in ``{{ LINK text = "`a` [b](/c)" url = "/" }}`` the argument is plain text. Links come next, then strong, then em, and none of them can cut through a code span or a `{{ }}` unit.
+
 Code blocks are also supported:
 
 ~~~
