@@ -1,0 +1,8 @@
+{{ ARTICLE content = POST }}
+
+~ POST
+Yazı.
+{{ MAIN content = BODY }}
+
+~ BODY
+Gövde.

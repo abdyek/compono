@@ -1,0 +1,8 @@
+{{ ARTICLE content = POST }}
+
+~ POST
+Yazı.
+{{ ARTICLE content = COMMENT }}
+
+~ COMMENT
+Yorum.

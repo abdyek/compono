@@ -1,0 +1,8 @@
+{{ ASIDE content = OUTER }}
+
+~ OUTER
+Dış.
+{{ ASIDE content = INNER }}
+
+~ INNER
+İç.

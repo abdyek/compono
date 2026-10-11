@@ -1,0 +1,8 @@
+{{ ARTICLE content = POST(title = "Umono Nedir?") }}
+
+~ POST title = ""
+{{ HEADER content = POST_HEADER(title = title) }}
+Gövde.
+
+~ POST_HEADER title = ""
+# {{ title }}

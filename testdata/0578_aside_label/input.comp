@@ -1,0 +1,6 @@
+{{ ASIDE content = RELATED label = "  İlgili yazılar  " }}
+{{ ASIDE content = RELATED }}
+{{ ASIDE content = RELATED label = "" }}
+
+~ RELATED
+## İlgili
