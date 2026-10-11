@@ -97,6 +97,27 @@ A line that starts with `- ` followed by content is a list item. Leading spaces 
 
 A list interrupts a paragraph and ends at the first line that does not start with `- `. There is no lazy continuation and no nesting: indentation and `- - text` make sibling items. Only `-` starts an item, so `+ text`, `* text`, `1. text`, `-text` and a lone `-` are text. An item is a single line of inline content, so a block component call inside it is an invalid component usage. An item that resolves empty renders no `<li>`. Ordered and nested lists are built with `LIST`.
 
+A line that starts with `|` (after leading spaces and tabs) is a table row, and consecutive table rows form a table. The first row is the header, the second is the delimiter row and the rest are body rows:
+
+```
+| Plan     | Price |
+| -------- | ----- |
+| Personal | 0 ₺   |
+| Team     | 490 ₺ |
+```
+
+```html
+<table><thead><tr><th scope="col">Plan</th><th scope="col">Price</th></tr></thead><tbody><tr><td>Personal</td><td>0 ₺</td></tr><tr><td>Team</td><td>490 ₺</td></tr></tbody></table>
+```
+
+- A row starts and ends with `|`. The `|`s in between separate the cells. A `|` inside a code span or a `{{ }}` unit does not separate cells, and there is no other way to write a `|` in a cell.
+- Each delimiter cell is only `-`, at least three of them. There is no alignment.
+- A cell is a single line of inline content. It is trimmed and written even when it is empty. A block component call inside it is an invalid component usage that drops only the call.
+- A table interrupts a paragraph and ends at the first line that does not start with `|`. Comment lines inside a table do not split it. Two tables are separated by a line that is not a table row, such as a blank line.
+- There is no caption, row header, header-less table or multi-line cell.
+
+A table that breaks this structure does not fall back to text. It renders nothing and returns one diagnostic, for the first broken row from the top: `invalid-table-row` (a row that does not start and end with `|`), `invalid-table-delimiter` (a missing or wrong delimiter row), `table-cell-count-mismatch` (a row whose cell count differs from the header's), `empty-table-header` (a header cell with an empty source) or `empty-table` (no body row). A header cell whose source is not empty but resolves empty is not an error.
+
 ### Comments
 
 A line that starts with `//` is a comment line. Leading spaces and tabs are ignored. Comment lines are removed from the source, with their line breaks, before anything else is read, and they write nothing to the output:
