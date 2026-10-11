@@ -1,7 +1,7 @@
 package rule
 
 import (
-	"sort"
+	"bytes"
 
 	"github.com/umono-cms/compono/selector"
 )
@@ -17,60 +17,83 @@ func (_ *codeBlock) Name() string {
 }
 
 func (cb *codeBlock) Selectors() []selector.Selector {
-	se, _ := selector.NewStartEnd("```", "```")
 	return []selector.Selector{
-		selector.NewFilter(se, func(source []byte, index [][2]int) [][2]int {
-			if len(index) == 0 {
-				return [][2]int{}
+		selector.NewFilter(selector.NewAll(), func(source []byte, index [][2]int) [][2]int {
+			result := [][2]int{}
+			for _, ind := range index {
+				s, e := ind[0], ind[1]
+				nextLinePos := func(pos int) int {
+					if pos < e && source[pos] == '\n' {
+						return pos + 1
+					}
+					return pos
+				}
+				line := s
+				for line < e {
+					lineEnd := line
+					for lineEnd < e && source[lineEnd] != '\n' {
+						lineEnd++
+					}
+					trimmed := bytes.Trim(source[line:lineEnd], " \t")
+					n := 0
+					for n < len(trimmed) && trimmed[n] == '`' {
+						n++
+					}
+					if n < 3 {
+						line = nextLinePos(lineEnd)
+						continue
+					}
+					validOpening := true
+					for _, c := range trimmed[n:] {
+						if c == ' ' || c == '\t' {
+							validOpening = false
+							break
+						}
+					}
+					if !validOpening {
+						line = nextLinePos(lineEnd)
+						continue
+					}
+					openStart := line
+					for openStart < lineEnd && source[openStart] != '`' {
+						openStart++
+					}
+					next := nextLinePos(lineEnd)
+					found := false
+					for next < e {
+						closeLineEnd := next
+						for closeLineEnd < e && source[closeLineEnd] != '\n' {
+							closeLineEnd++
+						}
+						closeTrimmed := bytes.Trim(source[next:closeLineEnd], " \t")
+						if len(closeTrimmed) == n {
+							allBT := true
+							for _, c := range closeTrimmed {
+								if c != '`' {
+									allBT = false
+									break
+								}
+							}
+							if allBT {
+								closeFenceStart := next
+								for closeFenceStart < closeLineEnd && source[closeFenceStart] != '`' {
+									closeFenceStart++
+								}
+								endPos := closeFenceStart + n
+								result = append(result, [2]int{openStart, endPos})
+								line = nextLinePos(closeLineEnd)
+								found = true
+								break
+							}
+						}
+						next = nextLinePos(closeLineEnd)
+					}
+					if !found {
+						line = nextLinePos(lineEnd)
+					}
+				}
 			}
-
-			noMirage := filterOutMirage(index)
-			filtered := [][2]int{}
-
-			for _, ind := range noMirage {
-				start, end := ind[0], ind[1]
-
-				leftOK := true
-				for i := start - 1; i >= 0 && source[i] != '\n'; i-- {
-					if source[i] != ' ' && source[i] != '\t' {
-						leftOK = false
-						break
-					}
-				}
-
-				rightOK := true
-				for i := end; i < len(source) && source[i] != '\n'; i++ {
-					if source[i] != ' ' && source[i] != '\t' {
-						rightOK = false
-						break
-					}
-				}
-
-				leftOfEndOK := true
-				for i := end - 4; i >= 0 && source[i] != '\n'; i-- {
-					if source[i] != ' ' && source[i] != '\t' {
-						leftOfEndOK = false
-						break
-					}
-				}
-
-				rightOfStartOK := true
-				mustWhitespace := false
-				for i := start + 3; i < len(source) && source[i] != '\n'; i++ {
-					if mustWhitespace && source[i] != ' ' && source[i] != '\t' {
-						rightOfStartOK = false
-						break
-					}
-					if source[i] == ' ' || source[i] == '\t' {
-						mustWhitespace = true
-					}
-				}
-
-				if leftOK && rightOK && leftOfEndOK && rightOfStartOK {
-					filtered = append(filtered, ind)
-				}
-			}
-			return filtered
+			return result
 		}),
 	}
 }
@@ -94,7 +117,28 @@ func (_ *codeBlockLang) Name() string {
 
 func (_ *codeBlockLang) Selectors() []selector.Selector {
 	return []selector.Selector{
-		selector.NewStartEndInner("```", `\n`),
+		selector.NewFilter(selector.NewAll(), func(source []byte, index [][2]int) [][2]int {
+			result := [][2]int{}
+			for _, ind := range index {
+				s, e := ind[0], ind[1]
+				n := 0
+				for s+n < e && source[s+n] == '`' {
+					n++
+				}
+				lineEnd := s
+				for lineEnd < e && source[lineEnd] != '\n' {
+					lineEnd++
+				}
+				langEnd := lineEnd
+				for langEnd > s+n && (source[langEnd-1] == ' ' || source[langEnd-1] == '\t') {
+					langEnd--
+				}
+				if langEnd > s+n {
+					result = append(result, [2]int{s + n, langEnd})
+				}
+			}
+			return result
+		}),
 	}
 }
 
@@ -114,7 +158,26 @@ func (_ *codeBlockContent) Name() string {
 
 func (_ *codeBlockContent) Selectors() []selector.Selector {
 	return []selector.Selector{
-		selector.NewStartEndInner(`\n`, "```"),
+		selector.NewFilter(selector.NewAll(), func(source []byte, index [][2]int) [][2]int {
+			result := [][2]int{}
+			for _, ind := range index {
+				s, e := ind[0], ind[1]
+				firstNL := -1
+				lastNL := -1
+				for i := s; i < e; i++ {
+					if source[i] == '\n' {
+						if firstNL == -1 {
+							firstNL = i
+						}
+						lastNL = i
+					}
+				}
+				if firstNL != -1 && lastNL > firstNL {
+					result = append(result, [2]int{firstNL + 1, lastNL + 1})
+				}
+			}
+			return result
+		}),
 	}
 }
 
@@ -183,28 +246,4 @@ func (_ *inlineCodeContent) Rules() []Rule {
 	return []Rule{
 		newRaw(),
 	}
-}
-
-func filterOutMirage(indexes [][2]int) [][2]int {
-	if len(indexes) == 0 {
-		return indexes
-	}
-
-	sorted := make([][2]int, len(indexes))
-	copy(sorted, indexes)
-
-	sort.Slice(sorted, func(i, j int) bool {
-		return sorted[i][0] < sorted[j][0]
-	})
-
-	valid := make([][2]int, 0)
-
-	for _, interval := range sorted {
-		if len(valid) > 0 && interval[0] < valid[len(valid)-1][1] {
-			continue
-		}
-		valid = append(valid, interval)
-	}
-
-	return valid
 }
