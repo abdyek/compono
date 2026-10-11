@@ -306,6 +306,63 @@ func (s *componoTestSuite) TestAttributeHookConflict() {
 	}
 }
 
+func (s *componoTestSuite) TestAttributeHookRootPoints() {
+	suffix := "\n\n~ T\nt\n\n~ I item = {}\n{{ item.t }}"
+	cases := []struct {
+		name   string
+		source string
+		want   string
+	}{
+		{
+			name:   "NAV",
+			source: `{{ NAV content = T }}` + suffix,
+			want:   `<nav class="c"><p>t</p></nav>`,
+		},
+		{
+			name:   "DETAILS",
+			source: `{{ DETAILS text = "Menü" content = T }}` + suffix,
+			want:   `<details class="c"><summary>Menü</summary><p>t</p></details>`,
+		},
+		{
+			name:   "LIST",
+			source: `{{ LIST items = [{ t: "a" }, { t: "b" }] item = I }}` + suffix,
+			want:   `<ul class="c"><li>a</li><li>b</li></ul>`,
+		},
+		{
+			name:   "LIST ordered",
+			source: `{{ LIST ordered = true items = [{ t: "a" }] item = I }}` + suffix,
+			want:   `<ol class="c"><li>a</li></ol>`,
+		},
+		{
+			name:   "MAIN",
+			source: `{{ MAIN content = T }}` + suffix,
+			want:   `<main class="c"><p>t</p></main>`,
+		},
+		{
+			name:   "FOOTER",
+			source: `{{ FOOTER content = T }}` + suffix,
+			want:   `<footer class="c"><p>t</p></footer>`,
+		},
+		{
+			name:   "ARTICLE",
+			source: `{{ ARTICLE content = T }}` + suffix,
+			want:   `<article class="c"><p>t</p></article>`,
+		},
+		{
+			name:   "ASIDE",
+			source: `{{ ASIDE content = T }}` + suffix,
+			want:   `<aside class="c"><p>t</p></aside>`,
+		},
+	}
+
+	for _, tc := range cases {
+		hook := newRecordingAttributeHook(map[string]string{"class": "c"})
+		out, err := s.convertWithOpts(tc.source, WithAttributeHook(hook.hook()))
+		require.Nil(s.T(), err)
+		assert.Equal(s.T(), tc.want, out, tc.name)
+	}
+}
+
 func (s *componoTestSuite) TestAttributeHookChainIncludesContentBuiltin() {
 	var linkChain []Frame
 	fn := func(builtin string, chain []Frame) map[string]string {
