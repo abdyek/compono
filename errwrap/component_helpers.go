@@ -6,6 +6,7 @@ import (
 
 	"github.com/umono-cms/compono/ast"
 	"github.com/umono-cms/compono/builtin"
+	"github.com/umono-cms/compono/util"
 )
 
 type compParamInfo struct {
@@ -187,7 +188,7 @@ func isBlockComponentSeen(compDef ast.Node, seen map[ast.Node]bool) bool {
 	pContentChildren := pContent.Children()
 	filtered := pContentChildren[:0:0]
 	for _, c := range pContentChildren {
-		if ast.IsRuleName(c, "plain") && strings.TrimSpace(string(c.Raw())) == "" {
+		if ast.IsRuleName(c, "plain") && util.TrimWhitespace(string(c.Raw())) == "" {
 			continue
 		}
 		filtered = append(filtered, c)

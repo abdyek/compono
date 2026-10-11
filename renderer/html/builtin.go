@@ -2,9 +2,9 @@ package html
 
 import (
 	"html"
-	"strings"
 
 	"github.com/umono-cms/compono/ast"
+	"github.com/umono-cms/compono/util"
 )
 
 type builtinComponent interface {
@@ -61,7 +61,7 @@ func getArgValue(r *renderer, invoker renderableNode, compCall ast.Node, name st
 		return "", false
 	}
 
-	return html.EscapeString(strings.TrimSpace(resolved.Raw)), true
+	return html.EscapeString(util.TrimWhitespace(resolved.Raw)), true
 }
 
 func getBoolArgValue(r *renderer, invoker renderableNode, callNode ast.Node, name string) (bool, bool) {
