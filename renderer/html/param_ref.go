@@ -6,6 +6,7 @@ import (
 
 	"github.com/umono-cms/compono/ast"
 	"github.com/umono-cms/compono/errwrap"
+	"github.com/umono-cms/compono/util"
 )
 
 type baseParamRef struct {
@@ -219,7 +220,7 @@ func renderResolvedValue(value ast.ResolvedValue) string {
 		return ""
 	}
 
-	return html.EscapeString(strings.TrimSpace(value.Raw))
+	return html.EscapeString(value.Raw)
 }
 
 // renderParamRefUnit renders a parameter reference unit with a value. An
@@ -294,7 +295,7 @@ func isStandaloneParamRefInParagraph(paramRef ast.Node, pContent ast.Node) bool 
 		}
 
 		if ast.IsRuleName(child, "plain") {
-			if strings.TrimSpace(string(child.Raw())) == "" {
+			if util.TrimWhitespace(string(child.Raw())) == "" {
 				continue
 			}
 		}
@@ -339,7 +340,7 @@ func isStandaloneWithinNodes(paramRef ast.Node, nodes []ast.Node) bool {
 		if child == paramRef {
 			continue
 		}
-		if ast.IsRuleName(child, "plain") && strings.TrimSpace(string(child.Raw())) == "" {
+		if ast.IsRuleName(child, "plain") && util.TrimWhitespace(string(child.Raw())) == "" {
 			continue
 		}
 		return false

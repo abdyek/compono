@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/umono-cms/compono/ast"
+	"github.com/umono-cms/compono/util"
 )
 
 type image struct {
@@ -47,7 +48,7 @@ func (img *image) Render(invoker renderableNode, node ast.Node) string {
 	attrs := img.renderer.callAttributeHook(img.Name(), conflicts)
 
 	imgAttrs := ` src="` + html.EscapeString(img.recordField(media, "url")) + `"` +
-		` alt="` + html.EscapeString(strings.TrimSpace(alt.Raw)) + `"` +
+		` alt="` + html.EscapeString(util.TrimWhitespace(alt.Raw)) + `"` +
 		` width="` + html.EscapeString(img.recordField(media, "width")) + `"` +
 		` height="` + html.EscapeString(img.recordField(media, "height")) + `"`
 
@@ -106,7 +107,7 @@ func (img *image) recordField(record ast.ResolvedValue, key string) string {
 	if !ok {
 		return ""
 	}
-	return strings.TrimSpace(field.Raw)
+	return util.TrimWhitespace(field.Raw)
 }
 
 func (img *image) variants(media ast.ResolvedValue) []imageVariant {

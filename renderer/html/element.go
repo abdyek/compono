@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/umono-cms/compono/ast"
+	"github.com/umono-cms/compono/util"
 )
 
 type nonVoidElement struct {
@@ -86,6 +87,11 @@ func (nvec *nonVoidElementContent) Render() string {
 
 	tag := name[:idx]
 	rendered := normalizeRenderedMarkup(nvec.renderer.renderChildren(nvec, nvec.Node().Children()))
+
+	switch tag {
+	case "p", "h1", "h2", "h3", "h4", "h5", "h6":
+		rendered = util.TrimWhitespace(rendered)
+	}
 
 	if tag == "p" {
 		if ast.FindNodeByRuleName(nvec.Node().Children(), "soft-break") != nil &&

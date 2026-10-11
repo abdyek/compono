@@ -4,6 +4,7 @@ import (
 	"strings"
 
 	"github.com/umono-cms/compono/ast"
+	"github.com/umono-cms/compono/util"
 )
 
 func neverBlock(_ *wrapContext, _ ast.Node) bool { return false }
@@ -34,7 +35,7 @@ func blockForParamRef(_ *wrapContext, node ast.Node) bool {
 		if child == node {
 			continue
 		}
-		if ast.IsRuleName(child, "plain") && strings.TrimSpace(string(child.Raw())) == "" {
+		if ast.IsRuleName(child, "plain") && util.TrimWhitespace(string(child.Raw())) == "" {
 			continue
 		}
 		return false

@@ -221,7 +221,11 @@ func resolveValueNode(root Node, node Node, invokerAncestors []Node, currentNode
 		value := FindNodeByRuleName(node.Children(), "comp-param-defa-value")
 		raw := strings.TrimSpace(string(node.Raw()))
 		if value != nil {
-			raw = strings.TrimSpace(string(value.Raw()))
+			if node.Rule().Name() == "comp-string-param" {
+				raw = string(value.Raw())
+			} else {
+				raw = strings.TrimSpace(string(value.Raw()))
+			}
 		}
 		return ResolvedValue{
 			Type: strings.TrimSuffix(strings.TrimPrefix(node.Rule().Name(), "comp-"), "-param"),
@@ -231,7 +235,11 @@ func resolveValueNode(root Node, node Node, invokerAncestors []Node, currentNode
 		value := FindNodeByRuleName(node.Children(), "comp-call-arg-value")
 		raw := strings.TrimSpace(string(node.Raw()))
 		if value != nil {
-			raw = strings.TrimSpace(string(value.Raw()))
+			if node.Rule().Name() == "comp-call-string-arg" {
+				raw = string(value.Raw())
+			} else {
+				raw = strings.TrimSpace(string(value.Raw()))
+			}
 		}
 		return ResolvedValue{
 			Type: strings.TrimSuffix(strings.TrimPrefix(node.Rule().Name(), "comp-call-"), "-arg"),
