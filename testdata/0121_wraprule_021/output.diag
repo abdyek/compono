@@ -1,2 +1,2 @@
-unknown-component COMP 2:1-2:11 global:COMP>global:COMP
-unknown-component COMP 2:1-2:11 global:COMP
+invalid-component-usage - 1:10-1:32 -
+invalid-component-usage - 2:10-2:20 -

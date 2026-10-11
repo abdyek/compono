@@ -1,7 +1,7 @@
 Text {{ WRAP content = CARD(title = "Bound") }} more.
 
 ~ WRAP content = NO_MATTER
-{{ content title = "Caller" }}
+Pre {{ content title = "Caller" }} post
 
 ~ CARD title = ""
 *{{ title }}*
