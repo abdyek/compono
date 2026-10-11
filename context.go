@@ -34,7 +34,7 @@ func buildContextWrapper(parent ast.Node, values map[string]any) (ast.Node, erro
 		valueType.SetRule(rule.NewDynamic("context-value-type"))
 		valueType.SetParent(entry)
 
-		typedValue, err := buildContextValueNode(valueType, value)
+		typedValue, err := buildContextValueNode(valueType, value, map[uintptr]bool{})
 		if err != nil {
 			return nil, err
 		}
@@ -47,7 +47,7 @@ func buildContextWrapper(parent ast.Node, values map[string]any) (ast.Node, erro
 	return wrapper, nil
 }
 
-func buildContextValueNode(parent ast.Node, value any) (ast.Node, error) {
+func buildContextValueNode(parent ast.Node, value any, path map[uintptr]bool) (ast.Node, error) {
 	if value == nil {
 		return nil, NewComponoError(ErrUnsupportedType, "nil is not supported in context")
 	}
@@ -72,6 +72,17 @@ func buildContextValueNode(parent ast.Node, value any) (ast.Node, error) {
 	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
 		return buildContextScalarNode(parent, "comp-integer-param", strconv.FormatInt(val.Int(), 10)), nil
 	case reflect.Slice, reflect.Array:
+		if val.Kind() == reflect.Slice {
+			ptr := val.Pointer()
+			if ptr != 0 {
+				if path[ptr] {
+					return nil, NewComponoError(ErrUnsupportedType, "cyclic context value")
+				}
+				path[ptr] = true
+				defer delete(path, ptr)
+			}
+		}
+
 		node := ast.DefaultEmptyNode()
 		node.SetRule(rule.NewDynamic("comp-array-param"))
 		node.SetParent(parent)
@@ -90,7 +101,7 @@ func buildContextValueNode(parent ast.Node, value any) (ast.Node, error) {
 			valueTypeNode.SetRule(rule.NewDynamic("comp-array-param-value-type"))
 			valueTypeNode.SetParent(valueNode)
 
-			itemNode, err := buildContextValueNode(valueTypeNode, val.Index(i).Interface())
+			itemNode, err := buildContextValueNode(valueTypeNode, val.Index(i).Interface(), path)
 			if err != nil {
 				return nil, err
 			}
@@ -103,12 +114,20 @@ func buildContextValueNode(parent ast.Node, value any) (ast.Node, error) {
 		node.SetChildren([]ast.Node{valuesNode})
 		return node, nil
 	case reflect.Map:
+		ptr := val.Pointer()
+		if ptr != 0 {
+			if path[ptr] {
+				return nil, NewComponoError(ErrUnsupportedType, "cyclic context value")
+			}
+			path[ptr] = true
+			defer delete(path, ptr)
+		}
 		if val.Type().Key().Kind() != reflect.String {
 			return nil, NewComponoError(ErrUnsupportedType, "context map keys must be strings")
 		}
-		return buildContextRecordNode(parent, val)
+		return buildContextRecordNode(parent, val, path)
 	case reflect.Struct:
-		return buildContextStructNode(parent, val)
+		return buildContextStructNode(parent, val, path)
 	default:
 		return nil, NewComponoError(ErrUnsupportedType, fmt.Sprintf("unsupported context value type %s", val.Kind()))
 	}
@@ -128,7 +147,7 @@ func buildContextScalarNode(parent ast.Node, ruleName string, raw string) ast.No
 	return node
 }
 
-func buildContextRecordNode(parent ast.Node, val reflect.Value) (ast.Node, error) {
+func buildContextRecordNode(parent ast.Node, val reflect.Value, path map[uintptr]bool) (ast.Node, error) {
 	node := ast.DefaultEmptyNode()
 	node.SetRule(rule.NewDynamic("comp-record-param"))
 	node.SetParent(parent)
@@ -153,7 +172,7 @@ func buildContextRecordNode(parent ast.Node, val reflect.Value) (ast.Node, error
 		valueTypeNode.SetRule(rule.NewDynamic("comp-record-param-value-type"))
 		valueTypeNode.SetParent(recordValueNode)
 
-		fieldNode, err := buildContextValueNode(valueTypeNode, iter.Value().Interface())
+		fieldNode, err := buildContextValueNode(valueTypeNode, iter.Value().Interface(), path)
 		if err != nil {
 			return nil, err
 		}
@@ -167,7 +186,7 @@ func buildContextRecordNode(parent ast.Node, val reflect.Value) (ast.Node, error
 	return node, nil
 }
 
-func buildContextStructNode(parent ast.Node, val reflect.Value) (ast.Node, error) {
+func buildContextStructNode(parent ast.Node, val reflect.Value, path map[uintptr]bool) (ast.Node, error) {
 	node := ast.DefaultEmptyNode()
 	node.SetRule(rule.NewDynamic("comp-record-param"))
 	node.SetParent(parent)
@@ -204,7 +223,7 @@ func buildContextStructNode(parent ast.Node, val reflect.Value) (ast.Node, error
 		valueTypeNode.SetRule(rule.NewDynamic("comp-record-param-value-type"))
 		valueTypeNode.SetParent(recordValueNode)
 
-		fieldNode, err := buildContextValueNode(valueTypeNode, val.Field(i).Interface())
+		fieldNode, err := buildContextValueNode(valueTypeNode, val.Field(i).Interface(), path)
 		if err != nil {
 			return nil, err
 		}
