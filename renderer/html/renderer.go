@@ -6,12 +6,14 @@ import (
 
 	"github.com/umono-cms/compono/ast"
 	"github.com/umono-cms/compono/internal/attrhook"
+	"github.com/umono-cms/compono/internal/urlreport"
 	"github.com/umono-cms/compono/logger"
 )
 
 // Options holds the settings of a single Render call.
 type Options struct {
 	AttributeHook attrhook.AttributeHookFunc
+	URLReporter   urlreport.URLReporterFunc
 }
 
 type renderingFrame struct {
@@ -30,6 +32,7 @@ type renderer struct {
 	callNodes       []ast.Node
 	attrErr         error
 	diagnostics     []Diagnostic
+	urlReports      []urlreport.URLReport
 }
 
 func NewRenderer(log logger.Logger) *renderer {
@@ -84,6 +87,13 @@ func (r *renderer) Render(writer io.Writer, root ast.Node, opts Options) ([]Diag
 	}
 
 	out, diagnostics := cr.takeDiagnostics(out)
+	out, reports := cr.takeURLReports(out)
+
+	if opts.URLReporter != nil {
+		for _, rep := range reports {
+			opts.URLReporter(rep)
+		}
+	}
 
 	_, err := writer.Write([]byte(out))
 	if err != nil {

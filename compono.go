@@ -35,6 +35,7 @@ const (
 	ErrInvalidAttributeName
 	ErrAttributeConflict
 	ErrDuplicateGlobalComponent
+	ErrURLReporterAlreadySet
 )
 
 type Compono interface {
@@ -110,6 +111,7 @@ func (c *compono) Convert(source []byte, writer io.Writer, opts ...ConvertOption
 
 	rendered, err := c.renderer.Render(writer, root, renderer.Options{
 		AttributeHook: cfg.attributeHook,
+		URLReporter:   cfg.urlReporter,
 	})
 	if err != nil {
 		switch {

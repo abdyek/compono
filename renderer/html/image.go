@@ -43,12 +43,15 @@ func (img *image) Render(invoker renderableNode, node ast.Node) string {
 
 	attrs := img.renderer.callAttributeHook(img.Name(), map[string]bool{})
 
-	imgAttrs := ` src="` + html.EscapeString(util.NormalizeURL(img.recordField(media, "url"))) + `"` +
+	src := util.NormalizeURL(img.recordField(media, "url"))
+
+	imgAttrs := ` src="` + html.EscapeString(src) + `"` +
 		` alt="` + html.EscapeString(util.TrimWhitespace(alt.Raw)) + `"` +
 		` width="` + html.EscapeString(img.recordField(media, "width")) + `"` +
 		` height="` + html.EscapeString(img.recordField(media, "height")) + `"`
 
-	renderedImg := `<img` + imgAttrs + `>`
+	imgMarker := img.renderer.recordURL("img", "src", src)
+	renderedImg := imgMarker + `<img` + imgAttrs + `>`
 
 	if len(variants) == 0 {
 		return `<picture` + formatHookAttributes(attrs, "sizes") + `>` + renderedImg + `</picture>`
@@ -75,12 +78,14 @@ func (img *image) Render(invoker renderableNode, node ast.Node) string {
 			return items[i].width < items[j].width
 		})
 
+		sourceMarkers := ""
 		srcsetParts := make([]string, 0, len(items))
 		for _, item := range items {
+			sourceMarkers += img.renderer.recordURL("source", "srcset", item.url)
 			srcsetParts = append(srcsetParts, html.EscapeString(item.url)+" "+item.widthRaw+"w")
 		}
 
-		sources = append(sources, `<source type="`+html.EscapeString(mimeType)+`" srcset="`+strings.Join(srcsetParts, ", ")+`"`+sizeAttr+`>`)
+		sources = append(sources, sourceMarkers+`<source type="`+html.EscapeString(mimeType)+`" srcset="`+strings.Join(srcsetParts, ", ")+`"`+sizeAttr+`>`)
 	}
 
 	return `<picture` + formatHookAttributes(attrs, "sizes") + `>` + strings.Join(sources, "") + renderedImg + `</picture>`
