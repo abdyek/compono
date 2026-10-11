@@ -50,6 +50,7 @@ func (_ *rootContent) Rules() []Rule {
 		newHr(),
 		newBlockquote(),
 		newList(),
+		newTable(),
 		newH6(),
 		newH5(),
 		newH4(),

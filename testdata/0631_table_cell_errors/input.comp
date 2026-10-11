@@ -1,0 +1,15 @@
+| a | b |
+| --- | --- |
+| {{ FOO }} | {{ ARTICLE }} |
+| Önce {{ FOO }} sonra | # Metin |
+
+{{ T }}
+
+~ T h = ""
+| {{ h }} | b |
+| --- | --- |
+| 1 | 2 |
+
+~ ARTICLE
+# Başlık
+Metin.

@@ -1,0 +1,1 @@
+<table><thead><tr><th scope="col">a</th><th scope="col">b</th></tr></thead><tbody><tr><td>1</td><td>2</td></tr><tr><td>3</td><td>4</td></tr></tbody></table><table><thead><tr><th scope="col">c</th></tr></thead><tbody><tr><td>5</td></tr><tr><td>d</td></tr><tr><td>---</td></tr></tbody></table>
