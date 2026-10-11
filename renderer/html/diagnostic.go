@@ -36,10 +36,6 @@ func hasBlockErrorPrefix(rendered string) bool {
 	return strings.HasPrefix(rendered, blockDiagnosticMarkerPrefix)
 }
 
-func containsBlockError(rendered string) bool {
-	return strings.Contains(rendered, blockDiagnosticMarkerPrefix)
-}
-
 func (r *renderer) recordDiagnostic(node ast.Node, title, message string, block bool) string {
 	var calls []Call
 	if len(r.frameStack) > 0 {

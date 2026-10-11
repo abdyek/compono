@@ -1,0 +1,15 @@
+{{ W c = L }}
+
+{{ W2 c = L }}
+
+~ W c = NO_MATTER
+{{ c }}
+
+~ W2 c = NO_MATTER
+A
+B
+{{ c }}
+C
+
+~ L
+{{ LINK text = "a" url = "/a" }}

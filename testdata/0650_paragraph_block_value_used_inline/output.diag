@@ -1,0 +1,3 @@
+invalid-component-usage - 4:6-4:19 local:W
+invalid-component-usage - 5:1-5:14 local:W
+invalid-component-usage - 5:15-5:28 local:W

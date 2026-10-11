@@ -1,0 +1,9 @@
+{{ W content = B }}
+
+~ W content = NO_MATTER
+Önce {{ content }} sonra
+{{ content }} {{ content }}
+{{ content }}  
+
+~ B
+# b

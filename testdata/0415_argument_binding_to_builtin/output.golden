@@ -1,1 +1,1 @@
-<p><a href="https://example.com" target="_blank" rel="noopener noreferrer">Visit</a></p><p>Inline: [<a href="https://example.com">Visit</a>]</p>
+<a href="https://example.com" target="_blank" rel="noopener noreferrer">Visit</a><p>Inline: [<a href="https://example.com">Visit</a>]</p>

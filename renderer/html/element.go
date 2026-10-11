@@ -1,7 +1,6 @@
 package html
 
 import (
-	"strconv"
 	"strings"
 
 	"github.com/umono-cms/compono/ast"
@@ -85,32 +84,16 @@ func (nvec *nonVoidElementContent) Render() string {
 	}
 
 	tag := name[:idx]
+
+	if tag == "p" {
+		return renderParagraph(nvec)
+	}
+
 	rendered := nvec.renderer.renderChildren(nvec, nvec.Node().Children())
 
 	switch tag {
-	case "p", "h1", "h2", "h3", "h4", "h5", "h6":
+	case "h1", "h2", "h3", "h4", "h5", "h6":
 		rendered = util.TrimWhitespace(rendered)
-	}
-
-	if tag == "p" {
-		if ast.FindNodeByRuleName(nvec.Node().Children(), "soft-break") != nil &&
-			containsBlockLikeParagraphChild(nvec) {
-			return renderParagraphWithBlockLikeChildren(nvec)
-		}
-		if ast.FindNodeByRuleName(nvec.Node().Children(), "soft-break") != nil &&
-			containsBlockError(rendered) {
-			return splitParagraphByBreakWithBlockErr(rendered)
-		}
-
-		if standaloneParamRef := standaloneCompParamRefInParagraph(nvec.Node()); standaloneParamRef != nil {
-			if isBlockLikeRendered(rendered) || hasBlockErrorPrefix(rendered) {
-				return rendered
-			}
-		}
-		if ast.FindNodeByRuleName(nvec.Node().Children(), "block-error") != nil {
-			return renderParagraphWithBlockErrors(nvec)
-		}
-		return paragraph(rendered)
 	}
 
 	if isEmptyRendered(rendered) {
@@ -122,142 +105,56 @@ func (nvec *nonVoidElementContent) Render() string {
 	return "<" + tag + ">" + rendered + "</" + tag + ">"
 }
 
-func containsBlockLikeParagraphChild(nvec *nonVoidElementContent) bool {
+// renderParagraph renders a paragraph. A block line splits it: the paragraph lines before it and after it form separate paragraphs and the block line is rendered between them, outside any <p>.
+func renderParagraph(nvec *nonVoidElementContent) string {
+	lines := [][]ast.Node{}
+	current := []ast.Node{}
 	for _, child := range nvec.Node().Children() {
 		if ast.IsRuleName(child, "soft-break") {
+			lines = append(lines, current)
+			current = []ast.Node{}
 			continue
 		}
-		rendered := nvec.renderer.renderChildren(nvec, []ast.Node{child})
-		if isBlockLikeRendered(rendered) {
-			return true
-		}
+		current = append(current, child)
 	}
-	return false
-}
+	lines = append(lines, current)
 
-func renderParagraphWithBlockLikeChildren(nvec *nonVoidElementContent) string {
 	result := ""
-	inlineChunk := []ast.Node{}
-
+	rendered := []string{}
 	flush := func() {
-		if len(inlineChunk) == 0 {
-			return
+		if len(rendered) > 0 {
+			result += paragraph(util.TrimWhitespace(strings.Join(rendered, "<br>")))
+			rendered = nil
 		}
-		content := nvec.renderer.renderChildren(nvec, inlineChunk)
-		if content != "" {
-			result += paragraph(content)
-		}
-		inlineChunk = []ast.Node{}
 	}
 
-	for _, child := range nvec.Node().Children() {
-		if ast.IsRuleName(child, "soft-break") {
-			flush()
-			continue
-		}
-
-		rendered := nvec.renderer.renderChildren(nvec, []ast.Node{child})
-		if isBlockLikeRendered(rendered) {
-			flush()
-			if nvec.renderer.shouldOverridePreviousParagraph(rendered) {
-				result = rendered
-				inlineChunk = []ast.Node{}
+	for _, line := range lines {
+		nonEmpty := []ast.Node{}
+		for _, node := range line {
+			if ast.IsRuleName(node, "plain") && util.TrimWhitespace(string(node.Raw())) == "" {
 				continue
 			}
-			result += rendered
-			continue
+			nonEmpty = append(nonEmpty, node)
 		}
 
-		inlineChunk = append(inlineChunk, child)
-	}
+		isBlockLine := false
+		var thatNode ast.Node
+		if len(nonEmpty) == 1 {
+			node := nonEmpty[0]
+			if ast.IsRuleName(node, "block-error") || isCompParamRef(nvec.renderer, nvec, node) {
+				isBlockLine = true
+				thatNode = node
+			}
+		}
 
+		if isBlockLine {
+			flush()
+			result += nvec.renderer.renderChildren(nvec, []ast.Node{thatNode})
+		} else {
+			rendered = append(rendered, nvec.renderer.renderChildren(nvec, line))
+		}
+	}
 	flush()
-	return result
-}
-
-func isBlockLikeRendered(rendered string) bool {
-	return strings.HasPrefix(rendered, "<h1>") ||
-		strings.HasPrefix(rendered, "<h2>") ||
-		strings.HasPrefix(rendered, "<h3>") ||
-		strings.HasPrefix(rendered, "<h4>") ||
-		strings.HasPrefix(rendered, "<h5>") ||
-		strings.HasPrefix(rendered, "<h6>") ||
-		strings.HasPrefix(rendered, "<p>") ||
-		strings.HasPrefix(rendered, "<img ") ||
-		strings.HasPrefix(rendered, "<picture>") ||
-		strings.HasPrefix(rendered, "<header") ||
-		strings.HasPrefix(rendered, "<main") ||
-		strings.HasPrefix(rendered, "<footer") ||
-		strings.HasPrefix(rendered, "<article") ||
-		strings.HasPrefix(rendered, "<aside") ||
-		strings.HasPrefix(rendered, "<nav") ||
-		strings.HasPrefix(rendered, "<details") ||
-		strings.HasPrefix(rendered, "<ul") ||
-		strings.HasPrefix(rendered, "<ol") ||
-		strings.HasPrefix(rendered, "<hr") ||
-		strings.HasPrefix(rendered, "<blockquote") ||
-		hasBlockErrorPrefix(rendered)
-}
-
-func (r *renderer) shouldOverridePreviousParagraph(rendered string) bool {
-	if !hasBlockErrorPrefix(rendered) {
-		return false
-	}
-	for _, m := range diagnosticMarkerPattern.FindAllStringSubmatch(rendered, -1) {
-		if !strings.HasPrefix(m[0], blockDiagnosticMarkerPrefix) {
-			continue
-		}
-		if len(m) < 2 {
-			continue
-		}
-		idx, err := strconv.Atoi(m[1])
-		if err != nil || idx < 0 || idx >= len(r.diagnostics) {
-			continue
-		}
-		if r.diagnostics[idx].Title == "Invalid component usage" {
-			return true
-		}
-	}
-	return false
-}
-
-func renderParagraphWithBlockErrors(nvec *nonVoidElementContent) string {
-	children := nvec.Node().Children()
-	if len(children) == 0 {
-		return ""
-	}
-
-	result := ""
-	chunk := []ast.Node{}
-	hasBlockErr := ast.FindNodeByRuleName(children, "block-error") != nil
-
-	flushChunk := func() {
-		if len(chunk) == 0 {
-			return
-		}
-		content := nvec.renderer.renderChildren(nvec, chunk)
-		if content != "" {
-			result += paragraph(content)
-		}
-		chunk = []ast.Node{}
-	}
-
-	for _, child := range children {
-		if ast.IsRuleName(child, "block-error") {
-			flushChunk()
-			result += nvec.renderer.renderChildren(nvec, []ast.Node{child})
-			continue
-		}
-
-		if hasBlockErr && ast.IsRuleName(child, "soft-break") {
-			flushChunk()
-			continue
-		}
-
-		chunk = append(chunk, child)
-	}
-
-	flushChunk()
 	return result
 }
 
@@ -285,21 +182,4 @@ func paragraph(content string) string {
 		return out
 	}
 	return "<p>" + out + "</p>"
-}
-
-func splitParagraphByBreakWithBlockErr(rendered string) string {
-	parts := strings.Split(rendered, "<br>")
-	result := ""
-	for _, part := range parts {
-		part = strings.TrimSpace(part)
-		if part == "" {
-			continue
-		}
-		if hasBlockErrorPrefix(part) {
-			result += part
-			continue
-		}
-		result += paragraph(part)
-	}
-	return result
 }
