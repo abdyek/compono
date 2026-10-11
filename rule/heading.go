@@ -155,9 +155,9 @@ func (_ *h1Content) Selectors() []selector.Selector {
 func (_ *h1Content) Rules() []Rule {
 	return []Rule{
 		newLink(),
+		newInlineCode(),
 		newStrong(),
 		newEm(),
-		newInlineCode(),
 		newInlineCompCall(),
 		newContextRef(),
 		newParamRef(),
@@ -202,9 +202,9 @@ func (_ *h2Content) Selectors() []selector.Selector {
 func (_ *h2Content) Rules() []Rule {
 	return []Rule{
 		newLink(),
+		newInlineCode(),
 		newStrong(),
 		newEm(),
-		newInlineCode(),
 		newInlineCompCall(),
 		newContextRef(),
 		newParamRef(),
@@ -249,9 +249,9 @@ func (_ *h3Content) Selectors() []selector.Selector {
 func (_ *h3Content) Rules() []Rule {
 	return []Rule{
 		newLink(),
+		newInlineCode(),
 		newStrong(),
 		newEm(),
-		newInlineCode(),
 		newInlineCompCall(),
 		newContextRef(),
 		newParamRef(),
@@ -296,9 +296,9 @@ func (_ *h4Content) Selectors() []selector.Selector {
 func (_ *h4Content) Rules() []Rule {
 	return []Rule{
 		newLink(),
+		newInlineCode(),
 		newStrong(),
 		newEm(),
-		newInlineCode(),
 		newInlineCompCall(),
 		newContextRef(),
 		newParamRef(),
@@ -343,9 +343,9 @@ func (_ *h5Content) Selectors() []selector.Selector {
 func (_ *h5Content) Rules() []Rule {
 	return []Rule{
 		newLink(),
+		newInlineCode(),
 		newStrong(),
 		newEm(),
-		newInlineCode(),
 		newInlineCompCall(),
 		newContextRef(),
 		newParamRef(),
@@ -390,9 +390,9 @@ func (_ *h6Content) Selectors() []selector.Selector {
 func (_ *h6Content) Rules() []Rule {
 	return []Rule{
 		newLink(),
+		newInlineCode(),
 		newStrong(),
 		newEm(),
-		newInlineCode(),
 		newInlineCompCall(),
 		newContextRef(),
 		newParamRef(),

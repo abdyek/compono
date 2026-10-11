@@ -1,0 +1,8 @@
+`[a](/b)`
+`**x** *y* [l](/u) {{ X }}`
+[`compono`](/docs)
+`{{ name }}` ve {{ LINK text = "`a`" url = "/" }}
+Bak {{ LINK text = "[a](/x)" url = "/b" }} son
+Bak {{ LINK text = "*a b*" url = "/b" }}
+
+# **a `k` b**
