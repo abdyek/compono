@@ -32,6 +32,14 @@ func (r *renderer) pushGlobalFrame(name string, def ast.Node, signature string, 
 	r.callNodes = append(r.callNodes, call)
 }
 
+// pushBuiltinFrame pushes the frame of a built-in while it renders a component
+// value of its own, such as the content of MAIN.
+func (r *renderer) pushBuiltinFrame(name string, call ast.Node) {
+	r.frameStack = append(r.frameStack, frame{Name: name, Kind: attrhook.FrameBuiltin})
+	r.rendering = append(r.rendering, renderingFrame{})
+	r.callNodes = append(r.callNodes, call)
+}
+
 func (r *renderer) popFrame() {
 	if len(r.frameStack) == 0 {
 		return

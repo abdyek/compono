@@ -30,6 +30,7 @@ type renderer struct {
 	frameStack      []frame
 	rendering       []renderingFrame
 	callNodes       []ast.Node
+	firstMainCall   string
 	attrErr         error
 	diagnostics     []Diagnostic
 	urlReports      []urlreport.URLReport
@@ -67,6 +68,9 @@ func NewRenderer(log logger.Logger) *renderer {
 	builtinComps := []builtinComponent{
 		newLink(r),
 		newImage(r),
+		newContentBuiltin(r, "HEADER", "header"),
+		newContentBuiltin(r, "MAIN", "main"),
+		newContentBuiltin(r, "FOOTER", "footer"),
 	}
 
 	for _, bc := range builtinComps {

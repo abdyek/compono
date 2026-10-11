@@ -103,6 +103,7 @@ func renderCompValue(r *renderer, rn renderableNode, resolved ast.ResolvedValue,
 
 	builtinComp := r.findBuiltinComp(target.name)
 	if builtinComp != nil {
+		r.noteBuiltinCall(target.name, rn.Node())
 		if title, message, ok := errwrap.BuiltinCallError(r.root, rn.Node(), target.name, getAncestorsByInvoker(rn)); ok {
 			return r.recordDiagnostic(rn.Node(), title, message, !inlineCall)
 		}
