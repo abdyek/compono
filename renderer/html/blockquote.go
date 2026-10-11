@@ -24,18 +24,7 @@ func (_ *blockquote) Condition(_ renderableNode, node ast.Node) bool {
 }
 
 func (b *blockquote) Render() string {
-	content := ""
-	for _, child := range b.Node().Children() {
-		rendered := b.renderer.renderChildren(b, []ast.Node{child})
-		if len(rendered) >= 7 && rendered[:3] == "<p>" && rendered[len(rendered)-4:] == "</p>" {
-			inner := rendered[3 : len(rendered)-4]
-			if isEmptyRendered(inner) {
-				content += inner
-				continue
-			}
-		}
-		content += rendered
-	}
+	content := b.renderer.renderChildren(b, b.Node().Children())
 	if isEmptyRendered(content) {
 		return content
 	}

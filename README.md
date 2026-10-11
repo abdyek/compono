@@ -118,6 +118,22 @@ A line that starts with `|` (after leading spaces and tabs) is a table row, and 
 
 A table that breaks this structure does not fall back to text. It renders nothing and returns one diagnostic, for the first broken row from the top: `invalid-table-row` (a row that does not start and end with `|`), `invalid-table-delimiter` (a missing or wrong delimiter row), `table-cell-count-mismatch` (a row whose cell count differs from the header's), `empty-table-header` (a header cell with an empty source) or `empty-table` (no body row). A header cell whose source is not empty but resolves empty is not an error.
 
+### Empty Content
+
+Compono writes no empty element. A heading, paragraph, list item, list, blockquote, `*em*` or `**strong**` whose content is empty after trimming spaces and tabs renders nothing, and so does a code block that is empty or only whitespace. The rule works from inside out: `## **{{ subtitle }}**` renders nothing when `subtitle` is empty. A paragraph line that resolves empty is dropped with its line break:
+
+```
+A
+{{ empty }}
+B
+```
+
+```html
+<p>A<br>B</p>
+```
+
+Empty content is not an error, and a unit dropped by an error still returns its diagnostic. Table cells are the only exception: `<th>` and `<td>` are written even when empty, so the other cells of the row keep their columns.
+
 ### Comments
 
 A line that starts with `//` is a comment line. Leading spaces and tabs are ignored. Comment lines are removed from the source, with their line breaks, before anything else is read, and they write nothing to the output:

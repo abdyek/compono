@@ -111,9 +111,12 @@ func (nvec *nonVoidElementContent) Render() string {
 		if ast.FindNodeByRuleName(nvec.Node().Children(), "block-error") != nil {
 			return renderParagraphWithBlockErrors(nvec)
 		}
-		return "<p>" + rendered + "</p>"
+		return paragraph(rendered)
 	}
 
+	if isEmptyRendered(rendered) {
+		return rendered
+	}
 	if hasBlockErrorPrefix(rendered) {
 		return rendered
 	}
@@ -143,7 +146,7 @@ func renderParagraphWithBlockLikeChildren(nvec *nonVoidElementContent) string {
 		}
 		content := nvec.renderer.renderChildren(nvec, inlineChunk)
 		if content != "" {
-			result += "<p>" + content + "</p>"
+			result += paragraph(content)
 		}
 		inlineChunk = []ast.Node{}
 	}
@@ -240,7 +243,7 @@ func renderParagraphWithBlockErrors(nvec *nonVoidElementContent) string {
 		}
 		content := nvec.renderer.renderChildren(nvec, chunk)
 		if content != "" {
-			result += "<p>" + content + "</p>"
+			result += paragraph(content)
 		}
 		chunk = []ast.Node{}
 	}
@@ -264,6 +267,32 @@ func renderParagraphWithBlockErrors(nvec *nonVoidElementContent) string {
 	return result
 }
 
+// paragraph wraps the rendered inline content of a paragraph in <p>. A line
+// that resolves empty is dropped with its line break, and a paragraph whose
+// lines are all empty renders only its markers.
+func paragraph(content string) string {
+	parts := strings.Split(content, "<br>")
+	out, pending := "", ""
+	wrote := false
+	for _, part := range parts {
+		if isEmptyRendered(part) {
+			pending += strings.NewReplacer(" ", "", "\t", "", "\n", "").Replace(part)
+			continue
+		}
+		if wrote {
+			out += "<br>"
+		}
+		out += pending + part
+		pending = ""
+		wrote = true
+	}
+	out += pending
+	if !wrote {
+		return out
+	}
+	return "<p>" + out + "</p>"
+}
+
 func splitParagraphByBreakWithBlockErr(rendered string) string {
 	parts := strings.Split(rendered, "<br>")
 	result := ""
@@ -276,7 +305,7 @@ func splitParagraphByBreakWithBlockErr(rendered string) string {
 			result += part
 			continue
 		}
-		result += "<p>" + part + "</p>"
+		result += paragraph(part)
 	}
 	return result
 }
