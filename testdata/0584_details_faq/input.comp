@@ -1,0 +1,9 @@
+{{ DETAILS text = "Temayı nasıl kurarım?" content = ANSWER_1 open = true }}
+{{ DETAILS text = "  Temayı nasıl kaldırırım?  " content = ANSWER_2 }}
+{{ DETAILS text = "a < b" content = ANSWER_2 open = false }}
+
+~ ANSWER_1
+Kur.
+
+~ ANSWER_2
+Kaldır.

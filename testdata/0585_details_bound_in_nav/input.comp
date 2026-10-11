@@ -1,0 +1,4 @@
+{{ NAV label = "Ana menü" content = DETAILS(text = "Menü" content = MAIN_MENU(home = "/")) }}
+
+~ MAIN_MENU home = ""
+{{ LINK text = "Ana sayfa" url = home }}

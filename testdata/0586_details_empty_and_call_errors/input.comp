@@ -1,0 +1,12 @@
+{{ DETAILS text = "  " content = A }}
+{{ DETAILS text = "Menü" content = EMPTY }}
+{{ DETAILS text = "" content = EMPTY }}
+{{ DETAILS content = A }}
+
+Önce {{ DETAILS text = "x" content = A }} sonra
+
+~ A
+a
+
+~ EMPTY
+// boş
