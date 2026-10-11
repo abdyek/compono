@@ -48,6 +48,7 @@ func (_ *rootContent) Rules() []Rule {
 	return []Rule{
 		newCodeBlock(),
 		newHr(),
+		newBlockquote(),
 		newH6(),
 		newH5(),
 		newH4(),

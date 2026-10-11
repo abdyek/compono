@@ -573,6 +573,7 @@ func (_ *localCompDefContent) Rules() []Rule {
 	return []Rule{
 		newCodeBlock(),
 		newHr(),
+		newBlockquote(),
 		newH6(),
 		newH5(),
 		newH4(),
@@ -1480,6 +1481,7 @@ func (_ *globalCompDefContent) Rules() []Rule {
 	return []Rule{
 		newCodeBlock(),
 		newHr(),
+		newBlockquote(),
 		newH6(),
 		newH5(),
 		newH4(),
