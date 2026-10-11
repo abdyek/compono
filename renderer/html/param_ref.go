@@ -146,26 +146,34 @@ func (_ *paramRefInLocalCompDef) Condition(invoker renderableNode, node ast.Node
 	return localCompDef != nil
 }
 
-func (p *paramRefInLocalCompDef) Render() string {
-	paramRefName := p.paramRefName()
-
+func (p *paramRefInLocalCompDef) compParam() ast.Node {
 	localCompDef := ast.FindNodeByRuleName(ast.GetAncestors(p.Node()), "local-comp-def")
 	localCompDefHead := ast.FindNodeByRuleName(localCompDef.Children(), "local-comp-def-head")
 	compParams := ast.FindNodeByRuleName(localCompDefHead.Children(), "comp-params")
 
-	var compParam ast.Node
-	if compParams != nil {
-		compParam = ast.FindNode(compParams.Children(), func(cp ast.Node) bool {
-			compParamName := ast.FindNodeByRuleName(cp.Children(), "comp-param-name")
-			return strings.TrimSpace(string(compParamName.Raw())) == paramRefName
-		})
+	paramRefName := p.paramRefName()
+	if compParams == nil {
+		return nil
+	}
+	return ast.FindNode(compParams.Children(), func(cp ast.Node) bool {
+		compParamName := ast.FindNodeByRuleName(cp.Children(), "comp-param-name")
+		return strings.TrimSpace(string(compParamName.Raw())) == paramRefName
+	})
+}
+
+func (p *paramRefInLocalCompDef) isCompCall() bool {
+	cp := p.compParam()
+	return cp != nil && shouldTreatParamRefAsCompCall(cp, p, p.renderer, p.paramRefName())
+}
+
+func (p *paramRefInLocalCompDef) Render() string {
+	paramRefName := p.paramRefName()
+
+	if p.isCompCall() {
+		return renderCompParamCall(p.renderer, p, paramRefName)
 	}
 
-	if compParam != nil {
-		if shouldTreatParamRefAsCompCall(compParam, p, p.renderer, paramRefName) {
-			return renderCompParamCall(p.renderer, p, paramRefName)
-		}
-
+	if p.compParam() != nil {
 		return renderParamRefUnit(paramRefName, p, p.renderer)
 	}
 
@@ -200,26 +208,52 @@ func (_ *paramRefInGlobalCompDef) Condition(invoker renderableNode, node ast.Nod
 	return globalCompDef != nil
 }
 
-func (p *paramRefInGlobalCompDef) Render() string {
-	paramRefName := p.paramRefName()
-
+func (p *paramRefInGlobalCompDef) compParam() ast.Node {
 	globalCompDef := ast.FindNodeByRuleName(ast.GetAncestors(p.Node()), "global-comp-def")
 	globalCompDefHead := ast.FindNodeByRuleName(globalCompDef.Children(), "global-comp-def-head")
-
 	compParams := ast.FindNodeByRuleName(globalCompDefHead.Children(), "comp-params")
 
-	compParam := ast.FindNode(compParams.Children(), func(cp ast.Node) bool {
+	paramRefName := p.paramRefName()
+	return ast.FindNode(compParams.Children(), func(cp ast.Node) bool {
 		compParamName := ast.FindNodeByRuleName(cp.Children(), "comp-param-name")
 		return strings.TrimSpace(string(compParamName.Raw())) == paramRefName
 	})
-	if compParam == nil {
-		return ""
-	}
-	if shouldTreatParamRefAsCompCall(compParam, p, p.renderer, paramRefName) {
+}
+
+func (p *paramRefInGlobalCompDef) isCompCall() bool {
+	cp := p.compParam()
+	return cp != nil && shouldTreatParamRefAsCompCall(cp, p, p.renderer, p.paramRefName())
+}
+
+func (p *paramRefInGlobalCompDef) Render() string {
+	paramRefName := p.paramRefName()
+
+	if p.isCompCall() {
 		return renderCompParamCall(p.renderer, p, paramRefName)
 	}
 
-	return renderParamRefUnit(paramRefName, p, p.renderer)
+	if p.compParam() != nil {
+		return renderParamRefUnit(paramRefName, p, p.renderer)
+	}
+
+	return ""
+}
+
+// isCompParamRef reports whether node is a parameter reference that renders its value as a component call.
+func isCompParamRef(r *renderer, invoker renderableNode, node ast.Node) bool {
+	if !ast.IsRuleName(node, "param-ref") {
+		return false
+	}
+	rn := r.findRenderable(invoker, node)
+	if rn == nil {
+		return false
+	}
+	rn.SetInvoker(invoker)
+	rn.SetNode(node)
+	if cc, ok := rn.(interface{ isCompCall() bool }); ok {
+		return cc.isCompCall()
+	}
+	return false
 }
 
 func renderResolvedValue(value ast.ResolvedValue) string {
@@ -353,19 +387,6 @@ func isStandaloneWithinNodes(paramRef ast.Node, nodes []ast.Node) bool {
 		return false
 	}
 	return true
-}
-
-func standaloneCompParamRefInParagraph(pContent ast.Node) ast.Node {
-	paramRef := ast.FindNode(pContent.Children(), func(node ast.Node) bool {
-		return ast.IsRuleName(node, "param-ref")
-	})
-	if paramRef == nil {
-		return nil
-	}
-	if !isStandaloneParamRefInParagraph(paramRef, pContent) {
-		return nil
-	}
-	return paramRef
 }
 
 func shouldTreatParamRefAsCompCall(compParam ast.Node, rn renderableNode, r *renderer, paramRefName string) bool {
