@@ -1,0 +1,10 @@
+{{ X c = WRAP }}
+
+~ X c = NO_MATTER
+Önce {{ c }} sonra
+
+~ WRAP
+{{ NAME }}
+
+~ NAME
+Yunus

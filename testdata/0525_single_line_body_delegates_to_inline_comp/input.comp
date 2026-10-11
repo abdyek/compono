@@ -1,0 +1,10 @@
+Merhaba {{ WRAP name = "Yunus" }} dünya.
+
+{{ WRAP name = "Emre" }}
+
+~ WRAP name = ""
+// NAME'e devreder
+{{ NAME name = name }}
+
+~ NAME name = ""
+*{{ name }}*
