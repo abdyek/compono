@@ -1,2 +1,2 @@
-name = context(user/name)
+~ name = context(user/name)
 Hello {{ name }}

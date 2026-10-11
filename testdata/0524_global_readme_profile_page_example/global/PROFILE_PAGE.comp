@@ -1,0 +1,8 @@
+
+~ name="Guest"
+
+{{ PROFILE_CARD name = name }}
+
+~ PROFILE_CARD name = ""
+## {{ name }}
+Welcome to the profile page.

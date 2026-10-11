@@ -1,2 +1,2 @@
-name = "John"
+~ name = "John"
 # Hello {{ name }}

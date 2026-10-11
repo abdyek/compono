@@ -1,4 +1,4 @@
-comp = NO_MATTER cols = [] rows = [] areas = []
+~ comp = NO_MATTER cols = [] rows = [] areas = []
 
 {{ WEB_GRID
   items = [

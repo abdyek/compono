@@ -1,2 +1,2 @@
-media = {} alt = ""
+~ media = {} alt = ""
 {{ IMAGE media = media alt = alt }}

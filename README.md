@@ -158,13 +158,18 @@ Content here...
 
 A `Compono` value does not store global components. Pass them again to every conversion that uses them.
 
-Global components can also have parameters:
+Global components can also have parameters. They are defined on the **parameter line** at the start of the source. It starts with `~` and is the first line of a local component definition without the name, because the name is given by `WithGlobalComponent`:
 
 ```go
-c.Convert(source, &buf, compono.WithGlobalComponent("BLOG_PAGE", []byte(`title="" content=""
+c.Convert(source, &buf, compono.WithGlobalComponent("BLOG_PAGE", []byte(`~ title="" content=""
 ## {{ title }}
 {{ content }}`)))
 ```
+
+- Comment lines and blank lines may come before the parameter line.
+- If the first line does not start with `~`, the global component has no parameters and that line is content. A line like `title = ""` renders as text.
+- If the first line starts with `~ NAME`, it begins a local component definition and the global component has no parameters.
+- The parameter line follows the same rules as the parameters of a local component definition. A malformed line and a `~` line without parameters are errors. See [Parameter Definition Errors](#parameter-definition-errors).
 
 ### Global Component Scopes
 
@@ -413,6 +418,10 @@ This drops the `COVER` call with the message `The parameter **alt** of component
 
 A parameter definition must be `name = default` or `name! = default`. A definition without a default value (`~ X a`) or with any other shape (`~ X a ! = ""`, `~ X !a = ""`) is an `invalid-parameter-definition` error with the message `The parameter definition **[text]** of component **[component]** is invalid.` Every call of the component is dropped and returns this diagnostic.
 
+The same applies to the [parameter line](#global-components) of a global component. `~ title ! = ""` and a `~` line without parameters are this error too.
+
+A definition line, the first line of a local component definition or the parameter line of a global component, is a single line. A non-blank line that starts with a space or a tab right after it is also an `invalid-parameter-definition` error, so the first line of a component body cannot be indented.
+
 ---
 
 ### Passing Parameters to Other Components
@@ -564,7 +573,7 @@ The same applies to global components:
 
 ```go
 c.Convert(source, &buf, compono.WithGlobalComponent("PROFILE_PAGE", []byte(`
-name="Guest"
+~ name="Guest"
 
 {{ PROFILE_CARD name = name }}
 

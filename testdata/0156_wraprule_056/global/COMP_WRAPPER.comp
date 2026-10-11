@@ -1,4 +1,4 @@
-inline-comp = INLINE
+~ inline-comp = INLINE
 # {{ inline-comp }}
 
 ~ INLINE

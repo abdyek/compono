@@ -1,4 +1,4 @@
-comp-item = {}
+~ comp-item = {}
 
 {{ WEB_GRID
   items = [

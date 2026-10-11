@@ -1,6 +1,7 @@
 package errwrap
 
 import (
+	"bytes"
 	"strings"
 
 	"github.com/umono-cms/compono/ast"
@@ -29,8 +30,10 @@ func hasInvalidParamDef() func(*wrapContext, ast.Node) bool {
 }
 
 // getInvalidCompParamDef returns the first invalid parameter definition of the
-// local component definition the call resolves to. The definitions are the text
-// of the definition head after the component name.
+// local or global component definition the call resolves to. For a local
+// definition the scanned text is the definition head after the component name;
+// for a global definition it is the definition head after its first "~".
+// An indented line right after the definition line is also invalid.
 func getInvalidCompParamDef(ctx *wrapContext, compCall ast.Node) (string, bool) {
 	compCallName := getCompCallNameStr(compCall)
 	if compCallName == "" {
@@ -38,7 +41,15 @@ func getInvalidCompParamDef(ctx *wrapContext, compCall ast.Node) (string, bool) 
 	}
 
 	compDef := ast.FindCompDef(ctx.root, compCall, compCallName)
-	if compDef == nil || !ast.IsRuleName(compDef, "local-comp-def") {
+	if compDef == nil {
+		return "", false
+	}
+
+	if ast.IsRuleName(compDef, "global-comp-def") {
+		return getInvalidGlobalParamLine(compDef)
+	}
+
+	if !ast.IsRuleName(compDef, "local-comp-def") {
 		return "", false
 	}
 
@@ -62,7 +73,54 @@ func getInvalidCompParamDef(ctx *wrapContext, compCall ast.Node) (string, bool) 
 		return "", false
 	}
 
-	return selector.FirstInvalidCompParamDef([]byte(headRaw[nameIdx+len(name):]))
+	if invalid, ok := selector.FirstInvalidCompParamDef([]byte(headRaw[nameIdx+len(name):])); ok {
+		return invalid, true
+	}
+	return indentedLineAfterDefLine(compDef.Raw())
+}
+
+// getInvalidGlobalParamLine returns the first invalid parameter definition found
+// on the global component definition head after its leading "~".
+func getInvalidGlobalParamLine(compDef ast.Node) (string, bool) {
+	head := ast.FindNodeByRuleName(compDef.Children(), "global-comp-def-head")
+	if head == nil {
+		return "", false
+	}
+
+	headRaw := string(head.Raw())
+	tildeIdx := strings.Index(headRaw, "~")
+	if tildeIdx < 0 {
+		return "", false
+	}
+
+	tail := headRaw[tildeIdx+1:]
+	if strings.Trim(tail, " \t\n") == "" {
+		return "~", true
+	}
+
+	if invalid, ok := selector.FirstInvalidCompParamDef([]byte(tail)); ok {
+		return invalid, true
+	}
+	return indentedLineAfterDefLine(compDef.Raw())
+}
+
+// indentedLineAfterDefLine returns the trimmed text of the first indented line
+// immediately following the definition's "~" line, when one exists.
+func indentedLineAfterDefLine(compDefRaw []byte) (string, bool) {
+	tildeIdx := bytes.IndexByte(compDefRaw, '~')
+	if tildeIdx < 0 {
+		return "", false
+	}
+	_, rest, ok := bytes.Cut(compDefRaw[tildeIdx:], []byte("\n"))
+	if !ok {
+		return "", false
+	}
+	line, _, _ := bytes.Cut(rest, []byte("\n"))
+	trimmed := bytes.Trim(line, " \t")
+	if len(trimmed) == 0 || (line[0] != ' ' && line[0] != '\t') {
+		return "", false
+	}
+	return string(trimmed), true
 }
 
 func unknownCompCall() conditionAnalyzer {

@@ -1,4 +1,4 @@
-comp = EMPTY
+~ comp = EMPTY
 {{ HEADER }}
 {{ comp }}
 {{ FOOTER }}

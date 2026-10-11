@@ -1,4 +1,4 @@
-content = NO_MATTER
+~ content = NO_MATTER
 {{ HEADER }}
 {{ content }}
 {{ FOOTER }}

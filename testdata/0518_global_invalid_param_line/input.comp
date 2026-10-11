@@ -1,0 +1,3 @@
+{{ G title = "x" }}
+
+Hello {{ G title = "y" }} world.

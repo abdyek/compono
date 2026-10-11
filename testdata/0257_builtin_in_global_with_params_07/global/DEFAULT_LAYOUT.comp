@@ -1,4 +1,4 @@
-comp-item = { component: CONTENT, grid-area: "content" }
+~ comp-item = { component: CONTENT, grid-area: "content" }
 
 {{ WEB_GRID
   items = [

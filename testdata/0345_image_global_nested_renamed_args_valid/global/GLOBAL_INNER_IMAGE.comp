@@ -1,2 +1,2 @@
-photo = {} label = ""
+~ photo = {} label = ""
 {{ IMAGE media = photo alt = label }}

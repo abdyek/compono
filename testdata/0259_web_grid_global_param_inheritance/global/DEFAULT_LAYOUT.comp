@@ -1,4 +1,4 @@
-page-title = "[Page Title]" content = NO_MATTER
+~ page-title = "[Page Title]" content = NO_MATTER
 
 {{ WEB_GRID
   items = [
