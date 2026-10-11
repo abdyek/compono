@@ -68,6 +68,21 @@ fmt.Println("Hello")
 
 A line that is exactly `---` (spaces and tabs around it are ignored) is a thematic break and renders `<hr>`. It interrupts a paragraph. There are no setext headings: `---` or `===` under a line never turns it into a heading. `***`, `___` and `----` are text.
 
+A line that starts with `> ` is a quote line, and a line that is only `>` is an empty quote line. Leading spaces and tabs are ignored. Consecutive quote lines render a `<blockquote>` whose paragraphs are always wrapped in `<p>`:
+
+```
+> First paragraph,
+> second line.
+>
+> Second paragraph.
+```
+
+```html
+<blockquote><p>First paragraph,<br>second line.</p><p>Second paragraph.</p></blockquote>
+```
+
+A quote interrupts a paragraph and ends at the first line that does not start with `>`. There is no lazy continuation and no nesting. A quote holds only paragraphs: `> > text`, `> # text`, `> - text` and `>text` are text. A block component call inside a quote is an invalid component usage. A blank line between two quotes renders two blockquotes.
+
 ### Comments
 
 A line that starts with `//` is a comment line. Leading spaces and tabs are ignored. Comment lines are removed from the source, with their line breaks, before anything else is read, and they write nothing to the output:
