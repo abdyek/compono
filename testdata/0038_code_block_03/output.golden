@@ -1,5 +1,5 @@
-<pre><code class="language-plaintext">
+<pre><code>
   Global comp
 
-</code></pre><pre><code class="language-c">Another code block
+</code></pre><pre><code data-lang="c">Another code block
 </code></pre>
