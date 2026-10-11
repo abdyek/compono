@@ -27,7 +27,7 @@ func (_ *markdownListItem) Condition(_ renderableNode, node ast.Node) bool {
 }
 
 func (m *markdownListItem) Render() string {
-	content := util.TrimWhitespace(normalizeRenderedMarkup(m.renderer.renderChildren(m, m.Node().Children())))
+	content := util.TrimWhitespace(m.renderer.renderChildren(m, m.Node().Children()))
 	if isEmptyRendered(content) {
 		return content
 	}

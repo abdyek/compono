@@ -144,8 +144,8 @@ func (_ *h1Content) Selectors() []selector.Selector {
 func (_ *h1Content) Rules() []Rule {
 	return []Rule{
 		newLink(),
-		newEm(),
 		newStrong(),
+		newEm(),
 		newInlineCode(),
 		newInlineCompCall(),
 		newContextRef(),
