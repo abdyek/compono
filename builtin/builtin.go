@@ -153,6 +153,29 @@ func BuiltinComponents() []Definition {
 			},
 			InlineRenderable: false,
 		},
+		{
+			Name: "LIST",
+			Params: []Param{
+				{
+					Name:         "items",
+					Schema:       AnyArray(),
+					DefaultValue: []any{},
+					IsRequired:   true,
+				},
+				{
+					Name:         "item",
+					Schema:       Component(),
+					DefaultValue: "NO_MATTER",
+					IsRequired:   true,
+				},
+				{
+					Name:         "ordered",
+					Schema:       Bool(),
+					DefaultValue: false,
+				},
+			},
+			InlineRenderable: false,
+		},
 	}
 }
 

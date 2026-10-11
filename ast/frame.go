@@ -7,10 +7,18 @@ import "github.com/umono-cms/compono/rule"
 type compValueFrame struct {
 	node
 	value ResolvedValue
+	args  map[string]ResolvedValue
 }
 
 func NewCompValueFrame(value ResolvedValue, parent Node) Node {
-	frame := &compValueFrame{value: value}
+	return NewCompValueFrameWithArgs(value, parent, nil)
+}
+
+// NewCompValueFrameWithArgs is NewCompValueFrame with arguments given to the
+// component value by the frame itself, such as the item that LIST gives to its
+// item component.
+func NewCompValueFrameWithArgs(value ResolvedValue, parent Node, args map[string]ResolvedValue) Node {
+	frame := &compValueFrame{value: value, args: args}
 	frame.SetRule(rule.NewDynamic("comp-value-frame"))
 	frame.SetParent(parent)
 	frame.SetRange(parent.Range())
@@ -23,4 +31,14 @@ func GetCompValueFromFrame(node Node) (ResolvedValue, bool) {
 		return ResolvedValue{}, false
 	}
 	return frame.value, true
+}
+
+// GetCompValueFrameArg returns the argument the comp-value-frame gives to its component value.
+func GetCompValueFrameArg(node Node, name string) (ResolvedValue, bool) {
+	frame, ok := node.(*compValueFrame)
+	if !ok || frame.args == nil {
+		return ResolvedValue{}, false
+	}
+	value, ok := frame.args[name]
+	return value, ok
 }

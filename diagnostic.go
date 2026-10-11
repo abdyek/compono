@@ -27,6 +27,8 @@ const (
 	CodeInvalidContextAccess       DiagnosticCode = "invalid-context-access"
 	CodeInvalidCurrentValue        DiagnosticCode = "invalid-current-value"
 	CodeInvalidDimension           DiagnosticCode = "invalid-dimension"
+	CodeInvalidItemComponent       DiagnosticCode = "invalid-item-component"
+	CodeInvalidListItem            DiagnosticCode = "invalid-list-item"
 	CodeInvalidParameterAccess     DiagnosticCode = "invalid-parameter-access"
 	CodeInvalidParameterDefinition DiagnosticCode = "invalid-parameter-definition"
 	CodeInvalidParameterUsage      DiagnosticCode = "invalid-parameter-usage"

@@ -130,6 +130,11 @@ func ResolveFrameArg(root Node, frame Node, paramName string, invokerAncestors [
 	if !IsRuleNameOneOf(frame, []string{"param-ref", "comp-value-frame"}) {
 		return ResolvedValue{}, false
 	}
+
+	if resolved, ok := GetCompValueFrameArg(frame, paramName); ok {
+		return resolved, true
+	}
+
 	return ResolveBoundArg(root, ResolveFrameCompValue(root, frame, invokerAncestors), paramName)
 }
 

@@ -75,6 +75,7 @@ func NewRenderer(log logger.Logger) *renderer {
 		newContentBuiltin(r, "ASIDE", "aside", true, false),
 		newContentBuiltin(r, "NAV", "nav", true, false),
 		newContentBuiltin(r, "DETAILS", "details", false, true),
+		newList(r),
 	}
 
 	for _, bc := range builtinComps {
