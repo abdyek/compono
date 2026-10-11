@@ -1,0 +1,9 @@
+{{ HEADER content = A }}
+
+~ A
+Üst.
+{{ HEADER content = B }}
+{{ FOOTER content = B }}
+
+~ B
+İç.

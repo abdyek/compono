@@ -1,0 +1,6 @@
+Önce
+{{ MAIN content = BODY }}
+Sonra
+
+~ BODY
+Gövde.

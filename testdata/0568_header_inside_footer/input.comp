@@ -1,0 +1,8 @@
+{{ FOOTER content = SITE_FOOTER }}
+
+~ SITE_FOOTER
+İletişim
+{{ HEADER content = FOOTER_TITLE }}
+
+~ FOOTER_TITLE
+## Başlık

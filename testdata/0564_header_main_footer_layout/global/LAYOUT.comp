@@ -1,0 +1,10 @@
+~ title = "" content = NO_MATTER copyright = ""
+{{ HEADER content = SITE_HEADER(site-name = title) }}
+{{ MAIN content = content }}
+{{ FOOTER content = SITE_FOOTER(copyright = copyright) }}
+
+~ SITE_HEADER site-name = ""
+{{ LINK text = site-name url = "/" }}
+
+~ SITE_FOOTER copyright = ""
+{{ copyright }}
