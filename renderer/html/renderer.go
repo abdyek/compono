@@ -59,6 +59,7 @@ func NewRenderer(log logger.Logger) *renderer {
 		newLinkTextElement(r),
 		newLinkURLElement(r),
 		newBr(r),
+		newHr(r),
 	}
 
 	r.builtinCompMap = make(map[string]builtinComponent)

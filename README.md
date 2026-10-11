@@ -66,6 +66,8 @@ fmt.Println("Hello")
 ```
 ~~~
 
+A line that is exactly `---` (spaces and tabs around it are ignored) is a thematic break and renders `<hr>`. It interrupts a paragraph. There are no setext headings: `---` or `===` under a line never turns it into a heading. `***`, `___` and `----` are text.
+
 ### Comments
 
 A line that starts with `//` is a comment line. Leading spaces and tabs are ignored. Comment lines are removed from the source, with their line breaks, before anything else is read, and they write nothing to the output:
