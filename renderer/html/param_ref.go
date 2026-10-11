@@ -24,9 +24,15 @@ func renderCompParamCall(r *renderer, rn renderableNode, paramRefName string) st
 	if resolved.Type != "comp" || resolved.Raw == "" {
 		return ""
 	}
-	target := resolvedCompTarget{name: resolved.Raw, scope: resolved.Scope}
 
 	inlineCall := isInlineCompParamRef(rn.Node())
+
+	return renderCompValue(r, rn, resolved, inlineCall)
+}
+
+// renderCompValue renders the component value resolved as the content of the frame rn, as a block or inline.
+func renderCompValue(r *renderer, rn renderableNode, resolved ast.ResolvedValue, inlineCall bool) string {
+	target := resolvedCompTarget{name: resolved.Raw, scope: resolved.Scope}
 
 	localCompDefSrc := target.scope
 	if localCompDefSrc == nil {
