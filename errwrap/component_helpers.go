@@ -128,6 +128,15 @@ func findEnclosingCompDef(node ast.Node) ast.Node {
 }
 
 func isBlockComponent(compDef ast.Node) bool {
+	return isBlockComponentSeen(compDef, map[ast.Node]bool{})
+}
+
+func isBlockComponentSeen(compDef ast.Node, seen map[ast.Node]bool) bool {
+	if seen[compDef] {
+		return true
+	}
+	seen[compDef] = true
+
 	if ast.IsRuleName(compDef, "builtin-comp") {
 		nameNode := ast.FindNodeByRuleName(compDef.Children(), "builtin-comp-name")
 		if nameNode == nil {
@@ -149,6 +158,21 @@ func isBlockComponent(compDef ast.Node) bool {
 		return true
 	}
 
+	child := compDefContent.Children()[0]
+
+	root := compDef
+	if ancestors := ast.GetAncestors(compDef); len(ancestors) > 0 {
+		root = ancestors[len(ancestors)-1]
+	}
+
+	if ast.IsRuleName(child, "block-comp-call") {
+		calledDef := ast.FindCompDef(root, child, getCompCallNameStr(child))
+		if calledDef == nil {
+			return true
+		}
+		return isBlockComponentSeen(calledDef, seen)
+	}
+
 	p := ast.FindNodeByRuleName(compDefContent.Children(), "p")
 	if p == nil {
 		return true
@@ -156,8 +180,39 @@ func isBlockComponent(compDef ast.Node) bool {
 
 	pContent := ast.FindNodeByRuleName(p.Children(), "p-content")
 	softBlock := ast.FindNodeByRuleName(pContent.Children(), "soft-break")
+	if softBlock != nil {
+		return true
+	}
 
-	return softBlock != nil
+	pContentChildren := pContent.Children()
+	filtered := pContentChildren[:0:0]
+	for _, c := range pContentChildren {
+		if ast.IsRuleName(c, "plain") && strings.TrimSpace(string(c.Raw())) == "" {
+			continue
+		}
+		filtered = append(filtered, c)
+	}
+	if len(filtered) != 1 {
+		return false
+	}
+
+	only := filtered[0]
+	if !ast.IsRuleName(only, "param-ref") {
+		return false
+	}
+
+	accessors := ast.GetParamRefAccessors(only)
+	if len(accessors) == 0 {
+		paramName := getParamRefNameStr(only)
+		for _, info := range getCompDefParamInfos(compDef) {
+			if info.name == paramName {
+				return info.typ == "comp"
+			}
+		}
+		return false
+	}
+
+	return ast.ApplyAccessors(ast.ResolveCompParamDefaultFromCompDef(root, compDef, getParamRefNameStr(only)), accessors).Type == "comp"
 }
 
 func resolvedValueMissingContextKey(value ast.ResolvedValue) string {

@@ -242,6 +242,9 @@ func renderInlineCompDefContent(r *renderer, invoker renderableNode, compDefCont
 	if childCount == 0 {
 		return ""
 	}
+	if childCount == 1 && ast.IsRuleName(compDefContent.Children()[0], "block-comp-call") {
+		return renderNode(&compCall{renderer: r, inline: true}, invoker, compDefContent.Children()[0])
+	}
 	p := ast.FindNodeByRuleName(compDefContent.Children(), "p")
 	if p == nil {
 		return ""
