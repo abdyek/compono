@@ -1,0 +1,10 @@
+Merhaba {{ OUTER }} dünya.
+
+~ OUTER
+{{ MIDDLE }}
+
+~ MIDDLE
+{{ INNER }}
+
+~ INNER
+**Yunus**

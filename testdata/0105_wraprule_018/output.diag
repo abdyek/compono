@@ -1,2 +1,2 @@
-unknown-component - 5:1-5:11 local:COMP>local:COMP
-unknown-component - 5:1-5:11 local:COMP
+invalid-component-usage - 1:10-1:32 -
+invalid-component-usage - 2:10-2:20 -

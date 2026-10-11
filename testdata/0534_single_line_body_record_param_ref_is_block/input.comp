@@ -1,0 +1,7 @@
+Önce {{ X r = { content: Y } }} sonra
+
+~ X r = { content: NO_MATTER }
+{{ r.content }}
+
+~ Y
+tek

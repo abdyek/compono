@@ -10,6 +10,7 @@ import (
 type compCall struct {
 	baseRenderable
 	renderer *renderer
+	inline   bool
 }
 
 func newCompCall(rend *renderer) renderableNode {
@@ -32,7 +33,7 @@ func (cc *compCall) Render() string {
 	}
 
 	inlineCompCall := false
-	if ast.IsRuleName(cc.Node(), "inline-comp-call") {
+	if cc.inline || ast.IsRuleName(cc.Node(), "inline-comp-call") {
 		inlineCompCall = true
 	}
 
@@ -102,11 +103,5 @@ func (cc *compCall) Render() string {
 }
 
 func (cc *compCall) renderInlineCompCall(compName string, compDefContent ast.Node) string {
-	childCount := len(compDefContent.Children())
-	if childCount == 0 {
-		return ""
-	}
-	p := ast.FindNodeByRuleName(compDefContent.Children(), "p")
-	pContent := ast.FindNodeByRuleName(p.Children(), "p-content")
-	return cc.renderer.renderChildren(cc, pContent.Children())
+	return renderInlineCompDefContent(cc.renderer, cc, compDefContent)
 }

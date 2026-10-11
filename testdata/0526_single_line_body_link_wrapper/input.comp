@@ -1,0 +1,6 @@
+Bkz. {{ DOCS_LINK }} sayfası.
+
+{{ DOCS_LINK }}
+
+~ DOCS_LINK
+{{ LINK text = "Belgeler" url = "/docs" }}

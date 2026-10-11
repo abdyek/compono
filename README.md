@@ -142,6 +142,19 @@ Welcome, {{ USERNAME }}!
 John
 ```
 
+A component whose body is a single component call takes the class of the called component, so a wrapper is transparent. A wrapper of an inline component is inline, and a wrapper of `LINK` or `IMAGE` can be called both inline and on its own line:
+
+```
+See {{ DOCS_LINK }} for details.
+
+~ DOCS_LINK
+{{ LINK text = "Docs" url = "/docs" }}
+```
+
+This outputs `<p>See <a href="/docs">Docs</a> for details.</p>`. The rule is recursive. Comment lines do not count.
+
+A body that is only a reference to a component parameter (`{{ content }}`, also `{{ item.content }}`) is block whatever its value is. A body that is a call to an unknown component or a call that loops back to itself is block too. Calling a block component inline is an `invalid-component-usage` error and the call is dropped.
+
 ### Global Components
 
 Global components are given to `Convert` with `WithGlobalComponent` and exist only in that conversion:
