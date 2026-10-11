@@ -1,0 +1,4 @@
+{{ X t = "Umono'nun ""tema"" sistemi" }}
+
+~ X t = ""
+# {{ t }}
