@@ -4,6 +4,7 @@ import (
 	"io/fs"
 	"os"
 	"path/filepath"
+	"sort"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -190,7 +191,14 @@ func TestParseRangesMatchRaw(t *testing.T) {
 			if rem[0] < r.Start || rem[1] > r.End {
 				continue
 			}
-			out = append(out, source[pos:rem[0]]...)
+			if rem[1] <= pos {
+				continue
+			}
+			start := rem[0]
+			if start < pos {
+				start = pos
+			}
+			out = append(out, source[pos:start]...)
 			pos = rem[1]
 		}
 		out = append(out, source[pos:r.End]...)
@@ -198,9 +206,16 @@ func TestParseRangesMatchRaw(t *testing.T) {
 	}
 
 	assertRanges := func(t *testing.T, path string, source []byte, node ast.Node) {
+		crRanges := [][2]int{}
+		for i := 0; i < len(source)-1; i++ {
+			if source[i] == '\r' && source[i+1] == '\n' {
+				crRanges = append(crRanges, [2]int{i, i + 1})
+			}
+		}
 		var walk func(n ast.Node, pathRemoved [][2]int)
 		walk = func(n ast.Node, pathRemoved [][2]int) {
 			currentRemoved := append([][2]int(nil), pathRemoved...)
+			sort.Slice(currentRemoved, func(i, j int) bool { return currentRemoved[i][0] < currentRemoved[j][0] })
 			if lineRemover, ok := n.Rule().(rule.LineRemover); ok {
 				r := n.Range()
 
@@ -248,6 +263,7 @@ func TestParseRangesMatchRaw(t *testing.T) {
 					}
 					currentRemoved = append(currentRemoved, [2]int{start, end})
 				}
+				sort.Slice(currentRemoved, func(i, j int) bool { return currentRemoved[i][0] < currentRemoved[j][0] })
 			}
 
 			r := n.Range()
@@ -256,7 +272,7 @@ func TestParseRangesMatchRaw(t *testing.T) {
 				walk(child, currentRemoved)
 			}
 		}
-		walk(node, [][2]int{})
+		walk(node, crRanges)
 	}
 
 	rootFiles, err := filepath.Glob("../testdata/*/input.comp")
