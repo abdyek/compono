@@ -1,0 +1,2 @@
+invalid-component-usage - 5:1-5:25 builtin:HEADER>local:A
+invalid-component-usage - 6:1-6:25 builtin:HEADER>local:A

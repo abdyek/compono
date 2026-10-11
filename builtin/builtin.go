@@ -48,6 +48,42 @@ func BuiltinComponents() []Definition {
 			},
 			InlineRenderable: true,
 		},
+		{
+			Name: "HEADER",
+			Params: []Param{
+				{
+					Name:         "content",
+					Schema:       Component(),
+					DefaultValue: "NO_MATTER",
+					IsRequired:   true,
+				},
+			},
+			InlineRenderable: false,
+		},
+		{
+			Name: "MAIN",
+			Params: []Param{
+				{
+					Name:         "content",
+					Schema:       Component(),
+					DefaultValue: "NO_MATTER",
+					IsRequired:   true,
+				},
+			},
+			InlineRenderable: false,
+		},
+		{
+			Name: "FOOTER",
+			Params: []Param{
+				{
+					Name:         "content",
+					Schema:       Component(),
+					DefaultValue: "NO_MATTER",
+					IsRequired:   true,
+				},
+			},
+			InlineRenderable: false,
+		},
 	}
 }
 

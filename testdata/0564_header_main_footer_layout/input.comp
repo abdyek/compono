@@ -1,0 +1,5 @@
+{{ LAYOUT title = "Umono" content = BODY copyright = "© 2026 Umono" }}
+
+~ BODY
+# Umono Nedir?
+Umono içerik odaklı bir CMS'tir.

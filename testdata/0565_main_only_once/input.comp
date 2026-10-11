@@ -1,0 +1,8 @@
+{{ MAIN content = FIRST }}
+{{ MAIN content = SECOND }}
+
+~ FIRST
+Birinci.
+
+~ SECOND
+İkinci.

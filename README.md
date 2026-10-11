@@ -398,6 +398,33 @@ When validation fails, the IMAGE call renders nothing instead of producing inval
 - `duplicate-variant`
 - `inconsistent-aspect-ratio`
 
+### HEADER, MAIN and FOOTER
+
+These built-ins wrap the component given by their required `content` parameter in a `<header>`, `<main>` or `<footer>` element. They are block components and take no other parameter. Together they form the landmarks of a page skeleton:
+
+```
+{{ HEADER content = SITE_HEADER(site-name = site-name) }}
+{{ MAIN content = content }}
+{{ FOOTER content = SITE_FOOTER }}
+
+~ SITE_HEADER site-name = ""
+{{ LINK text = site-name url = "/" }}
+
+~ SITE_FOOTER
+© 2026 Umono
+```
+
+Output (with `site-name = "Umono"` and a `content` whose body is `# Hello`):
+```html
+<header><a href="/">Umono</a></header><main><h1>Hello</h1></main><footer><p>© 2026 Umono</p></footer>
+```
+
+- `content` is rendered like a block component call on its own line. Arguments are given to it with [argument binding](#argument-binding).
+- If `content` renders nothing, the built-in renders nothing. No empty element is written.
+- An error inside `content` drops only its own unit. The built-in is still rendered.
+- `MAIN` cannot be placed inside another built-in, and a conversion renders only its first `MAIN` call. `HEADER` and `FOOTER` cannot be placed inside a `HEADER` or a `FOOTER`. These rules look at where the call is, not at what it renders, and break with `invalid-component-usage`.
+- While these built-ins render their content, they are `builtin` frames of the [attribute hook](#attribute-hook) chain and of the call chain of [diagnostics](#diagnostics).
+
 ### Removed Built-in Components
 
 #### WEB_GRID

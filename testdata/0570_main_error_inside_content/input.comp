@@ -1,0 +1,4 @@
+{{ MAIN content = BODY }}
+
+~ BODY
+Önce {{ FOO }} sonra

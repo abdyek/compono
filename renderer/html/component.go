@@ -93,6 +93,7 @@ func (cc *compCall) Render() string {
 
 	builtinComp := cc.renderer.findBuiltinComp(string(compCallName.Raw()))
 	if builtinComp != nil {
+		cc.renderer.noteBuiltinCall(strings.TrimSpace(string(compCallName.Raw())), cc.Node())
 		if title, message, ok := errwrap.BuiltinCallError(cc.renderer.root, cc.Node(), strings.TrimSpace(string(compCallName.Raw())), invokerChain(cc.Invoker())); ok {
 			return cc.renderer.recordDiagnostic(cc.Node(), title, message, ast.IsRuleName(cc.Node(), "block-comp-call"))
 		}

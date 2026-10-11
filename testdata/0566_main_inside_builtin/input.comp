@@ -1,0 +1,8 @@
+{{ HEADER content = TOP }}
+
+~ TOP
+Üst.
+{{ MAIN content = BODY }}
+
+~ BODY
+Gövde.

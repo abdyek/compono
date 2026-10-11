@@ -1,0 +1,6 @@
+{{ HEADER content = EMPTY }}
+{{ MAIN content = EMPTY }}
+{{ FOOTER content = EMPTY }}
+
+~ EMPTY
+// boş

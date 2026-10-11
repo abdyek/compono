@@ -1,0 +1,7 @@
+{{ HEADER }}
+{{ FOOTER content = UNDEFINED }}
+
+Önce {{ HEADER content = A }} sonra
+
+~ A
+a

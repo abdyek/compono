@@ -1,0 +1,8 @@
+{{ PAGE }}
+{{ PAGE }}
+
+~ PAGE
+{{ MAIN content = BODY }}
+
+~ BODY
+Gövde.

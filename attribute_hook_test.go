@@ -305,3 +305,28 @@ func (s *componoTestSuite) TestAttributeHookConflict() {
 		s.requireErrorCode(err, ErrAttributeConflict)
 	}
 }
+
+func (s *componoTestSuite) TestAttributeHookChainIncludesContentBuiltin() {
+	var linkChain []Frame
+	fn := func(builtin string, chain []Frame) map[string]string {
+		if builtin == "LINK" {
+			linkChain = deepCopyFrames(chain)
+		}
+		if builtin == "HEADER" {
+			return map[string]string{"class": "site"}
+		}
+		return nil
+	}
+
+	out, err := s.convertWithOpts(
+		"{{ HEADER content = SITE_HEADER }}\n\n~ SITE_HEADER\n{{ LINK text = \"a\" url = \"/a\" }}",
+		WithAttributeHook(fn),
+	)
+	require.Nil(s.T(), err)
+
+	assert.Equal(s.T(), `<header class="site"><a href="/a">a</a></header>`, out)
+	assert.Equal(s.T(), []Frame{
+		{Name: "HEADER", Kind: FrameBuiltin},
+		{Name: "SITE_HEADER", Kind: FrameLocal},
+	}, linkChain)
+}

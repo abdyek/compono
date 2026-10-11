@@ -1,0 +1,5 @@
+{{ HEADER content = SITE_HEADER }}
+
+~ SITE_HEADER
+# Umono
+{{ LINK text = "Ana sayfa" url = "/" }}
