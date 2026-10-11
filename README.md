@@ -872,6 +872,7 @@ Notes:
 - `compono` struct tags must be valid `kebab-case`
 - if a struct field has no `compono` tag, its name is converted to `kebab-case`
 - unsupported types such as floats, pointers, functions, and channels return a fatal conversion error
+- a map or slice that contains itself is a fatal conversion error (`ErrUnsupportedType`). The same map or slice may appear more than once side by side.
 - fatal context injection errors are returned as `ErrUnsupportedType` or `ErrUnsupportedKeyNotation`
 
 ### Missing Keys and Errors

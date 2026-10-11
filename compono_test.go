@@ -76,6 +76,44 @@ func (s *componoTestSuite) TestConvertWithContextErrUnsupportedType() {
 	assert.Contains(s.T(), compErr.Message, "unsupported context value type")
 }
 
+func (s *componoTestSuite) TestConvertWithContextErrCyclicMap() {
+	compono := New()
+
+	m := map[string]any{}
+	m["self"] = m
+
+	var buf bytes.Buffer
+	_, err := compono.Convert([]byte("context"), &buf, WithContext(map[string]any{
+		"value": m,
+	}))
+
+	require.Error(s.T(), err)
+
+	var compErr *ComponoError
+	require.ErrorAs(s.T(), err, &compErr)
+	assert.Equal(s.T(), ErrUnsupportedType, compErr.Code)
+	assert.Contains(s.T(), compErr.Message, "cyclic context value")
+}
+
+func (s *componoTestSuite) TestConvertWithContextErrCyclicSlice() {
+	compono := New()
+
+	s2 := make([]any, 1)
+	s2[0] = s2
+
+	var buf bytes.Buffer
+	_, err := compono.Convert([]byte("context"), &buf, WithContext(map[string]any{
+		"value": s2,
+	}))
+
+	require.Error(s.T(), err)
+
+	var compErr *ComponoError
+	require.ErrorAs(s.T(), err, &compErr)
+	assert.Equal(s.T(), ErrUnsupportedType, compErr.Code)
+	assert.Contains(s.T(), compErr.Message, "cyclic context value")
+}
+
 func (s *componoTestSuite) TestConvertWithContextErrUnsupportedKeyNotation() {
 	compono := New()
 
