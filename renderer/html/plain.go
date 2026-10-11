@@ -2,7 +2,7 @@ package html
 
 import (
 	"html"
-	"regexp"
+	"strings"
 
 	"github.com/umono-cms/compono/ast"
 )
@@ -27,13 +27,5 @@ func (_ *plain) Condition(invoker renderableNode, node ast.Node) bool {
 }
 
 func (p *plain) Render() string {
-	return html.EscapeString(p.normalizeEdges(string(p.Node().Raw())))
-}
-
-func (_ *plain) normalizeEdges(s string) string {
-	reJunk := regexp.MustCompile(`[\t\n\r\f\v]+`)
-	s = reJunk.ReplaceAllString(s, "")
-
-	re := regexp.MustCompile(`^\s{2,}|\s{2,}$`)
-	return re.ReplaceAllString(s, " ")
+	return html.EscapeString(strings.NewReplacer("\r", "", "\n", "").Replace(string(p.Node().Raw())))
 }

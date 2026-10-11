@@ -26,18 +26,44 @@ func (p *parser) Parse(source []byte, root ast.Node) ast.Node {
 	cp.logger.Enter(logger.Parser, "Parser started")
 	root.SetRange(ast.Range{Start: 0, End: len(source)})
 
-	parseSource := source
-	var offsets []int
-	if lineRemover, ok := root.Rule().(rule.LineRemover); ok {
-		if removed := lineRemover.RemovedLines(source); len(removed) > 0 {
-			parseSource, offsets = stripRemovedLines(source, removed)
+	crRemoved := [][2]int{}
+	for i := 0; i < len(source)-1; i++ {
+		if source[i] == '\r' && source[i+1] == '\n' {
+			crRemoved = append(crRemoved, [2]int{i, i + 1})
 		}
+	}
+
+	crFree := source
+	var crOffsets []int
+	if len(crRemoved) > 0 {
+		crFree, crOffsets = stripRemovedLines(source, crRemoved)
+	}
+
+	parseSource := crFree
+	var lineOffsets []int
+	if lineRemover, ok := root.Rule().(rule.LineRemover); ok {
+		if removed := lineRemover.RemovedLines(crFree); len(removed) > 0 {
+			parseSource, lineOffsets = stripRemovedLines(crFree, removed)
+		}
+	}
+
+	var final []int
+	switch {
+	case crOffsets != nil && lineOffsets != nil:
+		final = make([]int, len(lineOffsets))
+		for i, off := range lineOffsets {
+			final[i] = crOffsets[off]
+		}
+	case crOffsets != nil:
+		final = crOffsets
+	default:
+		final = lineOffsets
 	}
 
 	node := cp.parse(parseSource, root)
 
-	if offsets != nil {
-		remapRanges(node, offsets, len(source), 0)
+	if final != nil {
+		remapRanges(node, final, len(source), 0)
 		root.SetRange(ast.Range{Start: 0, End: len(source)})
 	}
 

@@ -151,7 +151,7 @@ func renderParagraph(nvec *nonVoidElementContent) string {
 			flush()
 			result += nvec.renderer.renderChildren(nvec, []ast.Node{thatNode})
 		} else {
-			rendered = append(rendered, nvec.renderer.renderChildren(nvec, line))
+			rendered = append(rendered, util.TrimWhitespace(nvec.renderer.renderChildren(nvec, line)))
 		}
 	}
 	flush()

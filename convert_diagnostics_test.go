@@ -536,3 +536,15 @@ func TestConvertDiagnosticImageDropsPerRender(t *testing.T) {
 	}}
 	assert.Equal(t, want, diags)
 }
+
+func TestConvertDiagnosticOffsetsWithCRLF(t *testing.T) {
+	var buf bytes.Buffer
+	diags, err := New().Convert([]byte("a\r\n{{ U }}"), &buf)
+	require.NoError(t, err)
+	assert.Equal(t, "<p>a</p>", buf.String())
+	require.Len(t, diags, 1)
+	assert.Equal(t, Range{
+		Start: Position{Offset: 3, Line: 2, Column: 1},
+		End:   Position{Offset: 10, Line: 2, Column: 8},
+	}, diags[0].Range)
+}

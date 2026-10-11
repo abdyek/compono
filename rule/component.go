@@ -1397,7 +1397,7 @@ func NewGlobalCompDef() Rule {
 }
 
 func (_ *globalCompDef) RemovedLines(source []byte) [][2]int {
-	return commentLines(source)
+	return removedLines(source)
 }
 
 func (_ *globalCompDef) Name() string {

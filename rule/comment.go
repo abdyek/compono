@@ -9,12 +9,14 @@ type LineRemover interface {
 	RemovedLines(source []byte) [][2]int
 }
 
-// commentLines returns the [start, end) ranges of the comment lines of
-// source, each with its line break.
-func commentLines(source []byte) [][2]int {
+// removedLines returns the [start, end) ranges of the comment lines of
+// source, each with its line break, and of the spaces and tabs of every
+// line that holds only spaces and tabs (without its line break), so that
+// line becomes an empty line.
+func removedLines(source []byte) [][2]int {
 	codeSpans := newCodeBlock().Selectors()[0].Select(source)
 
-	comments := [][2]int{}
+	removed := [][2]int{}
 	protectedUntil := 0
 
 	for start := 0; start < len(source); {
@@ -42,7 +44,9 @@ func commentLines(source []byte) [][2]int {
 			}
 			if i+1 < end && source[i] == '/' && source[i+1] == '/' {
 				isComment = true
-				comments = append(comments, [2]int{start, end})
+				removed = append(removed, [2]int{start, end})
+			} else if i > start && (i == end || source[i] == '\n') {
+				removed = append(removed, [2]int{start, i})
 			}
 		}
 
@@ -84,5 +88,5 @@ func commentLines(source []byte) [][2]int {
 		start = end
 	}
 
-	return comments
+	return removed
 }
