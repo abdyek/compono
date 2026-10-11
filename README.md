@@ -77,6 +77,8 @@ fmt.Println("Hello")
 
 The language is written as `data-lang` on `<code>`. A code block without a language renders `<pre><code>` with no attribute. A language contains only lowercase ASCII letters, digits and `+ # . _ -`, starts with a letter or digit and is at most 32 bytes (`c++`, `c#`, `objective-c`). Otherwise the code block renders nothing and returns an `invalid-code-block-language` diagnostic. An empty code block, or one with only whitespace, renders nothing.
 
+The opening line is a fence of three or more backticks, followed without a space by the optional language. It is closed by the first following line that is exactly a fence of the same length; every line in between is content, kept as written. So a code that holds a ```` ``` ```` line is written with a ```` ```` ```` fence. The indentation of the closing line is not part of the content. An opening line that is never closed is text. `~~~` fences and indented code blocks do not exist.
+
 A line that is exactly `---` (spaces and tabs around it are ignored) is a thematic break and renders `<hr>`. It interrupts a paragraph. There are no setext headings: `---` or `===` under a line never turns it into a heading. `***`, `___` and `----` are text.
 
 A line that starts with `> ` is a quote line, and a line that is only `>` is an empty quote line. Leading spaces and tabs are ignored. Consecutive quote lines render a `<blockquote>` whose paragraphs are always wrapped in `<p>`:
