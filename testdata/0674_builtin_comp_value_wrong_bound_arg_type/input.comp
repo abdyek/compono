@@ -1,0 +1,15 @@
+{{ NAV content = CARD(n = "s") }}
+
+{{ MAIN content = CARD(n = "s") }}
+
+{{ LIST items = [{ text: "a" }] item = ITEM(n = "s") }}
+
+{{ LIST items = [] item = ITEM(n = "s") }}
+
+Son
+
+~ CARD n = 0
+{{ n }}
+
+~ ITEM item = {} n = 0
+{{ item.text }}{{ n }}

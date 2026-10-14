@@ -1,0 +1,9 @@
+{{ X c = CARD }}
+
+Son
+
+~ X c = NO_MATTER
+{{ c }}
+
+~ CARD n = 0 y
+{{ n }}
