@@ -22,7 +22,7 @@ func TestConvertDiagnosticInConvertedSource(t *testing.T) {
 	require.NoError(t, err)
 	want := []Diagnostic{{
 		Code:    CodeUnknownComponent,
-		Message: "The component **FOO** is not defined or not registered.",
+		Message: "The component **FOO** is not defined.",
 		Source:  nil,
 		Range: Range{
 			Start: Position{Offset: 6, Line: 1, Column: 7},
@@ -39,7 +39,7 @@ func TestConvertDiagnosticColumnCountsRunes(t *testing.T) {
 	require.NoError(t, err)
 	want := []Diagnostic{{
 		Code:    CodeUnknownComponent,
-		Message: "The component **FOO** is not defined or not registered.",
+		Message: "The component **FOO** is not defined.",
 		Source:  nil,
 		Range: Range{
 			Start: Position{Offset: 6, Line: 3, Column: 3},
@@ -57,7 +57,7 @@ func TestConvertDiagnosticsInOutputOrder(t *testing.T) {
 	want := []Diagnostic{
 		{
 			Code:    CodeUnknownComponent,
-			Message: "The component **A** is not defined or not registered.",
+			Message: "The component **A** is not defined.",
 			Source:  nil,
 			Range: Range{
 				Start: Position{Offset: 0, Line: 1, Column: 1},
@@ -67,7 +67,7 @@ func TestConvertDiagnosticsInOutputOrder(t *testing.T) {
 		},
 		{
 			Code:    CodeUnknownComponent,
-			Message: "The component **B** is not defined or not registered.",
+			Message: "The component **B** is not defined.",
 			Source:  nil,
 			Range: Range{
 				Start: Position{Offset: 14, Line: 3, Column: 6},
@@ -88,7 +88,7 @@ func TestConvertDiagnosticPerCallOfGlobal(t *testing.T) {
 	want := []Diagnostic{
 		{
 			Code:    CodeUnknownComponent,
-			Message: "The component **FOO** is not defined or not registered.",
+			Message: "The component **FOO** is not defined.",
 			Source:  []string{"G"},
 			Range: Range{
 				Start: Position{Offset: 3, Line: 1, Column: 4},
@@ -106,7 +106,7 @@ func TestConvertDiagnosticPerCallOfGlobal(t *testing.T) {
 		},
 		{
 			Code:    CodeUnknownComponent,
-			Message: "The component **FOO** is not defined or not registered.",
+			Message: "The component **FOO** is not defined.",
 			Source:  []string{"G"},
 			Range: Range{
 				Start: Position{Offset: 3, Line: 1, Column: 4},
@@ -132,7 +132,7 @@ func TestConvertDiagnosticInLocalComponent(t *testing.T) {
 	require.NoError(t, err)
 	want := []Diagnostic{{
 		Code:    CodeUnknownComponent,
-		Message: "The component **FOO** is not defined or not registered.",
+		Message: "The component **FOO** is not defined.",
 		Source:  nil,
 		Range: Range{
 			Start: Position{Offset: 13, Line: 4, Column: 1},
@@ -161,7 +161,7 @@ func TestConvertDiagnosticInSubComponent(t *testing.T) {
 	require.NoError(t, err)
 	want := []Diagnostic{{
 		Code:    CodeUnknownComponent,
-		Message: "The component **FOO** is not defined or not registered.",
+		Message: "The component **FOO** is not defined.",
 		Source:  []string{"LAYOUT", "CARD"},
 		Range: Range{
 			Start: Position{Offset: 0, Line: 1, Column: 1},
@@ -199,7 +199,7 @@ func TestConvertDiagnosticThroughComponentParameter(t *testing.T) {
 	require.NoError(t, err)
 	want := []Diagnostic{{
 		Code:    CodeUnknownComponent,
-		Message: "The component **FOO** is not defined or not registered.",
+		Message: "The component **FOO** is not defined.",
 		Source:  []string{"G"},
 		Range: Range{
 			Start: Position{Offset: 0, Line: 1, Column: 1},
@@ -235,7 +235,7 @@ func TestConvertDiagnosticOnceForBlockErrorInParagraph(t *testing.T) {
 	require.NoError(t, err)
 	want := []Diagnostic{{
 		Code:    CodeUnknownComponent,
-		Message: "The component **FOO** is not defined or not registered.",
+		Message: "The component **FOO** is not defined.",
 		Source:  nil,
 		Range: Range{
 			Start: Position{Offset: 2, Line: 2, Column: 1},
