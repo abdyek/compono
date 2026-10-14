@@ -41,3 +41,21 @@ func linkValueError(root, call ast.Node, invokerAncestors []ast.Node) (title, me
 func DisallowedURLSchemeError(scheme string) (title, message string) {
 	return "Disallowed URL scheme", "The URL scheme **" + scheme + "** is not allowed. Allowed schemes: **http**, **https**, **mailto**, **tel**."
 }
+
+// isCompCallInsideLink reports whether node is a component call in the text
+// or URL of a markdown link. The link renderer reports such a call as
+// invalid-component-usage and drops the link, so the call and its arguments
+// are not diagnosed.
+func isCompCallInsideLink(node ast.Node) bool {
+	if !ast.IsRuleName(node, "inline-comp-call") {
+		return false
+	}
+
+	for _, anc := range ast.GetAncestors(node) {
+		if ast.IsRuleName(anc, "link-text") || ast.IsRuleName(anc, "link-url") {
+			return true
+		}
+	}
+
+	return false
+}
