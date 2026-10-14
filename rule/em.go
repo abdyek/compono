@@ -60,6 +60,8 @@ func (_ *emContent) Rules() []Rule {
 		newInlineCompCall(),
 		newContextRef(),
 		newParamRef(),
+		newInvalidExpression(),
+		newUnclosedExpression(),
 		newPlain(),
 	}
 }
