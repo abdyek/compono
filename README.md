@@ -660,6 +660,7 @@ Whitespace in Compono is only the space (U+0020) and the tab (U+0009). Other spa
 - Values are never trimmed. A parameter value, a `context(...)` value, an array element and a record value are placed as they are: `Before[{{ t }}]after` with `t = "  a  "` gives `Before[  a  ]after`.
 - The content of a heading or a paragraph is trimmed at its edges after the values are placed. `# {{ t }}` with `t = " a "` gives the same output as `# a`.
 - The string arguments of built-in components, such as the `text` of `LINK` and the `alt` of `IMAGE`, are trimmed the same way.
+- Trimming happens before the units dropped by errors are removed. A dropped unit counts as content, so the whitespace around it is kept: `Before {{ UNKNOWN }}` gives `<p>Before </p>`. A parameter with an empty value is not dropped and is trimmed: `Before {{ t }}` with `t = ""` gives `<p>Before</p>`. The output with the error and the output after the error is fixed differ only by the unit itself. [Empty content](#empty-content) is checked after the dropped units are removed, so `{{ UNKNOWN }} {{ UNKNOWN }}` renders nothing.
 - A value of only U+00A0 is not empty. It renders in a heading and in the `text` of `LINK`.
 
 ### Required Parameters
