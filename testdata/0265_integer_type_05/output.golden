@@ -1,1 +1,0 @@
-<p>{{ COMP_FOR_NEGATIVE_INTEGER int = --123 }}</p>
