@@ -28,6 +28,10 @@ func (ew *errorWrapper) Wrap(root ast.Node) {
 }
 
 func (ew *errorWrapper) scanAndWrap(ctx *wrapContext, node ast.Node) {
+	if isCompCallInsideLink(node) {
+		return
+	}
+
 	if ew.wrap(ctx, node) {
 		return
 	}
