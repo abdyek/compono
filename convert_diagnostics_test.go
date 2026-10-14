@@ -380,7 +380,7 @@ func TestConvertDiagnosticDropsOnlyUnitInLinkText(t *testing.T) {
 	assert.Equal(t, `<p><a href="/docs">Docs </a></p>`, buf.String())
 	want := []Diagnostic{{
 		Code:    CodeInvalidParameterUsage,
-		Message: "Parameters cannot be used in the root context.",
+		Message: "The parameter **label** cannot be used outside a component.",
 		Source:  nil,
 		Range: Range{
 			Start: Position{Offset: 6, Line: 1, Column: 7},
