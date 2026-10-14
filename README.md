@@ -521,7 +521,7 @@ Nested lists are built by an item component that calls `LIST` again with its own
 {{ LIST items = item.children item = NAV_ITEM }}
 ```
 
-A component rendered again while it is being rendered is normally an `infinite-component-call` error. `LIST` allows it when the inner `LIST`'s `items` come from the current `item` of the outer `LIST` through at least one key or index access, also when passed through parameters. Every such step renders a smaller part of the data, so the recursion ends where the data ends. `{{ LIST items = menu item = NAV_ITEM(menu = menu) }}` inside `NAV_ITEM` does not shrink the data and is still an infinite call.
+Entering the item component again with the same signature while it is being rendered is normally an `infinite-component-call` error ([What Is Dropped](#what-is-dropped)). `LIST` allows it when the inner `LIST`'s `items` are equal to a part of the current `item` of the outer `LIST` reached through at least one key or index access, also when passed through parameters. The parts are compared by value, not by where they are written. Every such step renders a smaller part of the data, so the recursion ends where the data ends. `{{ LIST items = menu item = NAV_ITEM(menu = menu) }}` inside `NAV_ITEM` does not shrink the data and is still an infinite call.
 
 ### HEADER, MAIN and FOOTER
 
@@ -1149,7 +1149,9 @@ Item: {{ list[0] }}
 
 renders `<p>Item: 1</p><p>Item: </p>` and returns one `array-index-out-of-range` diagnostic whose `Calls` holds the second `ITEM` call.
 
-A call that enters a component already being rendered with the same component values never ends. It is an `infinite-component-call` and drops where it is written, so in a cycle only the call that closes it drops. A component that calls itself with other component values is not a loop.
+A call that enters a component already being rendered with the same signature never ends. The signature is the called definition and the definitions its Component parameters resolve to, each in the scope the value is written in: a local `CARD` of the converted source and a local `CARD` of a global are different values. Such a call is an `infinite-component-call` and drops where it is written, so in a cycle only the call that closes it drops. A component that calls itself with other component values is not a loop.
+
+Bound arguments and String, Integer, Bool, Array and Record parameters are not part of the signature. A value can grow on every entry, as `c` does in `{{ A c = B(x = c) }}`, and the chain would never see the same signature twice. Since the definitions are finite, so are the signatures, and every chain that never ends is stopped. The cost is that some chains that would end are dropped too.
 
 ### Rules
 
