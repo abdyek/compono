@@ -1,0 +1,5 @@
+a {{ context() }} b
+a {{ context(umono/) }} b
+a {{ context(Umono/X) }} b
+a {{ context(umono//v) }} b
+a {{ LINK text = context() url = "/" }} b

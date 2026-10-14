@@ -1,0 +1,13 @@
+# Başlık {{ IF x }} son
+
+- öğe {{ IF x }} son
+
+> alıntı {{ IF x }} son
+
+| a | b |
+| --- | --- |
+| {{ x | y }} | c |
+
+[{{ Bad }}](/x)
+
+**k {{ IF x }} l** *e {{ IF x }} f*

@@ -1,0 +1,3 @@
+x {{ LINK text = "a}}b" url = "/" }}
+
+x {{ LINK text = "a}}b" url = "/" extra }}

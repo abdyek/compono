@@ -1,0 +1,9 @@
+a {{ IF x }} b
+a {{ title | upper }} b
+a {{ Foo Bar }} b
+a {{ Title }} b
+a {{ LINK text = "a" url = "/" extra }} b
+a {{ LINK text = "a" url = "/" new_tab = true }} b
+a {{ X (a = 1) }} b
+a {{}} b
+a {{ }} b
