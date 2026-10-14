@@ -15,6 +15,8 @@ type conditionAnalyzer struct {
 
 func diagnosticAnalyzers() []diagnosticAnalyzer {
 	return []diagnosticAnalyzer{
+		invalidExpression(),
+		unclosedExpression(),
 		invalidParamDef(),
 		unknownCompCall(),
 		unknownCompParamCall(),

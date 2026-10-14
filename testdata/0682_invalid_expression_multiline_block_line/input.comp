@@ -1,0 +1,5 @@
+önce
+{{ LINK
+  text = "a"
+  new_tab = true }}
+sonra

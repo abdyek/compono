@@ -583,6 +583,7 @@ func (_ *localCompDefContent) Rules() []Rule {
 		newH2(),
 		newH1(),
 		newBlockCompCall(),
+		newBlockInvalidExpression(),
 		newP(),
 	}
 }
@@ -1493,6 +1494,7 @@ func (_ *globalCompDefContent) Rules() []Rule {
 		newH2(),
 		newH1(),
 		newBlockCompCall(),
+		newBlockInvalidExpression(),
 		newP(),
 	}
 }

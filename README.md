@@ -175,6 +175,12 @@ Output:
 
 Comments work in the converted source, in local components and in global components.
 
+### Invalid and Unclosed Units
+
+Every `{{` in inline content starts a unit. A unit that is not a component call, a parameter reference or a `context(key)`, such as `{{ title | upper }}`, `{{ Title }}` or `{{ X (a = 1) }}`, is an `invalid-expression` error and drops as a whole. The names inside it are not checked. A valid unit ends where its grammar ends, so a `}}` inside a string does not close it. An invalid unit ends at the first `}}` and cannot run past its paragraph, heading, list item, quote line or table row. On its own lines it splits the paragraph like a block call.
+
+A `{{` with no `}}` after it, or with another `{{` before the first `}}`, is an `unclosed-expression` error and only the `{{` drops: `Hello {{ name } world` renders `<p>Hello  name } world</p>`, and in `{{ name } {{ FOOTER }}` the second unit is still rendered. A `{{` is never plain text in inline content; to write one, put it in a code span or a code block.
+
 ### Components
 
 Components are the core feature of Compono. They allow you to create reusable content blocks.
@@ -976,7 +982,7 @@ Keys are static and unquoted. They are made of `segment`s joined by `/`.
 - repeated separators are invalid
 - whitespace is allowed around the key inside `context(...)`
 
-If `context()` is empty or the key format is invalid, it is treated as plain text instead of a context reference.
+An empty `context()` or a key that does not follow this format is not a context reference. It is not plain text either: the `{{ }}` unit it is in, or the call whose argument it is, is an `invalid-expression` error and drops ([Invalid and Unclosed Units](#invalid-and-unclosed-units)).
 
 ### Supported Go Types
 
@@ -1131,7 +1137,7 @@ A diagnostic has these fields:
 An error drops the smallest part it belongs to:
 
 - **A component call** (built-in, global or local) for its own errors: an unknown component, argument errors, built-in specific errors, an invalid parameter definition of the called component and an infinite call. An error of an argument's value also drops the call the argument belongs to.
-- **A `{{ }}` unit** (a parameter reference or `context(key)`) for its own errors.
+- **A `{{ }}` unit** (a parameter reference or `context(key)`) for its own errors, and a unit that follows no grammar. An unclosed `{{` drops only itself.
 - **A markdown link** for an error in its address and for a component call in its text or address, defined or not. The call is not rendered, so its own errors are not reported: `[{{ UNDEFINED }}](/z)` gives only `invalid-component-usage`. An error of a `{{ }}` unit in the link text drops only that unit: `[Docs {{ x }}](/docs)` renders `<a href="/docs">Docs </a>` when `x` cannot be used.
 
 The paragraph, heading or component body around a dropped part is still rendered. For example, `Hello {{ FOO }} world` with an undefined `FOO` renders `<p>Hello  world</p>`.

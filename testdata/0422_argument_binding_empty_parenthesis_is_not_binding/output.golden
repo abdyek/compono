@@ -1,1 +1,0 @@
-<p>{{ WRAP content = X() }}</p>

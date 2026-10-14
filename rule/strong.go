@@ -60,6 +60,8 @@ func (_ *strongContent) Rules() []Rule {
 		newInlineCompCall(),
 		newContextRef(),
 		newParamRef(),
+		newInvalidExpression(),
+		newUnclosedExpression(),
 		newPlain(),
 	}
 }

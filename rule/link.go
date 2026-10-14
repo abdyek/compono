@@ -49,6 +49,8 @@ func (_ *linkText) Rules() []Rule {
 		newInlineCompCall(),
 		newContextRef(),
 		newParamRef(),
+		newInvalidExpression(),
+		newUnclosedExpression(),
 		newPlain(),
 	}
 }
@@ -74,6 +76,8 @@ func (_ *linkURL) Rules() []Rule {
 		newInlineCompCall(),
 		newContextRef(),
 		newParamRef(),
+		newInvalidExpression(),
+		newUnclosedExpression(),
 		newPlain(),
 	}
 }

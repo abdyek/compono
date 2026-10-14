@@ -161,6 +161,8 @@ func (_ *h1Content) Rules() []Rule {
 		newInlineCompCall(),
 		newContextRef(),
 		newParamRef(),
+		newInvalidExpression(),
+		newUnclosedExpression(),
 		newPlain(),
 	}
 }
@@ -208,6 +210,8 @@ func (_ *h2Content) Rules() []Rule {
 		newInlineCompCall(),
 		newContextRef(),
 		newParamRef(),
+		newInvalidExpression(),
+		newUnclosedExpression(),
 		newPlain(),
 	}
 }
@@ -255,6 +259,8 @@ func (_ *h3Content) Rules() []Rule {
 		newInlineCompCall(),
 		newContextRef(),
 		newParamRef(),
+		newInvalidExpression(),
+		newUnclosedExpression(),
 		newPlain(),
 	}
 }
@@ -302,6 +308,8 @@ func (_ *h4Content) Rules() []Rule {
 		newInlineCompCall(),
 		newContextRef(),
 		newParamRef(),
+		newInvalidExpression(),
+		newUnclosedExpression(),
 		newPlain(),
 	}
 }
@@ -349,6 +357,8 @@ func (_ *h5Content) Rules() []Rule {
 		newInlineCompCall(),
 		newContextRef(),
 		newParamRef(),
+		newInvalidExpression(),
+		newUnclosedExpression(),
 		newPlain(),
 	}
 }
@@ -396,6 +406,8 @@ func (_ *h6Content) Rules() []Rule {
 		newInlineCompCall(),
 		newContextRef(),
 		newParamRef(),
+		newInvalidExpression(),
+		newUnclosedExpression(),
 		newPlain(),
 	}
 }

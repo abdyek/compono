@@ -121,6 +121,8 @@ func (_ *pContent) Rules() []Rule {
 		newInlineCompCall(),
 		newContextRef(),
 		newParamRef(),
+		newInvalidExpression(),
+		newUnclosedExpression(),
 		newSoftBreak(),
 		newPlain(),
 	}

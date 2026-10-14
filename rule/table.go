@@ -92,6 +92,8 @@ func (_ *tableCell) Rules() []Rule {
 		newInlineCompCall(),
 		newContextRef(),
 		newParamRef(),
+		newInvalidExpression(),
+		newUnclosedExpression(),
 		newPlain(),
 	}
 }

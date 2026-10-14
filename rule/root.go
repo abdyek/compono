@@ -58,6 +58,7 @@ func (_ *rootContent) Rules() []Rule {
 		newH2(),
 		newH1(),
 		newBlockCompCall(),
+		newBlockInvalidExpression(),
 		newP(),
 	}
 }
