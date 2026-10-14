@@ -238,7 +238,7 @@ See {{ DOCS_LINK }} for details.
 
 This outputs `<p>See <a href="/docs">Docs</a> for details.</p>`. The rule is recursive. Comment lines do not count.
 
-A body that is only a reference to a component parameter (`{{ content }}`, also `{{ item.content }}`) is block whatever its value is. A body that is a call to an unknown component or a call that loops back to itself is block too. Calling a block component inline is an `invalid-component-usage` error and the call is dropped.
+A body that is only a reference to a component parameter (`{{ content }}`, also `{{ item.content }}` when the default is `item = { content: NO_MATTER }`) is block whatever its value is. The type of a field or an index is read from the same place in the default value. When the default does not have it (`item = {}`, `list = []`), the type is unknown and a body that is only `{{ item.content }}` is a paragraph line, so the component is inline. If such a body is rendered inline and the value is a component, an inline component is placed inline and a block component is an `invalid-component-usage` error that drops the reference. Called on its own line, the body renders the value as a block. A body that is a call to an unknown component or a call that loops back to itself is block too. Calling a block component inline is an `invalid-component-usage` error and the call is dropped.
 
 ### Global Components
 

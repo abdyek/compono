@@ -32,6 +32,9 @@ type renderer struct {
 	// listItems is the element each enclosing LIST is rendering, with the
 	// innermost (the record being emitted right now) last.
 	listItems []ast.ResolvedValue
+	// inlineBodies is the number of component bodies being rendered inline
+	// around the current node.
+	inlineBodies int
 }
 
 func NewRenderer(log logger.Logger) *renderer {

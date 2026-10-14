@@ -1,0 +1,7 @@
+Önce {{ X r = { c: Y } }} sonra
+
+~ X r = {}
+{{ r.c }}
+
+~ Y
+tek

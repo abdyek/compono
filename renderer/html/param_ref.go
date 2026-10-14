@@ -25,7 +25,7 @@ func renderCompParamCall(r *renderer, rn renderableNode, paramRefName string) st
 		return ""
 	}
 
-	inlineCall := isInlineCompParamRef(rn.Node())
+	inlineCall := r.inlineBodies > 0 || isInlineCompParamRef(rn.Node())
 
 	return renderCompValue(r, rn, resolved, inlineCall)
 }
@@ -296,6 +296,8 @@ func renderInlineCompDefContent(r *renderer, invoker renderableNode, compDefCont
 		return ""
 	}
 
+	r.inlineBodies++
+	defer func() { r.inlineBodies-- }()
 	return r.renderChildren(invoker, pContent.Children())
 }
 

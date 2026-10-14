@@ -1,0 +1,8 @@
+Önce {{ X r = { c: B } }} sonra
+
+~ X r = {}
+{{ r.c }}
+
+~ B
+# Başlık
+metin

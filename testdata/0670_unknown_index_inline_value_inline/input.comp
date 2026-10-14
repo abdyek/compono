@@ -1,0 +1,7 @@
+Önce {{ X a = [Y] }} sonra
+
+~ X a = []
+{{ a[0] }}
+
+~ Y
+tek

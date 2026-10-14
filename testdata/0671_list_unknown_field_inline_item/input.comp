@@ -1,0 +1,11 @@
+{{ LIST items = [{ content: B }, { content: Y }] item = CARD }}
+
+~ CARD item = {}
+{{ item.content }}
+
+~ B
+# Başlık
+metin
+
+~ Y
+tek
