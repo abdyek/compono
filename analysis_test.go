@@ -210,3 +210,27 @@ func TestAnalyzeElements(t *testing.T) {
 		{Name: "code-block", Range: span(t, source, "```\nkod\n```", 0)},
 	}, analysis.Elements)
 }
+
+func TestAnalyzeInvalidParameterDefinitions(t *testing.T) {
+	source := "~ title ! = 0 n = 1\n" +
+		"{{ X }}\n" +
+		"\n" +
+		"~ X y\n" +
+		"x\n" +
+		"\n" +
+		"~ UNUSED a b = 2\n" +
+		"u\n"
+
+	analysis, err := Analyze([]byte(source))
+	require.NoError(t, err)
+
+	assert.Equal(t, []Param{
+		{Name: "n", Type: "integer", Range: span(t, source, "n = 1", 0)},
+	}, analysis.Params)
+	assert.Equal(t, []Diagnostic{
+		{Code: CodeInvalidParameterDefinition, Message: "The parameter definition **title ! = 0** is invalid.", Range: span(t, source, "title ! = 0", 0)},
+		{Code: CodeInvalidParameterDefinition, Message: "The parameter definition **y** of component **X** is invalid.", Range: span(t, source, "{{ X }}", 0)},
+		{Code: CodeInvalidParameterDefinition, Message: "The parameter definition **y** of component **X** is invalid.", Range: span(t, source, "y", 0)},
+		{Code: CodeInvalidParameterDefinition, Message: "The parameter definition **a** of component **UNUSED** is invalid.", Range: span(t, source, "a", 0)},
+	}, analysis.Diagnostics)
+}
