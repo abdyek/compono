@@ -28,6 +28,7 @@ const (
 	CodeInvalidCodeBlockLanguage   DiagnosticCode = "invalid-code-block-language"
 	CodeInvalidComponentUsage      DiagnosticCode = "invalid-component-usage"
 	CodeInvalidContextAccess       DiagnosticCode = "invalid-context-access"
+	CodeInvalidContextUsage        DiagnosticCode = "invalid-context-usage"
 	CodeInvalidCurrentValue        DiagnosticCode = "invalid-current-value"
 	CodeInvalidDimension           DiagnosticCode = "invalid-dimension"
 	CodeInvalidExpression          DiagnosticCode = "invalid-expression"

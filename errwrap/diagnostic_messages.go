@@ -12,24 +12,24 @@ func staticTitle(s string) func(*wrapContext, ast.Node) string {
 
 func unknownCompCallMsg(_ *wrapContext, node ast.Node) string {
 	name := getCompCallNameStr(node)
-	return "The component **" + name + "** is not defined or not registered."
+	return "The component **" + name + "** is not defined."
 }
 
 func unknownCompParamCallMsg(ctx *wrapContext, compCall ast.Node) string {
 	compCallName := getCompCallNameStr(compCall)
 	compDef := ast.FindCompDef(ctx.root, compCall, compCallName)
 	if compDef == nil {
-		return "The component **" + compCallName + "** is not defined or not registered."
+		return "The component **" + compCallName + "** is not defined."
 	}
 
 	unknowns := getUnknownResolvedCompArgs(ctx, compCall, compDef)
 
 	if len(unknowns) == 0 {
-		return "The component **" + compCallName + "** is not defined or not registered."
+		return "The component **" + compCallName + "** is not defined."
 	}
 
 	if len(unknowns) == 1 {
-		return "The component **" + unknowns[0] + "** is not defined or not registered."
+		return "The component **" + unknowns[0] + "** is not defined."
 	}
 
 	var prepared string
@@ -40,7 +40,7 @@ func unknownCompParamCallMsg(ctx *wrapContext, compCall ast.Node) string {
 		}
 	}
 
-	return "The components " + prepared + "are not defined or not registered."
+	return "The components " + prepared + " are not defined."
 }
 
 func blockCompInsideInlineMsg(_ *wrapContext, node ast.Node) string {
@@ -118,8 +118,18 @@ func builtinSchemaMismatchNamesMsg(compName string, names []string) string {
 	return "The parameters **" + strings.Join(names, "**, **") + "** do not match the schema of the built-in component **" + compName + "**."
 }
 
-func paramRefInRootMsg(_ *wrapContext, _ ast.Node) string {
-	return "Parameters cannot be used in the root context."
+func paramRefInRootMsg(_ *wrapContext, node ast.Node) string {
+	return "The parameter **" + getParamRefNameStr(node) + "** cannot be used outside a component."
+}
+
+// paramRefInLinkInRootMsg is paramRefInRootMsg for a markdown link whose
+// address holds parameter references: it names the first one.
+func paramRefInLinkInRootMsg(_ *wrapContext, link ast.Node) string {
+	refs := getParamRefsInLinkURL(link)
+	if len(refs) == 0 {
+		return ""
+	}
+	return "The parameter **" + getParamRefNameStr(refs[0]) + "** cannot be used outside a component."
 }
 
 func undefinedParamRefMsg(_ *wrapContext, node ast.Node) string {
@@ -152,7 +162,7 @@ func undefinedParamCompCallAsUnknownMsg(_ *wrapContext, node ast.Node) string {
 
 func notCompParamCompCallMsg(_ *wrapContext, node ast.Node) string {
 	name := getParamCompCallNameStr(node)
-	return "The parameter **" + name + "** is not component parameter"
+	return "The parameter **" + name + "** is not a component parameter and cannot be called."
 }
 
 func unknownContextKeyMsg(key string) string {
@@ -167,8 +177,8 @@ func paramArrayIndexOutOfRangeMsg(paramName string) string {
 	return "The index used for parameter **" + paramName + "** is out of range."
 }
 
-func contextArrayIndexOutOfRangeMsg() string {
-	return "The index used for this context value is out of range."
+func contextArrayIndexOutOfRangeMsg(key string) string {
+	return "The index used for context value **" + key + "** is out of range."
 }
 
 func invalidParamIndexAccessMsg(paramName string) string {

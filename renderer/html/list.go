@@ -43,7 +43,7 @@ func (l *list) Render(invoker renderableNode, node ast.Node) string {
 
 	compDef := ast.FindCompDefInScope(r.root, itemValue.Scope, node, itemValue.Raw)
 	if compDef == nil {
-		return r.recordDiagnostic(node, "Unknown component", "The component **"+itemValue.Raw+"** is not defined or not registered.", true)
+		return r.recordDiagnostic(node, "Unknown component", "The component **"+itemValue.Raw+"** is not defined.", true)
 	}
 
 	inline := !errwrap.IsBlockComponent(compDef)

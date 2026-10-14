@@ -1167,6 +1167,37 @@ Bound arguments and String, Integer, Bool, Array and Record parameters are not p
 - Diagnostics are returned in the order of the dropped parts in the output. The same source and options always return the same diagnostics in the same order.
 - A diagnostic is not a failure: the output is written and valid. `error` is only for fatal errors, and then no diagnostics are returned.
 
+### General Errors
+
+These errors belong to the language itself, not to a built-in or a Markdown element. The errors of built-ins and Markdown elements are described with them.
+
+| Code | When | Message |
+| --- | --- | --- |
+| `unknown-component` | A called name, or a name given as a value, resolves to no local, global or built-in component. This includes the default value of a Component parameter when it is used | `The component **[name]** is not defined.` |
+| `unknown-parameter` | A reference to a parameter the component does not define, or an argument in a call or a binding | `The parameter **[name]** is not defined for this component.` |
+| `wrong-argument-type` | The type of an argument does not match the type of the parameter. For built-ins the type comes from their parameter table | `The parameter **[name]** has the wrong type.` |
+| `missing-argument` | A required parameter gets no argument | `The parameter **[name]** of component **[component]** is required.` |
+| `duplicate-argument` | The caller gives an argument to a parameter that is already bound | `The parameter **[name]** of component **[component]** is already bound.` |
+| `invalid-parameter-definition` | A parameter definition does not follow the format | `The parameter definition **[text]** of component **[component]** is invalid.` |
+| `invalid-built-in-arguments` | The arguments of a built-in do not match its schema: a required argument is missing or the shape of a record argument does not match | `The parameter **[name]** does not match the schema of the built-in component **[component]**.` |
+| `invalid-component-usage` | A block component is used inline, directly or through a parameter reference | `The component **[name]** is a block component and cannot be used inline.` |
+| `infinite-component-call` | A call enters a component that is already being rendered with the same signature | `The call to component **[name]** creates an infinite loop and was skipped.` |
+| `not-component-parameter` | A parameter called with arguments (`{{ title x = 1 }}`) is not a Component parameter | `The parameter **[name]** is not a component parameter and cannot be called.` |
+| `invalid-parameter-usage` | A parameter reference in the root of the converted source, which is not a component body and defines no parameters | `The parameter **[name]** cannot be used outside a component.` |
+| `invalid-parameter-usage` | An array or record parameter rendered without access (`{{ items }}`) | `The parameter **[name]** is an array and cannot be rendered directly.` or `… is a record …` |
+| `invalid-parameter-access` | An index on a parameter that is not an array, or a key on one that is not a record | `The parameter **[name]** is not an array and cannot be indexed.` or `The parameter **[name]** is not a record and cannot be accessed by key.` |
+| `array-index-out-of-range` | The index is past the end of the array | `The index used for parameter **[name]** is out of range.` or `The index used for context value **[key]** is out of range.` |
+| `unknown-record-key` | The record has no such key | `The key **[key]** is not defined in this record.` |
+| `unknown-key` | The key of `context(key)` is not injected | `The key **[key]** is not injected.` |
+| `invalid-context-usage` | An array or record context value rendered without access | `The context value **[key]** is an array and cannot be rendered directly.` or `… is a record …` |
+| `invalid-context-access` | An index on a context value that is not an array, or a key on one that is not a record | `The context value **[key]** is not an array and cannot be indexed.` or `The context value **[key]** is not a record and cannot be accessed by key.` |
+| `invalid-expression` | A `{{ }}` unit follows no grammar ([Invalid and Unclosed Units](#invalid-and-unclosed-units)) | `The content between **{{** and **}}** must be a component call, a parameter reference or a context reference.` |
+| `unclosed-expression` | A `{{` has no matching `}}` | `This **{{** has no matching **}}**.` |
+
+- When the same error occurs for several names in one part, one diagnostic is returned and the message is plural, such as `The components **A**, **B** are not defined.`
+- An error of a value that comes from a parameter has an `invalid-parameter-*` code, and one that comes from `context(key)` has an `invalid-context-*` code.
+- `[name]`, `[component]`, `[key]` and `[text]` are as written in the source. Messages are not part of the API; codes are.
+
 ## API Reference
 
 ### Core Methods

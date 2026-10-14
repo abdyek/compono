@@ -20,8 +20,8 @@ func (contextRefAnalyzer) Diagnose(ctx *wrapContext, node ast.Node) (diagnostic,
 
 	if accessErr.Kind == "" && len(ast.GetContextAccessors(node)) == 0 && (resolved.Type == "array" || resolved.Type == "record") {
 		return diagnostic{
-			title:   "Invalid parameter usage",
-			message: contextRefInvalidUsageMessage(resolved),
+			title:   "Invalid context usage",
+			message: contextRefInvalidUsageMessage(resolved, ast.GetContextKey(node)),
 			block:   false,
 		}, true
 	}
@@ -37,7 +37,7 @@ func (contextRefAnalyzer) Diagnose(ctx *wrapContext, node ast.Node) (diagnostic,
 	if accessErr.Kind == ast.AccessErrorArrayIndexOutOfRange {
 		return diagnostic{
 			title:   "Array index out of range",
-			message: contextArrayIndexOutOfRangeMsg(),
+			message: contextArrayIndexOutOfRangeMsg(ast.GetContextKey(node)),
 			block:   false,
 		}, true
 	}
@@ -79,11 +79,11 @@ func isDirectContextRefNode(node ast.Node) bool {
 	}) == nil
 }
 
-func contextRefInvalidUsageMessage(resolved ast.ResolvedValue) string {
+func contextRefInvalidUsageMessage(resolved ast.ResolvedValue, key string) string {
 	if resolved.Type == "array" {
-		return "The context value is an array and cannot be rendered directly."
+		return "The context value **" + key + "** is an array and cannot be rendered directly."
 	}
-	return "The context value is a record and cannot be rendered directly."
+	return "The context value **" + key + "** is a record and cannot be rendered directly."
 }
 
 func resolveContextRefValueDetailed(root ast.Node, node ast.Node) (ast.ResolvedValue, ast.AccessError) {
