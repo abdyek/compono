@@ -1236,6 +1236,28 @@ _, err := c.Convert(source, writer, compono.WithURLReporter(func(r compono.URLRe
 
 A `Compono` value is stateless. `Convert` depends only on the source and the options, and it changes nothing in the `Compono` value. Everything that belongs to a conversion (global components, context, attribute hook) is given to `Convert` as an option and applies only to that conversion. One `Compono` value can be shared and its `Convert` called from several goroutines at once, with different options. The configuration does not change after `New`.
 
+### Analysis
+
+`Analyze` parses a source without rendering it and returns facts about the source itself. It takes no global components and no context, and its `error` is only for fatal errors. It is a package-level function and can be called from several goroutines at once.
+
+```go
+analysis, err := compono.Analyze(source)
+
+compono.Builtins()         // "LINK", "IMAGE", "HEADER", …
+compono.MarkdownElements() // "blockquote", "br", "code-block", …
+```
+
+A source that starts with a parameter line (`~ title = ""`) is analyzed as a global component, any other source as a converted source. An `Analysis` holds:
+
+- `Params`: the parameter line of a global source, `nil` for a converted source. A definition that does not follow the format is left out and reported in `Diagnostics`.
+- `Locals`: the local definitions, each with its name, parameters and range.
+- `Refs`: the references to components. `Kind` is `call` for a `{{ X … }}` call, `value` for a component given as a value (an argument, a bound argument, an array element or a record value; `X(c = Y(a = 1))` gives two) and `default` for a component written in a parameter definition. `In` is the local the reference is in, `Local` tells whether the name resolves to a local of the source, `Args` are the names of the arguments given or bound and `Block` tells whether a call is written as a block. Whether a name that resolves to no local is a global or a built-in is up to the caller.
+- `Elements`: the Markdown elements used, with the names of `MarkdownElements`. A heading of any level is `heading` and a line break in a paragraph is `br`.
+- `Root`: the units of the source outside its local definitions. A block call is a `call` unit with the index of its reference in `Refs`. A paragraph is split into its inline calls, its inline Markdown elements (`markdown`) and its `text`; any other block is `markdown`, and a `{{ }}` unit that follows no grammar is `text`. Comment lines, the parameter line, line breaks and whitespace are not units.
+- `Diagnostics`: the errors that do not depend on values, in the whole source, also in locals that are never called. An invalid parameter definition is reported at the definition, and also at every call to it. Since no globals and no context are given, `unknown-component` and `unknown-key` are not reported. `Source` and `Calls` are empty.
+
+Ranges are in the format of diagnostic ranges, relative to the source, with leading and trailing whitespace left out. Every list is in source order, and the same source always gives the same `Analysis`. `Builtins` and `MarkdownElements` return a new slice on every call.
+
 ## Component Naming Convention
 
 Component names must be in `SCREAMING_SNAKE_CASE`:
