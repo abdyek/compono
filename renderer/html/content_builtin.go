@@ -53,7 +53,7 @@ func (cb *contentBuiltin) Render(invoker renderableNode, node ast.Node) string {
 	}
 
 	if ast.FindCompDefInScope(r.root, value.Scope, node, value.Raw) == nil {
-		return r.recordDiagnostic(node, "Unknown component", "The component **"+value.Raw+"** is not defined or not registered.", true)
+		return r.recordDiagnostic(node, "Unknown component", "The component **"+value.Raw+"** is not defined.", true)
 	}
 
 	conflicts := map[string]bool{}

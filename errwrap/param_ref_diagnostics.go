@@ -38,7 +38,7 @@ func paramRefInLinkInRootContent() conditionAnalyzer {
 			hasParamRefInLinkURL(),
 		},
 		title:   staticTitle("Invalid parameter usage"),
-		message: paramRefInRootMsg,
+		message: paramRefInLinkInRootMsg,
 		block:   neverBlock,
 	}
 }
@@ -112,7 +112,7 @@ func notCompParamCompCall() conditionAnalyzer {
 	return conditionAnalyzer{
 		conditions: []func(*wrapContext, ast.Node) bool{
 			isRuleName("param-ref"),
-			any(hasCompCallArgs(), isLegacyNotCompStandalone()),
+			hasCompCallArgs(),
 			not(isInsideRootContent()),
 			isNotCompParamCompCall(),
 		},

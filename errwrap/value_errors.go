@@ -112,7 +112,7 @@ func CallArgTypeError(root, call, compDef ast.Node, invokerAncestors []ast.Node)
 // invokerAncestors are as for ast.ResolveCompCallArgValue.
 func ParamCompCallError(root, paramRef ast.Node, value ast.ResolvedValue, compDef ast.Node, invokerAncestors []ast.Node) (title, message string, ok bool) {
 	if compDef == nil {
-		return "Unknown component", "The component **" + value.Raw + "** is not defined or not registered.", true
+		return "Unknown component", "The component **" + value.Raw + "** is not defined.", true
 	}
 
 	if text, ok := getInvalidParamDefOfCompDef(compDef); ok {

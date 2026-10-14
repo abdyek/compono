@@ -168,28 +168,6 @@ func blockCompInsideInline() conditionAnalyzer {
 	}
 }
 
-func isLegacyNotCompStandalone() func(*wrapContext, ast.Node) bool {
-	return func(_ *wrapContext, node ast.Node) bool {
-		if getParamRefNameStr(node) != "param" {
-			return false
-		}
-		if !blockForParamRef(nil, node) {
-			return false
-		}
-		compDef := findEnclosingCompDef(node)
-		if compDef == nil || !ast.IsRuleName(compDef, "global-comp-def") {
-			return false
-		}
-
-		for _, info := range getCompDefParamInfos(compDef) {
-			if info.name == "param" && info.typ == "string" && info.defVal == "I am a string parameter" {
-				return true
-			}
-		}
-		return false
-	}
-}
-
 func isCompParamRefInCompDef(compDef ast.Node, node ast.Node) bool {
 	if !ast.IsRuleName(node, "param-ref") {
 		return false
