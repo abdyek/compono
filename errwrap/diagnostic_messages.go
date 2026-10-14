@@ -66,7 +66,11 @@ func undefinedParamNamesMsg(names []string) string {
 
 func invalidParamDefMsg(ctx *wrapContext, node ast.Node) string {
 	text, _ := getInvalidCompParamDef(ctx, node)
-	return "The parameter definition **" + text + "** of component **" + getCompCallNameStr(node) + "** is invalid."
+	return invalidParamDefTextMsg(text, getCompCallNameStr(node))
+}
+
+func invalidParamDefTextMsg(text, compName string) string {
+	return "The parameter definition **" + text + "** of component **" + compName + "** is invalid."
 }
 
 func missingArgMsg(ctx *wrapContext, node ast.Node) string {

@@ -114,6 +114,10 @@ func ParamCompCallError(root, paramRef ast.Node, value ast.ResolvedValue, compDe
 		return "Unknown component", "The component **" + value.Raw + "** is not defined or not registered.", true
 	}
 
+	if text, ok := getInvalidParamDefOfCompDef(compDef); ok {
+		return "Invalid parameter definition", invalidParamDefTextMsg(text, value.Raw), true
+	}
+
 	explicitArgs := []ast.Node{}
 	for _, arg := range ast.GetCompCallArgsFromCompCall(paramRef) {
 		if !ast.IsRuleName(arg, "comp-call-arg") {
@@ -244,6 +248,23 @@ func BuiltinCallError(root, call ast.Node, name string, invokerAncestors []ast.N
 			names = appendUniqueStrings(names, m.name)
 		}
 		return "Invalid built-in arguments", builtinSchemaMismatchNamesMsg(name, names), true
+	}
+
+	for _, param := range definition.Params {
+		if param.Schema.Kind() != builtin.ComponentKind {
+			continue
+		}
+		value := ast.ResolveFrameParam(root, call, param.Name, invokerAncestors)
+		if value.Type != "comp" || value.Raw == "" {
+			continue
+		}
+		compDef := ast.FindCompDefInScope(root, value.Scope, call, value.Raw)
+		if compDef == nil {
+			continue
+		}
+		if text, ok := getInvalidParamDefOfCompDef(compDef); ok {
+			return "Invalid parameter definition", invalidParamDefTextMsg(text, value.Raw), true
+		}
 	}
 
 	if name == "LINK" {

@@ -45,6 +45,13 @@ func getInvalidCompParamDef(ctx *wrapContext, compCall ast.Node) (string, bool) 
 		return "", false
 	}
 
+	return getInvalidParamDefOfCompDef(compDef)
+}
+
+// getInvalidParamDefOfCompDef returns the first invalid parameter definition
+// of a local or global component definition. It returns false for any other
+// node, such as a built-in.
+func getInvalidParamDefOfCompDef(compDef ast.Node) (string, bool) {
 	if ast.IsRuleName(compDef, "global-comp-def") {
 		return getInvalidGlobalParamLine(compDef)
 	}
