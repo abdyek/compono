@@ -1132,7 +1132,7 @@ An error drops the smallest part it belongs to:
 
 - **A component call** (built-in, global or local) for its own errors: an unknown component, argument errors, built-in specific errors, an invalid parameter definition of the called component and an infinite call. An error of an argument's value also drops the call the argument belongs to.
 - **A `{{ }}` unit** (a parameter reference or `context(key)`) for its own errors.
-- **A markdown link** for an error in its address. An error of a `{{ }}` unit in the link text drops only that unit: `[Docs {{ x }}](/docs)` renders `<a href="/docs">Docs </a>` when `x` cannot be used.
+- **A markdown link** for an error in its address and for a component call in its text or address, defined or not. The call is not rendered, so its own errors are not reported: `[{{ UNDEFINED }}](/z)` gives only `invalid-component-usage`. An error of a `{{ }}` unit in the link text drops only that unit: `[Docs {{ x }}](/docs)` renders `<a href="/docs">Docs </a>` when `x` cannot be used.
 
 The paragraph, heading or component body around a dropped part is still rendered. For example, `Hello {{ FOO }} world` with an undefined `FOO` renders `<p>Hello  world</p>`.
 
