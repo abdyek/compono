@@ -46,6 +46,30 @@ func wrongArgType() conditionAnalyzer {
 	}
 }
 
+// wrongBoundArgTypeInBuiltinCall reports a call to a built-in whose
+// arguments bind a value of the wrong type to a component value, such as
+// NAV(content = CARD(n = "s")) when n is an integer. The built-in's own
+// arguments are checked against its schema when it is rendered.
+func wrongBoundArgTypeInBuiltinCall() conditionAnalyzer {
+	return conditionAnalyzer{
+		conditions: []func(*wrapContext, ast.Node) bool{
+			isRuleNameOneOf("block-comp-call", "inline-comp-call"),
+			isKnownComponent(),
+			func(ctx *wrapContext, node ast.Node) bool {
+				return !isNotBuiltinComponent()(ctx, node)
+			},
+			func(ctx *wrapContext, node ast.Node) bool {
+				return len(getWrongTypeBoundArgNames(ctx.root, node)) > 0
+			},
+		},
+		title: staticTitle("Wrong argument type"),
+		message: func(ctx *wrapContext, node ast.Node) string {
+			return wrongArgTypeNamesMsg(getWrongTypeBoundArgNames(ctx.root, node))
+		},
+		block: blockFromRuleName,
+	}
+}
+
 func hasUndefinedArgs() func(*wrapContext, ast.Node) bool {
 	return func(ctx *wrapContext, compCall ast.Node) bool {
 		return len(getUndefinedArgNames(ctx, compCall)) > 0

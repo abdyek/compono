@@ -23,6 +23,7 @@ func diagnosticAnalyzers() []diagnosticAnalyzer {
 		missingArg(),
 		wrongImageArgType(),
 		wrongArgType(),
+		wrongBoundArgTypeInBuiltinCall(),
 		paramRefInRootContent(),
 		paramRefInLinkInRootContent(),
 		contextRefAnalyzer{},
