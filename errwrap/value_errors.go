@@ -1,6 +1,7 @@
 package errwrap
 
 import (
+	"fmt"
 	"sort"
 	"strings"
 
@@ -288,8 +289,8 @@ func BuiltinCallError(root, call ast.Node, name string, invokerAncestors []ast.N
 	return "", "", false
 }
 
-// CallSignature identifies what a frame renders: the values of the component
-// parameters of compDef resolved for frame. frame is a component call or a
+// CallSignature identifies what a frame renders: the definitions the component
+// parameters of compDef resolve to for frame. frame is a component call or a
 // parameter reference that renders compDef, and invokerAncestors are as for
 // ast.ResolveFrameParam. Entering compDef again with the same signature while
 // it is being rendered never ends.
@@ -307,9 +308,22 @@ func CallSignature(root, frame, compDef ast.Node, invokerAncestors []ast.Node) s
 
 	parts := make([]string, 0, len(compInfos))
 	for _, info := range compInfos {
-		parts = append(parts, info.name+"="+ast.ResolveFrameParam(root, frame, info.name, invokerAncestors).Raw)
+		value := ast.ResolveFrameParam(root, frame, info.name, invokerAncestors)
+		parts = append(parts, info.name+"="+compValueIdentity(root, frame, value))
 	}
 	return strings.Join(parts, "|")
+}
+
+// compValueIdentity identifies the definition a component value resolves to
+// in the scope it was written in, so two definitions with the same name in
+// different scopes are different values. A built-in or an unknown component
+// is identified by its name.
+func compValueIdentity(root, frame ast.Node, value ast.ResolvedValue) string {
+	compDef := ast.FindCompDefInScope(root, value.Scope, frame, value.Raw)
+	if compDef == nil || ast.IsRuleName(compDef, "builtin-comp") {
+		return value.Raw
+	}
+	return fmt.Sprintf("%p", compDef)
 }
 
 // InfiniteCallError returns the error of a call to the component name that
