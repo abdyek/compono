@@ -86,6 +86,12 @@ func getInvalidParamDefOfCompDef(compDef ast.Node) (string, bool) {
 	return indentedLineAfterDefLine(compDef.Raw())
 }
 
+// InvalidParamDefinition returns the first invalid parameter definition of a
+// local or global component definition. It returns false for any other node.
+func InvalidParamDefinition(compDef ast.Node) (string, bool) {
+	return getInvalidParamDefOfCompDef(compDef)
+}
+
 // getInvalidGlobalParamLine returns the first invalid parameter definition found
 // on the global component definition head after its leading "~".
 func getInvalidGlobalParamLine(compDef ast.Node) (string, bool) {
