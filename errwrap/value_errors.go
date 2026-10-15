@@ -158,6 +158,9 @@ func ParamCompCallError(root, paramRef ast.Node, value ast.ResolvedValue, compDe
 	for _, arg := range boundArgs {
 		supplied = appendUniqueStrings(supplied, ast.GetArgNameFromCompCallArg(arg))
 	}
+	for _, name := range ast.GetCompValueFrameArgNames(paramRef) {
+		supplied = appendUniqueStrings(supplied, name)
+	}
 
 	missing := missingArgNames(getRequiredParamNames(compDef), supplied)
 	if len(missing) > 0 {

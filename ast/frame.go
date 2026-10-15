@@ -1,6 +1,10 @@
 package ast
 
-import "github.com/umono-cms/compono/rule"
+import (
+	"sort"
+
+	"github.com/umono-cms/compono/rule"
+)
 
 // compValueFrame is a synthetic frame for a component value rendered without a
 // call of its own, such as the content of a built-in.
@@ -41,4 +45,20 @@ func GetCompValueFrameArg(node Node, name string) (ResolvedValue, bool) {
 	}
 	value, ok := frame.args[name]
 	return value, ok
+}
+
+// GetCompValueFrameArgNames returns the sorted names of the arguments given
+// to the component value by the comp-value-frame node itself, nil if node is
+// not such a frame or has no arguments.
+func GetCompValueFrameArgNames(node Node) []string {
+	frame, ok := node.(*compValueFrame)
+	if !ok || frame.args == nil {
+		return nil
+	}
+	names := make([]string, 0, len(frame.args))
+	for name := range frame.args {
+		names = append(names, name)
+	}
+	sort.Strings(names)
+	return names
 }
