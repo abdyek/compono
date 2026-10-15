@@ -1,0 +1,4 @@
+{{ LIST items = [] item = IT }}
+
+~ IT item! = {}
+{{ item.a }}
