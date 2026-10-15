@@ -511,7 +511,7 @@ Output:
 | `item`    | Component | Yes      |         | The **item component**, rendered for every element. |
 | `ordered` | Bool      | No       | `false` | `true` renders an `<ol>`, `false` a `<ul>`. |
 
-- The item component must define a record parameter named `item`. `LIST` gives it every element as `item`. A built-in or a component without such a parameter is an `invalid-item-component` error.
+- The item component must define a record parameter named `item`. `LIST` gives it every element as `item`, so `item` may be defined as required: `~ CARD item! = {}`. A built-in or a component without such a parameter is an `invalid-item-component` error.
 - Other parameters of the item component are given with [argument binding](#argument-binding): `item = CARD(more = more)`. Binding `item` itself is a `duplicate-argument` error. A required parameter that is not bound is a `missing-argument` error, also when `items` is empty.
 - An inline item component is written in the `<li>` without a `<p>`. A component that delegates to an inline component or to `LINK` is inline too. A block item component is written like a block call.
 - An element that is not a record is an `invalid-list-item` error and drops only that element. An element that renders nothing writes no `<li>`, and the numbers of an ordered list follow the written elements. A `LIST` without any `<li>`, for example with empty `items`, renders nothing.
